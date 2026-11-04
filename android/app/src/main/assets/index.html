@@ -117,19 +117,23 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .now-queue-trigger:focus-visible{outline:1px solid white;outline-offset:3px}
 .queue-open-hint{display:flex;align-items:center;gap:5px;color:#aaa;font-size:10px;white-space:nowrap;flex:none}
 .queue-open-hint svg{height:17px;width:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
-/* ColorOS-like spring slide-up for Up Next. Visibility prevents hidden
-   dialogs intercepting touches; transforms avoid layout reflows. */
-#queueOverlay{display:flex;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .3s ease,visibility .3s}
-#queueOverlay.open{visibility:visible;opacity:1;pointer-events:auto}
-#queueOverlay .queue-sheet{transform:translate3d(0,105%,0) scale(.985);opacity:.86;transition:transform .46s cubic-bezier(.18,.88,.24,1),opacity .3s ease}
-#queueOverlay.open .queue-sheet{transform:translate3d(0,0,0) scale(1);opacity:1}
-.queue-sheet{max-height:80vh;display:flex;flex-direction:column}
+/* A continuous player surface: pulling the queue open expands the actual
+   bottom dock upward, revealing Up Next immediately beneath the seek bar.
+   No modal, overlay, fade, or separate sliding sheet. */
+.queue-grip{width:100%;height:19px;display:grid;place-items:center;padding:0;border:0;background:none;touch-action:none;cursor:pointer}
+.queue-grip-bar{height:3px;width:31px;background:rgba(255,255,255,.30);border-radius:999px}
+.queue-grip:focus-visible .queue-grip-bar{outline:1px solid white;outline-offset:4px}
+.queue-drawer{height:0;overflow:hidden;visibility:hidden;pointer-events:none;transition:height .48s cubic-bezier(.22,.9,.24,1),visibility .48s}
+.queue-drawer.open{height:min(49vh,470px);visibility:visible;pointer-events:auto}
+.queue-drawer-inner{height:min(49vh,470px);min-height:0;display:flex;flex-direction:column;overflow:hidden;border-top:1px solid rgba(255,255,255,.11);padding:10px 1px 13px}
+.queue-drawer .sheet-head{flex:none}
+.queue-drawer .queue-meta{flex:none}
 .now-queue-trigger{transition:transform .2s cubic-bezier(.22,1,.36,1),background .2s;border-radius:10px}
 .now-queue-trigger:active{transform:scale(.985);background:rgba(255,255,255,.07)}
 .queue-row{transition:background .2s ease}
 .queue-row:active{background:rgba(255,255,255,.09)}
 .queue-meta{font-size:11px;color:#aaa;line-height:1.4;margin:0 0 11px}
-.queue-list{min-height:60px;max-height:min(59vh,580px);overflow-y:auto;overscroll-behavior:contain}
+.queue-list{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .queue-row{display:grid;grid-template-columns:minmax(0,1fr) 36px;align-items:center;min-height:59px;border-bottom:1px solid rgba(255,255,255,.09);gap:4px}
 .queue-row.is-current{border-left:2px solid #eee;padding-left:9px;background:rgba(255,255,255,.04)}
 .queue-row-main{display:flex;align-items:center;gap:11px;min-width:0;text-align:left;padding:10px 3px;width:100%}
@@ -199,7 +203,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 @media(prefers-reduced-motion:reduce){
  .digit{animation:none}
  *{scroll-behavior:auto!important}
- .content-stage,.tab-indicator,#queueOverlay,#queueOverlay .queue-sheet,.tab,.now-queue-trigger,.queue-row{transition:none!important;animation:none!important}
+ .content-stage,.tab-indicator,.queue-drawer,.tab,.now-queue-trigger,.queue-row{transition:none!important;animation:none!important}
 }
 </style>
 </head>
@@ -257,6 +261,15 @@ input[type=range]{accent-color:#eee;cursor:pointer}
    <output class="scrub-tooltip" id="scrubTooltip" aria-hidden="true">0:00</output>
   </div>
   <span class="time" id="total">0:00</span></div>
+ <button type="button" id="queueGrip" class="queue-grip" aria-label="Expand or collapse Up Next" aria-controls="queueDrawer" aria-expanded="false"><span class="queue-grip-bar" aria-hidden="true"></span></button>
+ <section class="queue-drawer" id="queueDrawer" aria-label="Up Next" aria-hidden="true">
+  <div class="queue-drawer-inner">
+   <div class="sheet-head"><h2>Up Next</h2><button class="close" type="button" id="closeQueue" aria-label="Collapse queue">×</button></div>
+   <p class="queue-meta" id="queueMeta">Songs waiting to play</p>
+   <div class="queue-list" id="queueList"></div>
+   <div class="queue-footer">Tap a song to play it, or × to remove it from Up Next. Your music stays on your device.</div>
+  </div>
+ </section>
  <div class="transport">
   <button id="likeButton" aria-label="Like current song" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M20.7 5.1a5.6 5.6 0 0 0-7.9 0L12 6l-.8-.9a5.6 5.6 0 0 0-7.9 7.9L12 22l8.7-9a5.6 5.6 0 0 0 0-7.9Z"/></svg></button>
   <button id="previousButton" aria-label="Previous song"><svg viewBox="0 0 24 24"><path d="M6 5v14 M18 6l-9 6 9 6"/></svg></button>
@@ -278,14 +291,6 @@ input[type=range]{accent-color:#eee;cursor:pointer}
  <div class="sheet-head"><h2 id="sheetTitle">Options</h2><button type="button" class="close" id="closeSheet" aria-label="Close">×</button></div>
  <div id="sheetBody"></div>
 </div></div>
-<div class="overlay" id="queueOverlay">
- <div class="sheet queue-sheet" role="dialog" aria-modal="true" aria-label="Playback queue">
-  <div class="sheet-head"><h2>Up Next</h2><button class="close" type="button" id="closeQueue" aria-label="Close queue">×</button></div>
-  <p class="queue-meta" id="queueMeta">Songs waiting to play</p>
-  <div class="queue-list" id="queueList"></div>
-  <div class="queue-footer">Tap a song to play it next, or × to remove it from this queue. Your music files are not deleted.</div>
- </div>
-</div>
 <div id="toast" class="toast" role="status"></div>
 <script>
 (function(){
@@ -446,7 +451,7 @@ function renderSettings(){
   '<div class="settings-panel"><button class="settings-action" data-rescan-library="1"><span>Rescan music library<small>Refresh songs indexed on your phone</small></span><span aria-hidden="true">↻</span></button></div>'+
   '<div class="settings-heading">About</div>'+
   '<div class="settings-panel"><div class="settings-about"><div class="settings-about-title">999 · WRLD</div>'+
-   '<div class="settings-about-version">Android v0.1.8 (beta)</div>'+
+   '<div class="settings-about-version">Android v0.1.10 (beta)</div>'+
    '<div class="settings-about-desc">Offline music player powered by Android Media3. Your music, favorites, playlists, history, and audio preferences stay on this device. No account required.</div></div>'+
    '<button class="settings-action" data-open-updates="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>GitHub Releases<small>View the latest Android updates</small></span><span aria-hidden="true">↗</span></button></div>'+
   '</div>';
@@ -454,19 +459,30 @@ function renderSettings(){
 }
 var queueItems=[];
 var queueDisplayed=0;
+function isQueueOpen(){return el("queueDrawer").classList.contains("open")}
+function setQueueOpen(value){
+ var drawer=el("queueDrawer");
+ drawer.classList.toggle("open",value);
+ drawer.setAttribute("aria-hidden",String(!value));
+ el("queueGrip").setAttribute("aria-expanded",String(value));
+ el("openQueueButton").setAttribute("aria-expanded",String(value));
+}
 function closeQueue(){
- el("queueOverlay").classList.remove("open");
- call("closeQueue");
+ if(!isQueueOpen())return;
  el("openQueueButton").focus();
+ setQueueOpen(false);
+ call("closeQueue");
 }
 function openQueue(){
+ if(isQueueOpen())return;
  if(!app.player.id){notice("Choose a song to see the queue");return}
- el("queueOverlay").classList.add("open");
+ setQueueOpen(true);
  el("queueMeta").textContent="Loading queue…";
  el("queueList").innerHTML="";
  queueItems=[];queueDisplayed=0;
  call("requestQueue");
 }
+function toggleQueue(){if(isQueueOpen())closeQueue();else openQueue()}
 function renderQueue(){
  var count=Math.max(0,queueItems.length-1);
  el("queueMeta").textContent=count+" upcoming song"+(count===1?"":"s");
@@ -479,7 +495,7 @@ function renderQueue(){
  appendQueueRows();
 }
 function appendQueueRows(){
- if(!el("queueOverlay").classList.contains("open"))return;
+ if(!isQueueOpen())return;
  var end=Math.min(queueDisplayed+60,queueItems.length);
  if(end<=queueDisplayed)return;
  var frag=document.createDocumentFragment();
@@ -597,9 +613,26 @@ el("list").addEventListener("click",function(event){
  if(b.dataset.song){var i=app.visible.findIndex(function(s){return s.id===b.dataset.song});if(i>=0)playIndex(i)}
 });
 el("overlay").addEventListener("click",function(e){if(e.target===el("overlay"))hideSheet()});
-el("openQueueButton").addEventListener("click",openQueue);
+el("openQueueButton").setAttribute("aria-expanded","false");
+el("openQueueButton").setAttribute("aria-controls","queueDrawer");
+el("openQueueButton").addEventListener("click",toggleQueue);
 el("closeQueue").addEventListener("click",closeQueue);
-el("queueOverlay").addEventListener("click",function(e){if(e.target===el("queueOverlay"))closeQueue()});
+// Tap the grip, or pull it up/down; both control the same attached drawer.
+var gripStartY=null;
+el("queueGrip").addEventListener("pointerdown",function(e){gripStartY=e.clientY});
+el("queueGrip").addEventListener("pointerup",function(e){
+ if(gripStartY===null)return;
+ var dy=e.clientY-gripStartY;
+ gripStartY=null;
+ if(dy < -26)openQueue();
+ else if(dy > 26)closeQueue();
+ else toggleQueue();
+});
+el("queueGrip").addEventListener("pointercancel",function(){gripStartY=null});
+el("queueGrip").addEventListener("click",function(e){
+ // Keyboard and accessibility activation doesn't produce pointerup.
+ if(e.detail===0)toggleQueue();
+});
 el("queueList").addEventListener("scroll",function(e){
  if(e.target.scrollTop+e.target.clientHeight>=e.target.scrollHeight-220)appendQueueRows();
 },{passive:true});
@@ -613,7 +646,7 @@ el("queueList").addEventListener("click",function(event){
  else{call("jumpToQueued",index,id);closeQueue()}
 });
 document.addEventListener("keydown",function(e){
- if(e.key==="Escape"&&el("queueOverlay").classList.contains("open"))closeQueue();
+ if(e.key==="Escape"&&isQueueOpen())closeQueue();
 });
 el("closeSheet").addEventListener("click",hideSheet);
 el("sheetBody").addEventListener("click",function(e){
@@ -708,7 +741,7 @@ window.WRLD={
  },
  receiveQueue:function(data){
   queueItems=data&&Array.isArray(data.items)?data.items:[];
-  if(el("queueOverlay").classList.contains("open"))renderQueue();
+  if(isQueueOpen())renderQueue();
  },
  receiveAudioSettings:function(data){
   if(!data||typeof data!=="object")return;

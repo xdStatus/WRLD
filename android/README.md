@@ -1,4 +1,4 @@
-# WRLD Android — first playable beta (v0.1.9)
+# WRLD Android — first playable beta (v0.1.10)
 
 Native Android music playback with a monochrome WebView interface. The Windows
 Python/WebView2 player and its releases remain unchanged.
@@ -15,7 +15,7 @@ Python/WebView2 player and its releases remain unchanged.
 ## How to try it
 
 1. Open GitHub Actions in xdStatus/WRLD and verify **Build WRLD Android APK** succeeded.
-2. Open the **android-v0.1.9** release and download **WRLD-Android-v0.1.9.apk** to your Android device.
+2. Open the **android-v0.1.10** release and download **WRLD-Android-v0.1.10.apk** to your Android device.
 3. Allow APK installation from your browser or file manager when Android prompts.
 4. Open WRLD and grant **Music and audio** access.
 5. Put music files in your phone's Music folder if the library is empty, then reopen/Rescan.
@@ -196,3 +196,17 @@ The scroll handler pauses while a view is changing. When motion reduction is
 enabled in Android accessibility settings, these animations are disabled.
 The existing 999 logo, 25FPS lightweight starfield, queue controls and music
 playback behavior remain unchanged.
+
+## Android beta v0.1.10 — Up Next as one continuous player drawer
+
+**Up Next now lives inside the bottom player**, directly underneath the
+progress bar. Tap the current-song area or the small handle beneath the
+timeline, or swipe the handle upward. The bottom player grows upward to
+uncover the queue in a single animated height change; the playback controls
+and volume stay anchored to the bottom. Tapping the handle again, swiping it
+downward, or pressing the × control collapses the queue into the player.
+
+There is no separate bottom-sheet popup, overlay or backdrop fade. The
+underlying app tabs and audio logic are unchanged. Android reduced-motion
+preferences turn off the height animation. Upcoming tracks remain removable
+without deleting audio files, and the existing long-queue pagination stays.
