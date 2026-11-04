@@ -39,6 +39,10 @@ class MainActivity : Activity() {
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
     private var songs: List<Song> = emptyList()
+    private var localSongs: List<Song> = emptyList()
+    private var cloudSongs: List<Song> = emptyList()
+    private var musicSource = "device"
+    private var cloudAddress = ""
     private var webReady = false
     private var libraryLoading = false
     private var queueOpened = false
@@ -57,6 +61,9 @@ class MainActivity : Activity() {
         collections = CollectionStore(this)
         history = HistoryStore(this)
         audioSettings = AudioSettingsStore(this)
+        val cloudPrefs = getSharedPreferences("wrld-cloud", MODE_PRIVATE)
+        cloudAddress = cloudPrefs.getString("address", "") ?: ""
+        musicSource = if (cloudPrefs.getString("source", "device") == "cloud") "cloud" else "device"
         web = WebView(this).apply {
             setBackgroundColor(Color.rgb(5, 5, 5))
             settings.javaScriptEnabled = true
@@ -82,8 +89,10 @@ class MainActivity : Activity() {
                     sendCollections()
                     sendHistory()
                     sendAudioSettings()
+                    sendCloudConfig()
                     sendPlayerState()
-                    if (hasAudioPermission()) loadLibrary() else requestAudioPermission()
+                    if (musicSource == "cloud") loadCloudLibrary()
+                    else if (hasAudioPermission()) loadLibrary() else requestAudioPermission()
                 }
             }
             addJavascriptInterface(NativeBridge(), "WRLDNative")
@@ -216,6 +225,58 @@ class MainActivity : Activity() {
             JSONObject().put("items", payload).toString() + ");")
     }
 
+    private fun sendCloudConfig() {
+        sendScript("window.WRLD.receiveCloudConfig(" + JSONObject()
+            .put("source", musicSource)
+            .put("url", cloudAddress)
+            .toString() + ");")
+    }
+
+    private fun sendSongs(scanned: List<Song>) {
+        songs = scanned
+        val data = JSONObject().put("songs", JSONArray().apply {
+            scanned.forEach { put(it.toJson()) }
+        })
+        sendScript("window.WRLD.receiveLibrary(" + data.toString() + ");")
+    }
+
+    private fun loadCloudLibrary() {
+        if (libraryLoading) return
+        if (cloudAddress.isBlank()) {
+            sendScript("window.WRLD.receiveCloudStatus(" +
+                JSONObject.quote("Set your Windows server address in Settings.") + ");")
+            sendSongs(emptyList())
+            return
+        }
+        libraryLoading = true
+        sendScript("window.WRLD.receiveCloudStatus(" +
+            JSONObject.quote("Connecting to your Windows computer…") + ");")
+        val requestedAddress = cloudAddress
+        executor.execute {
+            try {
+                val scanned = CloudLibrary.fetch(requestedAddress)
+                runOnUiThread {
+                    libraryLoading = false
+                    // Ignore a response if the user switched servers/sources while loading.
+                    if (musicSource != "cloud" || cloudAddress != requestedAddress) return@runOnUiThread
+                    cloudSongs = scanned
+                    sendSongs(scanned)
+                    sendScript("window.WRLD.receiveCloudStatus(" +
+                        JSONObject.quote("Connected · ${scanned.size} songs") + ");")
+                }
+            } catch (error: Exception) {
+                runOnUiThread {
+                    libraryLoading = false
+                    if (musicSource != "cloud" || cloudAddress != requestedAddress) return@runOnUiThread
+                    sendSongs(emptyList())
+                    val message = error.message ?: "Could not contact your Windows PC."
+                    sendScript("window.WRLD.receiveCloudStatus(" +
+                        JSONObject.quote("Connection failed: " + message) + ");")
+                }
+            }
+        }
+    }
+
     private fun loadLibrary() {
         if (!hasAudioPermission()) {
             sendScript("window.WRLD.permissionDenied();")
@@ -227,12 +288,9 @@ class MainActivity : Activity() {
             try {
                 val scanned = LibraryRepository.scan(applicationContext)
                 runOnUiThread {
-                    songs = scanned
+                    localSongs = scanned
                     libraryLoading = false
-                    val json = JSONObject().put("songs", JSONArray().apply {
-                        scanned.forEach { put(it.toJson()) }
-                    })
-                    sendScript("window.WRLD.receiveLibrary(" + json.toString() + ");")
+                    if (musicSource == "device") sendSongs(scanned)
                 }
             } catch (error: Exception) {
                 runOnUiThread {
@@ -270,6 +328,40 @@ class MainActivity : Activity() {
     }
 
     inner class NativeBridge {
+        @JavascriptInterface fun requestCloudConfig() {
+            runOnUiThread { sendCloudConfig() }
+        }
+
+        @JavascriptInterface fun setMusicSource(value: String) {
+            runOnUiThread {
+                if (value != "device" && value != "cloud") return@runOnUiThread
+                musicSource = value
+                getSharedPreferences("wrld-cloud", MODE_PRIVATE).edit()
+                    .putString("source", value).apply()
+                sendCloudConfig()
+                if (value == "cloud") loadCloudLibrary()
+                else if (hasAudioPermission()) {
+                    if (localSongs.isNotEmpty()) sendSongs(localSongs)
+                    else loadLibrary()
+                } else requestAudioPermission()
+            }
+        }
+
+        @JavascriptInterface fun setCloudServer(value: String) {
+            runOnUiThread {
+                val normalized = CloudLibrary.normalizeAddress(value)
+                if (normalized == null) {
+                    showError("Use your private Tailscale HTTPS address ending in .ts.net")
+                    return@runOnUiThread
+                }
+                cloudAddress = normalized
+                getSharedPreferences("wrld-cloud", MODE_PRIVATE).edit()
+                    .putString("address", normalized).apply()
+                sendCloudConfig()
+                if (musicSource == "cloud") loadCloudLibrary()
+            }
+        }
+
         @JavascriptInterface fun requestQueue() {
             runOnUiThread {
                 queueOpened = true
@@ -323,7 +415,8 @@ class MainActivity : Activity() {
 
         @JavascriptInterface fun requestLibrary() {
             runOnUiThread {
-                if (hasAudioPermission()) loadLibrary() else requestAudioPermission()
+                if (musicSource == "cloud") loadCloudLibrary()
+                else if (hasAudioPermission()) loadLibrary() else requestAudioPermission()
             }
         }
 
