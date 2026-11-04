@@ -104,4 +104,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.4: Android-inspired Shuffle All, recent History (up to 50 songs), fade-in/out playback settings, gapless option, About, fluid tabs, and the integrated Up Next queue under the progress bar. Includes startup checks and updater rollback."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.5: adds WRLD Cloud, a read-only local music streaming server on 127.0.0.1:18766 for private Tailscale Serve access. The Windows app also starts this endpoint while open; local playback and your saved playlists are unchanged."

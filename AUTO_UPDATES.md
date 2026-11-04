@@ -54,3 +54,11 @@ clear them, but the Windows updater retains the profile as before.
 Bumping app_version.py triggers the Windows GitHub Actions pipeline. It checks
 JavaScript syntax and probes the packaged EXE before publishing a versioned
 release. Use Updates → Check Now → Update & Restart inside the installed app.
+
+## Windows 1.8.5 — private WRLD Cloud
+
+Opening WRLD.exe now also starts a read-only library/streaming endpoint on
+127.0.0.1:18766. Its native server never binds to a public or LAN interface.
+Use Tailscale Serve to expose it privately to your own devices over HTTPS.
+The existing Windows release updater continues to preserve local collections.
+See WRLD_CLOUD_SETUP.md for instructions and restrictions.

@@ -1,4 +1,4 @@
-# WRLD Android — first playable beta (v0.1.11)
+# WRLD Android — first playable beta (v0.1.12)
 
 Native Android music playback with a monochrome WebView interface. The Windows
 Python/WebView2 player and its releases remain unchanged.
@@ -15,7 +15,7 @@ Python/WebView2 player and its releases remain unchanged.
 ## How to try it
 
 1. Open GitHub Actions in xdStatus/WRLD and verify **Build WRLD Android APK** succeeded.
-2. Open the **android-v0.1.11** release and download **WRLD-Android-v0.1.11.apk** to your Android device.
+2. Open the **android-v0.1.12** release and download **WRLD-Android-v0.1.12.apk** to your Android device.
 3. Allow APK installation from your browser or file manager when Android prompts.
 4. Open WRLD and grant **Music and audio** access.
 5. Put music files in your phone's Music folder if the library is empty, then reopen/Rescan.
@@ -225,3 +225,27 @@ settings, interface controls, the integrated queue, and Windows builds remain
 untouched. The app still uses temporary debug APK signing keys, so installing
 this build over an older beta may require uninstalling it first; music files
 are not deleted, but saved app preferences/playlists/likes may be cleared.
+
+## Android beta v0.1.12 — WRLD Cloud (personal Windows server)
+
+WRLD can now stream from the music collection on your own Windows computer
+without copying the songs onto Android. Settings → Music source → WRLD Cloud
+accepts the PC's private HTTPS Tailscale Serve address, then downloads a
+read-only metadata list and plays streams through Media3 ExoPlayer, retaining
+background playback, Bluetooth controls and the integrated Up Next queue.
+Music sources can be switched between **On this device** and **WRLD Cloud**.
+
+Both Windows and Android must be connected to your own Tailscale tailnet; the
+Windows machine must remain awake with WRLD running. The app only accepts a
+trusted HTTPS *.ts.net hostname as its cloud endpoint; untrusted HTTP links
+and redirects are not accepted for metadata. No Google Drive or public server
+is involved. The local server is read-only and exposes only song metadata and
+music-file streams. See WRLD_CLOUD_SETUP.md in the repository for setup.
+
+This first streaming milestone does not sync playlists/likes/history across
+Windows and Android, nor cache offline cloud tracks. They remain device-local.
+The Windows desktop app itself still plays music locally as before.
+
+Debug APK signing remains temporary; switching APK versions may require
+uninstalling WRLD, which clears app-specific preferences, liked songs and
+playlists but does not delete your music files.
