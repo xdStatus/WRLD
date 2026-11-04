@@ -52,6 +52,13 @@ jobs:
         if: steps.release.outputs.publish == 'true'
         run: python -m pip install "pyinstaller>=6.11,<7" "pywebview>=6.1,<7"
 
+      - name: Validate desktop WebView JavaScript
+        if: steps.release.outputs.publish == 'true'
+        shell: pwsh
+        run: |
+          python -c "import pathlib,re; html=pathlib.Path('web/index.html').read_text(encoding='utf-8'); scripts=re.findall(r'<script>(.*?)</script>',html,re.S); assert len(scripts)==1, 'Expected one main desktop script'; pathlib.Path('desktop-ui-check.js').write_text(scripts[0],encoding='utf-8')"
+          node --check desktop-ui-check.js
+
       - name: Build Windows EXE
         if: steps.release.outputs.publish == 'true'
         shell: pwsh
@@ -93,4 +100,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD for Windows. Improved updater with pre-install launch checks and automatic rollback; WebView2 runtime required."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.4: Android-inspired Shuffle All, recent History (up to 50 songs), fade-in/out playback settings, gapless option, About, fluid tabs, and the integrated Up Next queue under the progress bar. Includes startup checks and updater rollback."

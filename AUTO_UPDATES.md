@@ -30,3 +30,27 @@ If an earlier update is already broken, rename its `WRLD.exe` to
 `WRLD.broken.exe`, then rename `WRLD.previous.exe` to `WRLD.exe`.
 No music or playlist data is lost; settings are kept in `%APPDATA%\\WRLDPlayer`.
 Do not disable security protection to get the app running; inspect Protection History.
+
+## WRLD Windows v1.8.4 — Android experience on desktop
+
+The Windows app now includes Shuffle All, up to 50 most recently played distinct
+songs, a Settings tab (independent fade-in/out, 0.5–5-second fade duration,
+optional gapless playback, About and library rescan), and a responsive
+ColorOS-inspired animated tab indicator.
+
+Click the bottom player title or the small grip below the progress bar to
+expand **Up Next** from inside the player. The queue reveals upcoming songs
+between the progress bar and playback buttons as the dock grows upward; click
+an upcoming song to play it or remove it with × without changing files or
+playlists. The existing audio visualizer, repeat mode, playlists and desktop
+ColorOS seek/volume sliders remain.
+
+Windows uses an HTML audio element, so gapless **on** does not add an artificial
+pause but cannot guarantee sample-accurate gapless playback on every codec.
+Gapless **off** adds ~400 ms between songs. History and audio preferences are
+stored locally in WebView2's persistent profile; changing that profile can
+clear them, but the Windows updater retains the profile as before.
+
+Bumping app_version.py triggers the Windows GitHub Actions pipeline. It checks
+JavaScript syntax and probes the packaged EXE before publishing a versioned
+release. Use Updates → Check Now → Update & Restart inside the installed app.

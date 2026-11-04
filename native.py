@@ -79,6 +79,9 @@ def self_test() -> None:
         with urlopen(Request(base + '/'), timeout=10) as response:
             page = response.read().decode('utf-8')
             assert '<title>WRLD</title>' in page, 'The WRLD UI did not load'
+            assert 'id="queueDrawer"' in page, 'Up Next queue was not included'
+            assert 'id="settingsPanel"' in page, 'Playback Settings page was not included'
+            assert 'id="tabHistory"' in page, '50-song History tab was not included'
         with urlopen(Request(base + '/favicon.ico'), timeout=10) as response:
             assert response.headers.get_content_type() == 'image/x-icon'
             assert response.read(4) == b'\x00\x00\x01\x00'
