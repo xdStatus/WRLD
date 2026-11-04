@@ -40,6 +40,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .tab{color:#9d9d9d;padding:14px 0 13px;font-size:13px;position:relative;font-weight:530}
 .tab.active{color:#fff}
 .tab.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:3px;background:#f4f4f4;box-shadow:0 0 12px rgba(255,255,255,.25)}
+.shuffle-all-row{display:flex;align-items:center;gap:12px;margin:0 0 17px}
+.shuffle-all{display:flex;align-items:center;justify-content:center;gap:10px;flex:none;min-height:42px;padding:0 16px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.095);color:#f6f6f6;border-radius:12px;font-size:12px;font-weight:620;letter-spacing:.025em;transition:transform .18s,background .18s,border-color .18s}
+.shuffle-all svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.shuffle-all:active:not(:disabled){transform:scale(.96);background:rgba(255,255,255,.18)}
+.shuffle-all:disabled{opacity:.35;cursor:default}
+.shuffle-hint{font-size:11px;color:#999;line-height:1.4;min-width:0}
 .toolbar{min-height:66px;padding:18px 0 12px;display:flex;align-items:center;justify-content:space-between;gap:11px}
 .toolbar-left{display:flex;flex-direction:column;gap:4px;min-width:0}
 .toolbar-title{font-size:15px;font-weight:620;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
@@ -128,6 +134,13 @@ input[type=range]{accent-color:#eee;cursor:pointer}
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.7"/><path d="m16 16 5 5"/></svg>
   <input type="search" id="search" placeholder="Search your songs…" autocomplete="off" aria-label="Search songs">
  </label>
+ <div class="shuffle-all-row">
+   <button class="shuffle-all" id="shuffleAllBtn" type="button" disabled aria-label="Shuffle all songs">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h3c6 0 6 12 12 12h3m-4-4 4 4-4 4M3 18h3c3 0 4.5-3 6-6s3-6 6-6h3m-4-4 4 4-4 4"/></svg>
+    <span>Shuffle All</span>
+   </button>
+   <span class="shuffle-hint">Play your entire library in random order</span>
+ </div>
  <nav class="tabs" aria-label="Library views">
   <button class="tab active" data-view="all">All songs</button>
   <button class="tab" data-view="liked">Liked <span id="likedCount"></span></button>
@@ -242,6 +255,19 @@ function playIndex(i){
  if(!ids.length)return;
  call("playQueue",JSON.stringify(ids),i);
 }
+function shuffleAll(){
+ // Always include the entire indexed music library, independent of the
+ // current playlist, tab, text search, or sort order.
+ var ids=app.songs.map(function(song){return song.id});
+ if(!ids.length){notice("No songs to shuffle");return}
+ // Fisher–Yates: create a fresh, unbiased random playback order.
+ for(var i=ids.length-1;i>0;i--){
+  var j=Math.floor(Math.random()*(i+1));
+  var temp=ids[i];ids[i]=ids[j];ids[j]=temp;
+ }
+ call("playQueue",JSON.stringify(ids),0);
+ notice("Shuffling "+ids.length+" songs");
+}
 function renderNow(){
  var song=app.map.get(app.player.id);
  el("currentTitle").textContent=song?song.title:"Select a song";
@@ -300,6 +326,7 @@ el("sheetBody").addEventListener("click",function(e){
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){setView(t.dataset.view)})});
 el("search").addEventListener("input",function(e){app.query=e.target.value;render()});
 el("sort").addEventListener("change",function(e){app.sort=e.target.value;render()});
+el("shuffleAllBtn").addEventListener("click",shuffleAll);
 el("playButton").addEventListener("click",function(){if(!app.player.id&&app.visible.length)playIndex(0);else call("togglePlay")});
 el("previousButton").addEventListener("click",function(){call("previous")});
 el("nextButton").addEventListener("click",function(){call("next")});
@@ -311,7 +338,7 @@ var volumeTimer;
 el("volume").addEventListener("input",function(e){var v=Number(e.target.value);el("volumeLabel").textContent=v+"%";clearTimeout(volumeTimer);volumeTimer=setTimeout(function(){call("setVolume",v/100);el("volume").blur()},70)});
 el("updatesButton").addEventListener("click",function(){call("openUpdates")});
 window.WRLD={
- receiveLibrary:function(data){app.songs=Array.isArray(data.songs)?data.songs:[];app.map=new Map(app.songs.map(function(s){s.id=String(s.id);return [s.id,s]}));app.permission=false;el("folderStatus").textContent=app.songs.length+" local audio files found";render();renderNow()},
+ receiveLibrary:function(data){app.songs=Array.isArray(data.songs)?data.songs:[];app.map=new Map(app.songs.map(function(s){s.id=String(s.id);return [s.id,s]}));app.permission=false;el("folderStatus").textContent=app.songs.length+" local audio files found";el("shuffleAllBtn").disabled=app.songs.length===0;render();renderNow()},
  receiveCollections:function(data){app.liked=new Set((data.liked||[]).map(String));app.playlists=Array.isArray(data.playlists)?data.playlists.map(function(p){return {id:String(p.id),name:String(p.name),ids:(p.ids||[]).map(String)}}):[];render();renderNow()},
  receivePlayer:function(data){var previous=app.player.id;app.player={id:String(data.id||""),playing:!!data.playing,position:Number(data.position)||0,duration:Number(data.duration)||0,volume:Number(data.volume==null?.1:data.volume),repeat:data.repeat||"off"};renderNow();if(previous!==app.player.id)document.querySelectorAll(".track").forEach(function(row){row.classList.toggle("is-current",row.dataset.song===app.player.id)})},
  permissionDenied:function(){app.permission=true;el("folderStatus").textContent="Music access is required to list local songs.";el("list").innerHTML='<div class="empty"><b>Allow music access</b>Enable Music permission in Android Settings, then return and use Rescan.<div style="margin-top:16px"><button class="outline" id="rescan">Rescan</button></div></div>';var b=el("rescan");if(b)b.addEventListener("click",function(){call("requestLibrary")})},
