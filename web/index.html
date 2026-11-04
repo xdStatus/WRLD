@@ -473,6 +473,64 @@ body:not(.native-shell) .brand h1{cursor:default}
 
 
 /* Windows 1.8.4: integrated ColorOS-like player queue and fluid library tabs. */
+/* Windows 1.8.7 — Responsive desktop and reliable Settings scrolling. */
+html,body{width:100%;height:100%;min-width:0}
+.app{width:100%;max-width:none;min-width:0;height:100%;height:100dvh;grid-template-rows:minmax(58px,82px) minmax(0,1fr) auto;padding-inline:clamp(12px,2.4vw,44px)}
+.topbar,.main,.library,.library-stage,.player{min-width:0}
+.main{grid-template-columns:minmax(0,1fr) minmax(230px,.62fr);gap:clamp(16px,3vw,54px);overflow:hidden}
+.library-head,.library-nav{min-width:0}
+.settings-panel{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-bottom:30px;scrollbar-width:thin}
+.settings-panel>.settings-heading,.settings-panel>.settings-card{flex:0 0 auto;min-height:max-content}
+.settings-panel .settings-row,.settings-panel .settings-duration,.settings-panel .settings-about,.settings-panel .cloud-config{flex-shrink:0}
+.settings-panel .settings-card{overflow:visible}
+.settings-panel .cloud-source-switch{flex-wrap:wrap}
+.settings-panel .cloud-source-switch button{min-width:135px}
+.settings-panel .cloud-config label{overflow-wrap:anywhere}
+.settings-panel .cloud-config input{min-width:0}
+.player{min-width:0;grid-template-columns:minmax(115px,1fr) minmax(200px,1.3fr) minmax(110px,.8fr);gap:clamp(8px,1.6vw,22px)}
+.player-left,.center,.player-right{min-width:0}
+body.native-shell .window-chrome{display:none!important}
+@media(max-width:1050px){
+  .app{grid-template-rows:auto minmax(0,1fr) auto}
+  .topbar{min-height:70px;height:auto;gap:12px;flex-wrap:wrap;padding-block:10px}
+  .brand{min-width:unset}
+  .main{grid-template-columns:minmax(0,1fr) minmax(185px,.5fr);gap:18px;padding-top:18px}
+  .side{width:100%;max-width:none}
+  .player{grid-template-columns:minmax(100px,1fr) minmax(175px,1.3fr) minmax(100px,.75fr)}
+}
+@media(max-width:800px){
+  .app{grid-template-rows:auto minmax(0,1fr) auto}
+  .topbar{min-height:62px;gap:8px}
+  .actions{margin-left:auto}
+  .search{order:3;flex:1 0 100%;max-width:none}
+  .main{display:grid;grid-template-columns:minmax(0,1fr);gap:0;padding:12px 0 6px}
+  .side{display:none}
+  .library{min-width:0}
+  .player{grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;padding:7px 0}
+  .player-left{grid-column:1;grid-row:1}
+  .player-right{grid-column:2;grid-row:1;width:125px}
+  .center{grid-column:1/-1;grid-row:2}
+  .library-head{padding-bottom:10px}
+  .library-head h2{font-size:21px}
+}
+@media(max-width:520px){
+  .app{padding-inline:10px}
+  .actions button{padding-inline:8px;font-size:11px}
+  .brand h1{font-size:14px}
+  .library-nav{gap:10px}
+  .settings-panel .settings-row{padding:12px}
+  .settings-panel .cloud-config{padding:10px 12px 15px}
+  .player-right{width:95px}
+  .player-right .volume-value{display:none}
+}
+@media(max-height:650px){
+  .app{grid-template-rows:auto minmax(0,1fr) auto}
+  .topbar{min-height:52px}
+  .main{padding-top:8px;padding-bottom:6px}
+  .player{padding-top:5px;padding-bottom:5px}
+  .side{gap:9px}
+}
+
 .app{grid-template-rows:82px minmax(0,1fr) auto}
 .library-nav{position:relative;flex:none;gap:14px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
 .library-nav::-webkit-scrollbar{display:none}
