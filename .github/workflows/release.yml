@@ -46,6 +46,7 @@ jobs:
             Write-Host "Preparing new release $tag"
             "publish=true" >> $env:GITHUB_OUTPUT
           }
+          $global:LASTEXITCODE = 0
 
       - name: Install build tools
         if: steps.release.outputs.publish == 'true'
