@@ -33,6 +33,7 @@ class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var collections: CollectionStore
     private lateinit var history: HistoryStore
+    private lateinit var audioSettings: AudioSettingsStore
     private val executor = Executors.newSingleThreadExecutor()
     private val handler = Handler(Looper.getMainLooper())
     private var controllerFuture: ListenableFuture<MediaController>? = null
@@ -54,6 +55,7 @@ class MainActivity : Activity() {
         window.navigationBarColor = Color.BLACK
         collections = CollectionStore(this)
         history = HistoryStore(this)
+        audioSettings = AudioSettingsStore(this)
         web = WebView(this).apply {
             setBackgroundColor(Color.rgb(5, 5, 5))
             settings.javaScriptEnabled = true
@@ -78,6 +80,7 @@ class MainActivity : Activity() {
                     webReady = true
                     sendCollections()
                     sendHistory()
+                    sendAudioSettings()
                     sendPlayerState()
                     if (hasAudioPermission()) loadLibrary() else requestAudioPermission()
                 }
@@ -181,6 +184,10 @@ class MainActivity : Activity() {
         sendScript("window.WRLD.receiveHistory(" + history.read().toString() + ");")
     }
 
+    private fun sendAudioSettings() {
+        sendScript("window.WRLD.receiveAudioSettings(" + audioSettings.read().toJson().toString() + ");")
+    }
+
     private fun loadLibrary() {
         if (!hasAudioPermission()) {
             sendScript("window.WRLD.permissionDenied();")
@@ -216,8 +223,9 @@ class MainActivity : Activity() {
             .put("playing", player?.isPlaying == true)
             .put("position", (player?.currentPosition ?: 0L).coerceAtLeast(0L))
             .put("duration", if (duration == C.TIME_UNSET) 0L else duration.coerceAtLeast(0L))
-            .put("volume", player?.volume
-                ?: getSharedPreferences("wrld", MODE_PRIVATE).getFloat("volume", 0.10f))
+            // Show the user's chosen level, not the temporary fade-automation gain.
+            .put("volume", getSharedPreferences("wrld", MODE_PRIVATE)
+                .getFloat("volume", 0.10f).coerceIn(0f, 1f))
             .put("repeat", when (player?.repeatMode) {
                 Player.REPEAT_MODE_ALL -> "all"
                 Player.REPEAT_MODE_ONE -> "one"
@@ -234,6 +242,17 @@ class MainActivity : Activity() {
     }
 
     inner class NativeBridge {
+        @JavascriptInterface fun requestAudioSettings() {
+            runOnUiThread { sendAudioSettings() }
+        }
+
+        @JavascriptInterface fun setAudioSetting(key: String, value: String) {
+            runOnUiThread {
+                if (audioSettings.update(key, value)) sendAudioSettings()
+                else showError("Invalid audio setting.")
+            }
+        }
+
         @JavascriptInterface fun requestHistory() {
             runOnUiThread { sendHistory() }
         }
@@ -314,7 +333,7 @@ class MainActivity : Activity() {
         @JavascriptInterface fun setVolume(value: Double) {
             runOnUiThread {
                 val volume = value.toFloat().coerceIn(0f, 1f)
-                controller?.volume = volume
+                // The service listens for this preference and reapplies fade gain.
                 getSharedPreferences("wrld", MODE_PRIVATE).edit().putFloat("volume", volume).apply()
                 sendPlayerState()
             }
