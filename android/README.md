@@ -1,4 +1,4 @@
-# WRLD Android — first playable beta (v0.1.4)
+# WRLD Android — first playable beta (v0.1.5)
 
 Native Android music playback with a monochrome WebView interface. The Windows
 Python/WebView2 player and its releases remain unchanged.
@@ -8,14 +8,14 @@ Python/WebView2 player and its releases remain unchanged.
 - Discovers audio indexed by Android MediaStore, including songs in your Music folder
 - Plays local music using Media3 ExoPlayer and a MediaSessionService
 - Plays in the background with Android lock-screen, notification and Bluetooth controls
-- All songs, Liked Songs, local playlists, Shuffle All, search, sorting, repeat Off/All/One
+- All songs, Liked Songs, History (up to 50), local playlists, Shuffle All, search, sorting, repeat Off/All/One
 - Editable playback position, app volume (defaults to 10%), animated 999 logo and a lower-power twinkling starfield (no shooting comet)
 - No music uploads, no ads and no account requirement
 
 ## How to try it
 
 1. Open GitHub Actions in xdStatus/WRLD and verify **Build WRLD Android APK** succeeded.
-2. Open the **android-v0.1.4** release and download **WRLD-Android-v0.1.4.apk** to your Android device.
+2. Open the **android-v0.1.5** release and download **WRLD-Android-v0.1.5.apk** to your Android device.
 3. Allow APK installation from your browser or file manager when Android prompts.
 4. Open WRLD and grant **Music and audio** access.
 5. Put music files in your phone's Music folder if the library is empty, then reopen/Rescan.
@@ -108,3 +108,19 @@ working v0.1.0 and collect a device crash log for investigation.
 
 The early APKs remain signed with separate temporary keys; installing this
 update may require uninstalling the old beta first.
+
+## Android beta v0.1.5 — progress bar and history
+
+The seek bar now matches the desktop WRLD ColorOS-inspired style: a slim dim
+rail, pale gradient fill, small luminous playhead, and an expanded track with
+a scrub-position tooltip on touch. The existing Media3 seeking logic remains.
+
+History is a fourth tab. It is saved on the phone by the Media3 playback service,
+so songs played through Shuffle All, regular playback and background media
+controls are included. It shows **at most 50 distinct songs**, most recently
+played first. Replaying a song moves it to the front. Song history stays local
+and isn't uploaded or synchronized with Windows. Uninstalling WRLD clears it.
+
+The CI workflow validates the WebView JavaScript and launches the APK on an
+Android emulator before publishing. APK signing is still temporary; installing
+a different beta may require uninstalling the current one first.

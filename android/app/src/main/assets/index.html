@@ -36,8 +36,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .search-wrap svg{width:17px;height:17px;flex:none}
 .search-wrap input{flex:1;min-width:0;color:white;border:0;background:transparent;outline:0;font-size:14px}
 .search-wrap input::placeholder{color:#7f7f7f}
-.tabs{display:flex;gap:28px;border-bottom:1px solid var(--line);align-items:center;white-space:nowrap}
-.tab{color:#9d9d9d;padding:14px 0 13px;font-size:13px;position:relative;font-weight:530}
+.tabs{display:flex;gap:21px;border-bottom:1px solid var(--line);align-items:center;white-space:nowrap;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{color:#9d9d9d;padding:14px 0 13px;font-size:13px;position:relative;font-weight:530;flex:none}
 .tab.active{color:#fff}
 .tab.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:3px;background:#f4f4f4;box-shadow:0 0 12px rgba(255,255,255,.25)}
 .shuffle-all-row{display:flex;align-items:center;gap:12px;margin:0 0 17px}
@@ -88,7 +89,18 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .time{color:#a6a6a6;font-size:10px;font-variant-numeric:tabular-nums;min-width:32px}
 .time:last-child{text-align:right}
 input[type=range]{accent-color:#eee;cursor:pointer}
-#seek{flex:1;min-width:0;height:18px;touch-action:none}
+/* WRLD desktop-style ColorOS scrubber, adapted for a touch-friendly 32px target. */
+.seek-shell{position:relative;display:flex;align-items:center;flex:1;min-width:0;height:32px;touch-action:none;cursor:pointer}
+.seek-track{position:absolute;left:0;right:0;top:50%;height:4px;transform:translateY(-50%);border-radius:999px;background:rgba(233,233,233,.24);pointer-events:none;transition:height .2s var(--ease),background .2s}
+.seek-fill{position:relative;height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#c5c5c5,#f5f5f5 60%,#fff);box-shadow:0 0 6px rgba(238,238,238,.15);transition:width .1s linear}
+.seek-head{position:absolute;right:0;top:0;height:100%;width:4px;border-radius:99px;background:#fff;transform:translateX(35%);box-shadow:0 0 8px 2px rgba(255,255,255,.48),0 0 18px 3px rgba(235,235,235,.17)}
+.seek-shell.is-scrubbing .seek-track{height:6px;background:rgba(244,244,244,.29)}
+.seek-shell.is-scrubbing .seek-head{box-shadow:0 0 12px 3px rgba(255,255,255,.64),0 0 23px 5px rgba(230,230,230,.2)}
+#seek{position:absolute;inset:0;z-index:2;width:100%;height:100%;min-width:0;margin:0;opacity:0;cursor:pointer;touch-action:none;-webkit-appearance:none;appearance:none}
+#seek::-webkit-slider-runnable-track{height:32px;background:transparent}
+#seek::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:32px;background:transparent;border:0}
+.scrub-tooltip{position:absolute;left:0;bottom:32px;transform:translateX(-50%) translateY(5px);background:#252525;border:1px solid rgba(255,255,255,.20);border-radius:8px;padding:5px 8px;min-width:38px;color:#eee;font-size:10px;text-align:center;pointer-events:none;opacity:0;transition:opacity .16s,transform .16s;white-space:nowrap}
+.seek-shell.is-scrubbing .scrub-tooltip{opacity:1;transform:translateX(-50%) translateY(0)}
 .transport{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:0 8px 0 6px;height:58px}
 .transport button{height:42px;min-width:40px;display:grid;place-items:center;position:relative;border-radius:50%}
 .transport button:active{transform:scale(.88);background:rgba(255,255,255,.09)}
@@ -144,6 +156,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
  <nav class="tabs" aria-label="Library views">
   <button class="tab active" data-view="all">All songs</button>
   <button class="tab" data-view="liked">Liked <span id="likedCount"></span></button>
+  <button class="tab" data-view="history">History</button>
   <button class="tab" data-view="playlists">Playlists</button>
  </nav>
  <div class="toolbar">
@@ -161,7 +174,13 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 </main>
 <footer class="dock"><div class="dock-inner">
  <div class="current-info"><div class="current-art">9</div><div class="current-titles"><strong id="currentTitle">Select a song</strong><span id="currentArtist">Your music stays on your phone</span></div></div>
- <div class="timeline"><span class="time" id="elapsed">0:00</span><input type="range" id="seek" value="0" min="0" max="1000" step="1" aria-label="Seek"><span class="time" id="total">0:00</span></div>
+ <div class="timeline"><span class="time" id="elapsed">0:00</span>
+  <div class="seek-shell" id="seekShell">
+   <div class="seek-track" aria-hidden="true"><div class="seek-fill" id="seekFill"><span class="seek-head"></span></div></div>
+   <input type="range" id="seek" value="0" min="0" max="1000" step="1" aria-label="Seek in song">
+   <output class="scrub-tooltip" id="scrubTooltip" aria-hidden="true">0:00</output>
+  </div>
+  <span class="time" id="total">0:00</span></div>
  <div class="transport">
   <button id="likeButton" aria-label="Like current song" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M20.7 5.1a5.6 5.6 0 0 0-7.9 0L12 6l-.8-.9a5.6 5.6 0 0 0-7.9 7.9L12 22l8.7-9a5.6 5.6 0 0 0 0-7.9Z"/></svg></button>
   <button id="previousButton" aria-label="Previous song"><svg viewBox="0 0 24 24"><path d="M6 5v14 M18 6l-9 6 9 6"/></svg></button>
@@ -181,7 +200,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 "use strict";
 const el=function(id){return document.getElementById(id)};
 const call=function(method){try{if(!window.WRLDNative)return;var args=Array.prototype.slice.call(arguments,1);return window.WRLDNative[method].apply(window.WRLDNative,args)}catch(error){notice("Android connection unavailable");}};
-const app={songs:[],map:new Map(),liked:new Set(),playlists:[],view:"all",playlistId:"",query:"",sort:"title",visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false};
+const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],view:"all",playlistId:"",query:"",sort:"title",visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false};
 const heart='<svg viewBox="0 0 24 24"><path d="M20.7 5.1a5.6 5.6 0 0 0-7.9 0L12 6l-.8-.9a5.6 5.6 0 0 0-7.9 7.9L12 22l8.7-9a5.6 5.6 0 0 0 0-7.9Z"/></svg>';
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function fmt(ms){var seconds=Math.floor(Math.max(0,Number(ms)||0)/1000);return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")}
@@ -191,6 +210,7 @@ function playlist(){return app.playlists.find(function(p){return p.id===app.play
 function songsForView(){
  var all=app.songs;
  if(app.view==="liked")all=all.filter(function(s){return app.liked.has(s.id)});
+ if(app.view==="history")return app.history.slice(0,50).map(function(id){return app.map.get(id)}).filter(Boolean).filter(match);
  if(app.view==="playlist"){var p=playlist();if(!p)return [];return (p.ids||[]).map(function(id){return app.map.get(String(id))}).filter(Boolean).filter(match)}
  return all.filter(match).sort(compare);
 }
@@ -208,18 +228,19 @@ function compare(a,b){
  }
  return result||a.title.localeCompare(b.title);
 }
-function setView(name,id){app.view=name;app.playlistId=id||"";app.displayed=0;document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.view===name||(name==="playlist"&&t.dataset.view==="playlists"))});render()}
+function setView(name,id){app.view=name;app.playlistId=id||"";app.displayed=0;document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.view===name||(name==="playlist"&&t.dataset.view==="playlists"))});render();if(name==="history")call("requestHistory")}
 function render(){
  el("likedCount").textContent=app.liked.size?" "+app.liked.size:"";
  var title="All songs",sub="",isLists=app.view==="playlists";
  if(app.view==="liked")title="Liked songs";
+ if(app.view==="history")title="Recently played";
  if(isLists)title="Playlists";
  if(app.view==="playlist")title=playlist()?playlist().name:"Playlist";
  el("sectionTitle").textContent=title;
- el("sortGroup").style.display=(isLists||app.view==="playlist")?"none":"flex";
+ el("sortGroup").style.display=(isLists||app.view==="playlist"||app.view==="history")?"none":"flex";
  if(isLists){el("sectionSubtitle").textContent=app.playlists.length+" collections";renderPlaylists();return}
  app.visible=songsForView();
- el("sectionSubtitle").textContent=app.visible.length+" songs";
+ el("sectionSubtitle").textContent=app.visible.length+(app.view==="history"?" recent songs":" songs");
  app.displayed=0;
  el("list").innerHTML="";
  if(app.view==="playlist"){
@@ -227,7 +248,7 @@ function render(){
    var del=document.createElement("button");del.className="tiny-action";del.style.margin="11px 0";del.textContent="Delete playlist";del.dataset.delete="1";el("list").appendChild(del);
  }
  if(app.visible.length===0){
-  var empty=document.createElement("div");empty.className="empty";empty.innerHTML="<b>No songs here yet</b>"+(app.permission?"Allow music access in Settings, then tap Rescan.":"Add music to your phone or change your search.");el("list").appendChild(empty);return;
+  var empty=document.createElement("div");empty.className="empty";empty.innerHTML=app.view==="history"?"<b>No recently played songs</b>Play a song to start your listening history.":("<b>No songs here yet</b>"+(app.permission?"Allow music access in Settings, then tap Rescan.":"Add music to your phone or change your search."));el("list").appendChild(empty);return;
  }
  appendTracks();
 }
@@ -268,16 +289,26 @@ function shuffleAll(){
  call("playQueue",JSON.stringify(ids),0);
  notice("Shuffling "+ids.length+" songs");
 }
+var seekDragging=false;
+function paintSeek(value){
+ var position=Math.max(0,Math.min(1000,Number(value)||0));
+ var percent=position/10;
+ el("seekFill").style.width=percent+"%";
+ el("scrubTooltip").style.left="clamp(21px, "+percent+"%, calc(100% - 21px))";
+ el("scrubTooltip").textContent=fmt(position/1000*app.player.duration);
+}
 function renderNow(){
  var song=app.map.get(app.player.id);
  el("currentTitle").textContent=song?song.title:"Select a song";
  el("currentArtist").textContent=song?song.artist:"Your music stays on your phone";
  el("playIcon").innerHTML=app.player.playing?'<rect x="6.5" y="5.5" width="3.5" height="13" rx="1" fill="white" stroke="none"/><rect x="14" y="5.5" width="3.5" height="13" rx="1" fill="white" stroke="none"/>':'<path d="M8.5 5 19 12 8.5 19Z"/>';
  el("playButton").setAttribute("aria-label",app.player.playing?"Pause":"Play");
- el("elapsed").textContent=fmt(app.player.position);
+ if(!seekDragging)el("elapsed").textContent=fmt(app.player.position);
  el("total").textContent=fmt(app.player.duration);
- if(document.activeElement!==el("seek")){
-  el("seek").value=String(app.player.duration>0?Math.round(1000*app.player.position/app.player.duration):0);
+ if(!seekDragging){
+  var fraction=app.player.duration>0?Math.round(1000*app.player.position/app.player.duration):0;
+  el("seek").value=String(fraction);
+  paintSeek(fraction);
  }
  var liked=!!app.player.id&&app.liked.has(app.player.id);
  el("likeButton").classList.toggle("liked",liked);
@@ -332,15 +363,33 @@ el("previousButton").addEventListener("click",function(){call("previous")});
 el("nextButton").addEventListener("click",function(){call("next")});
 el("likeButton").addEventListener("click",function(){if(app.player.id)call("setLike",app.player.id,!app.liked.has(app.player.id));else notice("Choose a song first")});
 el("repeatButton").addEventListener("click",function(){var m=app.player.repeat;var next=m==="off"?"all":m==="all"?"one":"off";call("setRepeat",next);app.player.repeat=next;renderNow();notice(next==="off"?"Repeat off":next==="all"?"Repeat all":"Repeat one")});
-el("seek").addEventListener("input",function(e){el("elapsed").textContent=fmt((Number(e.target.value)/1000)*app.player.duration)});
-el("seek").addEventListener("change",function(e){call("seek",Math.floor(Number(e.target.value)/1000*app.player.duration));e.target.blur()});
+el("seek").addEventListener("pointerdown",function(){seekDragging=true;el("seekShell").classList.add("is-scrubbing")});
+el("seek").addEventListener("input",function(e){
+ seekDragging=true;el("seekShell").classList.add("is-scrubbing");
+ var p=Number(e.target.value);
+ paintSeek(p);el("elapsed").textContent=fmt(p/1000*app.player.duration);
+});
+el("seek").addEventListener("change",function(e){
+ var p=Number(e.target.value);
+ call("seek",Math.floor(p/1000*app.player.duration));
+ seekDragging=false;el("seekShell").classList.remove("is-scrubbing");e.target.blur();
+});
+el("seek").addEventListener("pointercancel",function(){seekDragging=false;el("seekShell").classList.remove("is-scrubbing");renderNow()});
+el("seek").addEventListener("blur",function(){seekDragging=false;el("seekShell").classList.remove("is-scrubbing")});
 var volumeTimer;
 el("volume").addEventListener("input",function(e){var v=Number(e.target.value);el("volumeLabel").textContent=v+"%";clearTimeout(volumeTimer);volumeTimer=setTimeout(function(){call("setVolume",v/100);el("volume").blur()},70)});
 el("updatesButton").addEventListener("click",function(){call("openUpdates")});
 window.WRLD={
  receiveLibrary:function(data){app.songs=Array.isArray(data.songs)?data.songs:[];app.map=new Map(app.songs.map(function(s){s.id=String(s.id);return [s.id,s]}));app.permission=false;el("folderStatus").textContent=app.songs.length+" local audio files found";el("shuffleAllBtn").disabled=app.songs.length===0;render();renderNow()},
  receiveCollections:function(data){app.liked=new Set((data.liked||[]).map(String));app.playlists=Array.isArray(data.playlists)?data.playlists.map(function(p){return {id:String(p.id),name:String(p.name),ids:(p.ids||[]).map(String)}}):[];render();renderNow()},
- receivePlayer:function(data){var previous=app.player.id;app.player={id:String(data.id||""),playing:!!data.playing,position:Number(data.position)||0,duration:Number(data.duration)||0,volume:Number(data.volume==null?.1:data.volume),repeat:data.repeat||"off"};renderNow();if(previous!==app.player.id)document.querySelectorAll(".track").forEach(function(row){row.classList.toggle("is-current",row.dataset.song===app.player.id)})},
+ receiveHistory:function(data){
+  app.history=Array.isArray(data)?data.slice(0,50).map(String):[];
+  if(app.view==="history")render();
+ },
+ receivePlayer:function(data){var previous=app.player.id;app.player={id:String(data.id||""),playing:!!data.playing,position:Number(data.position)||0,duration:Number(data.duration)||0,volume:Number(data.volume==null?.1:data.volume),repeat:data.repeat||"off"};renderNow();if(previous!==app.player.id){
+  document.querySelectorAll(".track").forEach(function(row){row.classList.toggle("is-current",row.dataset.song===app.player.id)});
+  if(app.player.id && app.view==="history")call("requestHistory");
+ }},
  permissionDenied:function(){app.permission=true;el("folderStatus").textContent="Music access is required to list local songs.";el("list").innerHTML='<div class="empty"><b>Allow music access</b>Enable Music permission in Android Settings, then return and use Rescan.<div style="margin-top:16px"><button class="outline" id="rescan">Rescan</button></div></div>';var b=el("rescan");if(b)b.addEventListener("click",function(){call("requestLibrary")})},
  showMessage:notice
 };

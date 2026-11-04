@@ -32,6 +32,7 @@ import java.util.concurrent.Executors
 class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var collections: CollectionStore
+    private lateinit var history: HistoryStore
     private val executor = Executors.newSingleThreadExecutor()
     private val handler = Handler(Looper.getMainLooper())
     private var controllerFuture: ListenableFuture<MediaController>? = null
@@ -52,6 +53,7 @@ class MainActivity : Activity() {
         window.statusBarColor = Color.BLACK
         window.navigationBarColor = Color.BLACK
         collections = CollectionStore(this)
+        history = HistoryStore(this)
         web = WebView(this).apply {
             setBackgroundColor(Color.rgb(5, 5, 5))
             settings.javaScriptEnabled = true
@@ -75,6 +77,7 @@ class MainActivity : Activity() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     webReady = true
                     sendCollections()
+                    sendHistory()
                     sendPlayerState()
                     if (hasAudioPermission()) loadLibrary() else requestAudioPermission()
                 }
@@ -174,6 +177,10 @@ class MainActivity : Activity() {
         sendScript("window.WRLD.receiveCollections(" + collections.read().toString() + ");")
     }
 
+    private fun sendHistory() {
+        sendScript("window.WRLD.receiveHistory(" + history.read().toString() + ");")
+    }
+
     private fun loadLibrary() {
         if (!hasAudioPermission()) {
             sendScript("window.WRLD.permissionDenied();")
@@ -227,6 +234,10 @@ class MainActivity : Activity() {
     }
 
     inner class NativeBridge {
+        @JavascriptInterface fun requestHistory() {
+            runOnUiThread { sendHistory() }
+        }
+
         @JavascriptInterface fun requestLibrary() {
             runOnUiThread {
                 if (hasAudioPermission()) loadLibrary() else requestAudioPermission()
