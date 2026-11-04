@@ -16,7 +16,7 @@ import re
 import threading
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import Request, build_opener, HTTPRedirectHandler
 
 from player import CONFIG_DIR
 
@@ -79,6 +79,14 @@ def cloud_status() -> dict:
     return {"url": WORKER_ORIGIN, "configured": SECRET_PATH.exists()}
 
 
+class _BlockRedirects(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+_https_opener = build_opener(_BlockRedirects)
+
+
 def _authorized_request(path: str, *, range_header: str = "", method: str = "GET"):
     # Routes must come from our validated Worker API, not arbitrary HTTPS URLs.
     if not (path == "/api/tracks" or path.startswith("/api/stream/")):
@@ -90,7 +98,7 @@ def _authorized_request(path: str, *, range_header: str = "", method: str = "GET
     if range_header:
         headers["Range"] = range_header
     request = Request(WORKER_ORIGIN + path, headers=headers, method=method)
-    response = urlopen(request, timeout=25)
+    response = _https_opener.open(request, timeout=25)
     # The token may never be forwarded to a redirect host.
     if urlsplit(response.geturl()).netloc != urlsplit(WORKER_ORIGIN).netloc:
         response.close()
