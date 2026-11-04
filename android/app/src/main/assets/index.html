@@ -19,7 +19,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .header{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:15px}
 .brand{display:flex;align-items:center;gap:11px;min-width:0}
 .brand-logo{padding:0;display:flex;gap:0;align-items:center;justify-content:center;height:46px;width:91px;flex:none;white-space:nowrap;color:white;transition:filter .5s var(--ease)}
-.brand-logo:active{filter:drop-shadow(0 0 12px rgba(255,255,255,.5))}
+
 .digit{display:inline-block;font-size:39px;font-style:italic;line-height:1;letter-spacing:-.14em;font-weight:730;transform-origin:50% 58%;animation:ninewave 2.7s cubic-bezier(.44,0,.21,1) infinite}
 .digit:nth-child(2){animation-delay:.17s}.digit:nth-child(3){animation-delay:.34s}
 @keyframes ninewave{0%,16%,66%,100%{transform:translateY(0) rotate(0);opacity:.84}35%{transform:translateY(-7px) rotate(-4deg);opacity:1}48%{transform:translateY(1px) rotate(1deg);opacity:.95}}
@@ -118,7 +118,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 <main class="shell">
  <header class="header">
   <div class="brand">
-   <button id="brandLogo" class="brand-logo" type="button" aria-label="WRLD, summon comet"><span class="digit">9</span><span class="digit">9</span><span class="digit">9</span></button>
+   <div class="brand-logo" role="img" aria-label="Animated 999 WRLD emblem"><span class="digit">9</span><span class="digit">9</span><span class="digit">9</span></div>
    <span class="brand-text"><strong>WRLD</strong><small>Android Edition</small></span>
   </div>
   <button class="outline" id="updatesButton">Updates ↗</button>
@@ -320,38 +320,28 @@ window.WRLD={
 renderNow();
 function startSky(){
  var canvas=el("stars"),ctx=canvas.getContext("2d");if(!ctx)return;
- var w=1,h=1,dpr=1,stars=[],last=0,nextComet=0,comets=[];
+ var w=1,h=1,dpr=1,stars=[],last=0,lastDraw=0;
  function random(a,b){return a+Math.random()*(b-a)}
  function resize(){
-  dpr=Math.min(1.7,window.devicePixelRatio||1);w=innerWidth;h=innerHeight;
+  dpr=Math.min(1.25,window.devicePixelRatio||1);w=innerWidth;h=innerHeight;
   canvas.width=Math.ceil(w*dpr);canvas.height=Math.ceil(h*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  var count=Math.min(120,Math.max(35,Math.floor(w*h/3400)));
+  var count=Math.min(90,Math.max(28,Math.floor(w*h/4800)));
   stars=Array.from({length:count},function(){return {x:random(0,w),y:random(0,h),radius:random(.35,1.25),speed:random(2,11),phase:random(0,6.28),rate:random(.5,2.1),bright:random(.22,.8)}});
  }
- function comet(){comets.push({x:w+40,y:random(40,h*.52),vx:random(-20,-15),vy:random(4,8),life:0,max:31})}
- el("brandLogo").addEventListener("click",function(){comet()});
  function frame(time){
-  if(document.hidden){last=0;return}
-  if(!last)last=time;
-  var dt=Math.min((time-last)/16.67,2);last=time;
-  if(time-nextComet<30){requestAnimationFrame(frame);return}
-  nextComet=time;
+  if(document.hidden){last=0;lastDraw=0;return}
+  // About 25 FPS is sufficient for the subtle twinkle and drift on a phone.
+  if(time-lastDraw<40){requestAnimationFrame(frame);return}
+  var dt=Math.min((time-(last||time))/16.67,3);last=time;lastDraw=time;
   ctx.fillStyle="#050505";ctx.fillRect(0,0,w,h);
+  ctx.fillStyle="#fff";
   stars.forEach(function(s){
    s.x-=s.speed*dt*.06;if(s.x<0)s.x=w;
    var glow=s.bright*(.62+.38*Math.sin(time*.001*s.rate+s.phase));
-   ctx.globalAlpha=Math.max(.08,glow);ctx.fillStyle="#fff";
+   ctx.globalAlpha=Math.max(.08,glow);
    ctx.beginPath();ctx.arc(s.x,s.y,s.radius,0,Math.PI*2);ctx.fill();
   });ctx.globalAlpha=1;
-  comets=comets.filter(function(c){return c.life++<c.max});
-  comets.forEach(function(c){
-   c.x+=c.vx*dt;c.y+=c.vy*dt;
-   var grad=ctx.createLinearGradient(c.x,c.y,c.x+170,c.y-70);
-   grad.addColorStop(0,"rgba(255,255,255,.95)");grad.addColorStop(1,"rgba(255,255,255,0)");
-   ctx.strokeStyle=grad;ctx.lineWidth=2.3;ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x+170,c.y-70);ctx.stroke();
-   ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(c.x,c.y,3.3,0,6.28);ctx.fill();
-  });
   requestAnimationFrame(frame);
  }
  window.addEventListener("resize",resize,{passive:true});

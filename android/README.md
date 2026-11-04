@@ -1,4 +1,4 @@
-# WRLD Android — first playable beta (v0.1.0)
+# WRLD Android — first playable beta (v0.1.1)
 
 Native Android music playback with a monochrome WebView interface. The Windows
 Python/WebView2 player and its releases remain unchanged.
@@ -9,13 +9,13 @@ Python/WebView2 player and its releases remain unchanged.
 - Plays local music using Media3 ExoPlayer and a MediaSessionService
 - Plays in the background with Android lock-screen, notification and Bluetooth controls
 - All songs, Liked Songs, local playlists, search, sorting, repeat Off/All/One
-- Editable playback position, app volume (defaults to 10%), animated stars and a clickable 999 comet
+- Editable playback position, app volume (defaults to 10%), animated 999 logo and a lower-power twinkling starfield (no shooting comet)
 - No music uploads, no ads and no account requirement
 
 ## How to try it
 
 1. Open GitHub Actions in xdStatus/WRLD and verify **Build WRLD Android APK** succeeded.
-2. Open the **android-v0.1.0** release and download **WRLD-Android-v0.1.0.apk** to your Android device.
+2. Open the **android-v0.1.1** release and download **WRLD-Android-v0.1.1.apk** to your Android device.
 3. Allow APK installation from your browser or file manager when Android prompts.
 4. Open WRLD and grant **Music and audio** access.
 5. Put music files in your phone's Music folder if the library is empty, then reopen/Rescan.
@@ -53,3 +53,15 @@ your phone's default browser, not an automatic installer.
 
 Android music decoding supports formats supported by Android/Media3 and the
 device's codecs; availability may differ for unusual audio formats.
+
+## Android beta v0.1.1
+
+The tap-to-summon comet Easter egg has been removed; the 999 digits still wave.
+The starfield is capped at about 25 frames/second, with fewer stars and a
+smaller canvas to reduce the GPU load on phones.
+
+Because the early GitHub Actions beta APKs use temporary debug signing keys,
+Android may reject installing v0.1.1 directly over v0.1.0. If Android displays
+"App not installed" or a signature conflict, uninstall the old WRLD Android
+beta first, then install v0.1.1. Uninstalling clears this app's Liked Songs and
+playlists but does **not** delete music stored on the phone.
