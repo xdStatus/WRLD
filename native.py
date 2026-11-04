@@ -19,6 +19,7 @@ from urllib.request import urlopen, Request
 from http.server import ThreadingHTTPServer
 
 from player import Handler, CONFIG_DIR, rebuild
+from cloud_server import create_cloud_server, start_cloud_server, CLOUD_PORT
 from app_version import APP_VERSION
 import update_support
 
@@ -147,6 +148,7 @@ def run_desktop() -> None:
     # Always reuse the existing library scanner and persistent collections folder.
     rebuild()
     server = create_server()
+    cloud_server = start_cloud_server()
     thread = threading.Thread(target=server.serve_forever, daemon=True,
                               name='WRLD-local-music-server')
     thread.start()
@@ -171,6 +173,8 @@ def run_desktop() -> None:
             debug=False,
         )
     finally:
+        cloud_server.shutdown()
+        cloud_server.server_close()
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
@@ -184,6 +188,17 @@ def main() -> int:
         return 0
     if '--self-test' in sys.argv:
         self_test()
+        return 0
+    if '--cloud-server' in sys.argv:
+        count = rebuild()
+        with create_cloud_server() as server:
+            print(f"WRLD Cloud: {count} songs on local-only port {CLOUD_PORT}.")
+            print("Use Tailscale Serve for private HTTPS access.")
+            print("Press Ctrl+C to stop.")
+            try:
+                server.serve_forever()
+            except KeyboardInterrupt:
+                pass
         return 0
     try:
         run_desktop()
