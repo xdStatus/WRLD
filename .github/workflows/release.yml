@@ -108,4 +108,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.8: streamlined top bar, with rescan, change folder, and update controls organized in Settings. Responsive layout and WRLD Cloud remain available."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.9: clearer secure Cloudflare connection diagnostics for TLS, DNS, timeouts and Windows socket errors; streamlined Settings and responsive layout retained."
