@@ -23,6 +23,7 @@ class CloudBackendTests(unittest.TestCase):
             "artist":"Juice WRLD","streamPath":"/api/stream/My%20Song.mp3"}]}
         def fake_open(req,timeout):
             self.assertEqual(req.get_header("Authorization"),"Bearer "+"f"*64)
+            self.assertEqual(req.get_header("User-agent"),"WRLD-Player/1.8.11")
             self.assertEqual(req.full_url,cloud_backend.WORKER_ORIGIN+"/api/tracks")
             return Response(json.dumps(data).encode(),req.full_url)
         with patch.object(cloud_backend,"_read_token",return_value="f"*64), \
