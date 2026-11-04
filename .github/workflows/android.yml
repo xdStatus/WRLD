@@ -1,0 +1,56 @@
+name: Build WRLD Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wrld-android-beta
+  cancel-in-progress: false
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Build debug-signed Android APK
+        run: gradle -p android :app:assembleDebug --stacktrace --no-daemon
+      - name: Prepare APK and checksum
+        run: |
+          mkdir -p android/dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk android/dist/WRLD-Android-v0.1.0.apk
+          cd android/dist
+          sha256sum WRLD-Android-v0.1.0.apk > WRLD-Android-v0.1.0.apk.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WRLD-Android-v0.1.0
+          path: android/dist/*
+          if-no-files-found: error
+      - name: Publish Android beta (only once per version)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="android-v0.1.0"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Android beta $TAG already exists; keeping existing published APK."
+          else
+            gh release create "$TAG" android/dist/WRLD-Android-v0.1.0.apk android/dist/WRLD-Android-v0.1.0.apk.sha256 --target "$GITHUB_SHA" --title "WRLD Android v0.1.0 (beta)" --notes "First Android preview. Install on Android 8+ and allow access to audio. Note: This initial APK uses a temporary CI debug signing key and is for testing; future APKs may require uninstalling this beta until a persistent private signing key is configured."
+          fi
