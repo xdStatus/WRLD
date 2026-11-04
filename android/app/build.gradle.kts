@@ -4,7 +4,7 @@ plugins {
 }
 android {
     namespace = "com.wrld.player"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "com.wrld.player"
         minSdk = 26
