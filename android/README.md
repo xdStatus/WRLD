@@ -37,7 +37,7 @@ Open the android/ directory in Android Studio, or build using:
 
     gradle -p android :app:assembleDebug
 
-Recommended: JDK 17, Gradle 8.11.1, Android SDK 35.
+Recommended: JDK 17, Gradle 8.11.1, Android SDK 36.
 Android package: com.wrld.player, minSdk 26, targetSdk 35.
 
 Architecture:
