@@ -45,6 +45,7 @@ class MainActivity : Activity() {
     private var cloudAddress = ""
     private var webReady = false
     private var libraryLoading = false
+    private var cloudRequestVersion = 0
     private var queueOpened = false
 
     private val tick = object : Runnable {
@@ -241,14 +242,13 @@ class MainActivity : Activity() {
     }
 
     private fun loadCloudLibrary() {
-        if (libraryLoading) return
+        val version = ++cloudRequestVersion
         if (cloudAddress.isBlank()) {
             sendScript("window.WRLD.receiveCloudStatus(" +
                 JSONObject.quote("Set your Windows server address in Settings.") + ");")
             sendSongs(emptyList())
             return
         }
-        libraryLoading = true
         sendScript("window.WRLD.receiveCloudStatus(" +
             JSONObject.quote("Connecting to your Windows computer…") + ");")
         val requestedAddress = cloudAddress
@@ -256,9 +256,9 @@ class MainActivity : Activity() {
             try {
                 val scanned = CloudLibrary.fetch(requestedAddress)
                 runOnUiThread {
-                    libraryLoading = false
-                    // Ignore a response if the user switched servers/sources while loading.
-                    if (musicSource != "cloud" || cloudAddress != requestedAddress) return@runOnUiThread
+                    // Ignore responses from stale connections and source switches.
+                    if (musicSource != "cloud" || cloudAddress != requestedAddress ||
+                        version != cloudRequestVersion) return@runOnUiThread
                     cloudSongs = scanned
                     sendSongs(scanned)
                     sendScript("window.WRLD.receiveCloudStatus(" +
@@ -266,8 +266,8 @@ class MainActivity : Activity() {
                 }
             } catch (error: Exception) {
                 runOnUiThread {
-                    libraryLoading = false
-                    if (musicSource != "cloud" || cloudAddress != requestedAddress) return@runOnUiThread
+                    if (musicSource != "cloud" || cloudAddress != requestedAddress ||
+                        version != cloudRequestVersion) return@runOnUiThread
                     sendSongs(emptyList())
                     val message = error.message ?: "Could not contact your Windows PC."
                     sendScript("window.WRLD.receiveCloudStatus(" +
@@ -355,10 +355,12 @@ class MainActivity : Activity() {
                     return@runOnUiThread
                 }
                 cloudAddress = normalized
+                musicSource = "cloud"
                 getSharedPreferences("wrld-cloud", MODE_PRIVATE).edit()
-                    .putString("address", normalized).apply()
+                    .putString("address", normalized)
+                    .putString("source", "cloud").apply()
                 sendCloudConfig()
-                if (musicSource == "cloud") loadCloudLibrary()
+                loadCloudLibrary()
             }
         }
 
