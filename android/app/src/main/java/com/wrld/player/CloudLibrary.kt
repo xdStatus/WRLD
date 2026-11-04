@@ -3,6 +3,8 @@ package com.wrld.player
 import android.net.Uri
 import org.json.JSONObject
 import java.net.URL
+import java.net.URI
+import java.io.ByteArrayOutputStream
 import javax.net.ssl.HttpsURLConnection
 
 /** Downloads metadata from a personal Windows WRLD server over Tailscale HTTPS.
@@ -14,20 +16,21 @@ object CloudLibrary {
         val input = value.trim().trimEnd('/')
         if (input.isEmpty()) return ""
         return try {
-            val url = URL(input)
-            val host = url.host.lowercase()
-            if (url.protocol != "https" ||
+            val uri = URI(input)
+            val host = uri.host?.lowercase() ?: return null
+            if (uri.scheme != "https" ||
                 !host.endsWith(".ts.net") || host.length <= ".ts.net".length ||
-                url.port != -1 || url.userInfo != null ||
-                url.path !in listOf("", "/") ||
-                url.query != null || url.ref != null) null
+                uri.port != -1 || uri.userInfo != null ||
+                uri.path !in listOf("", "/") ||
+                uri.query != null || uri.fragment != null) null
             else "https://" + host
         } catch (_: Exception) { null }
     }
 
     fun fetch(baseAddress: String): List<Song> {
         val base = normalizeAddress(baseAddress)
-        require(!base.isNullOrEmpty()) { "Enter a valid private server address." }
+            ?.takeIf { it.isNotEmpty() }
+            ?: throw IllegalArgumentException("Enter a valid private server address.")
         val connection = URL("$base/cloud/tracks").openConnection() as HttpsURLConnection
         connection.connectTimeout = 8000
         connection.readTimeout = 12000
@@ -40,9 +43,16 @@ object CloudLibrary {
             val size = connection.contentLengthLong
             if (size > 5_000_000L) throw IllegalStateException("Library response too large.")
             val payload = connection.inputStream.use { stream ->
-                val bytes = stream.readNBytes(5_000_001)
-                if (bytes.size > 5_000_000) throw IllegalStateException("Library response too large.")
-                JSONObject(String(bytes, Charsets.UTF_8))
+                val output = ByteArrayOutputStream()
+                val buffer = ByteArray(32_768)
+                while (true) {
+                    val count = stream.read(buffer)
+                    if (count < 0) break
+                    if (output.size() + count > 5_000_000)
+                        throw IllegalStateException("Library response too large.")
+                    output.write(buffer, 0, count)
+                }
+                JSONObject(output.toString("UTF-8"))
             }
             val tracks = payload.optJSONArray("tracks")
                 ?: throw IllegalStateException("This is not a WRLD Cloud library.")

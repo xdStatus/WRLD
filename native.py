@@ -148,7 +148,12 @@ def run_desktop() -> None:
     # Always reuse the existing library scanner and persistent collections folder.
     rebuild()
     server = create_server()
-    cloud_server = start_cloud_server()
+    try:
+        cloud_server = start_cloud_server()
+    except OSError:
+        # Another WRLD Cloud instance may already be serving this port.
+        # Never prevent the desktop player from opening just for this.
+        cloud_server = None
     thread = threading.Thread(target=server.serve_forever, daemon=True,
                               name='WRLD-local-music-server')
     thread.start()
@@ -173,8 +178,9 @@ def run_desktop() -> None:
             debug=False,
         )
     finally:
-        cloud_server.shutdown()
-        cloud_server.server_close()
+        if cloud_server is not None:
+            cloud_server.shutdown()
+            cloud_server.server_close()
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
