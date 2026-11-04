@@ -379,6 +379,14 @@ class Handler(BaseHTTPRequestHandler):
             return self.serve_static('favicon.svg','image/svg+xml')
         if path in ('/favicon.ico','/favicon.png'):
             return self.serve_static('favicon.ico','image/x-icon')
+        if path == '/api/cloud/tracks':
+            try:
+                from cloud_backend import list_tracks
+                return self.json_out(200, list_tracks())
+            except Exception as exc:
+                return self.json_out(502, {'error': str(exc)})
+        if path.startswith('/cloud/media/'):
+            return self.stream_cloud(path.rsplit('/', 1)[-1])
         if path == '/api/tracks':
             return self.json_out(200, public_tracks())
         if path == '/api/collections':
@@ -453,6 +461,32 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:
                 return self.json_out(500, {'error': f'Folder picker unavailable. Paste the folder path instead. ({type(exc).__name__})'})
         return self.json_out(404, {'error': 'Not found'})
+
+    def stream_cloud(self, track_id):
+        from cloud_backend import CloudError, open_stream
+        try:
+            remote = open_stream(track_id, range_header=self.headers.get('Range', ''),
+                                 method=self.command)
+        except CloudError as exc:
+            return self.json_out(502, {'error': str(exc)})
+        with remote:
+            self.send_response(remote.status)
+            for key in ('Content-Type', 'Content-Length', 'Content-Range', 'Accept-Ranges'):
+                if remote.headers.get(key):
+                    self.send_header(key, remote.headers[key])
+            self.send_header('Cache-Control', 'private, no-store')
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.end_headers()
+            if self.command == 'HEAD':
+                return
+            try:
+                while True:
+                    chunk = remote.read(131072)
+                    if not chunk:
+                        break
+                    self.wfile.write(chunk)
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                pass
 
     def stream_track(self, track_id):
         with lock:
