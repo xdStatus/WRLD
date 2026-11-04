@@ -438,8 +438,8 @@ body.native-shell .brand h1.pywebview-drag-region:active{cursor:grabbing}
 .window-chrome button{width:29px;height:30px;border:0;background:transparent;color:#aaa;font:19px/1 Segoe UI,system-ui;padding:0;border-radius:5px;transition:background .18s,color .18s}
 .window-chrome button:hover{color:#fff;background:rgba(255,255,255,.13)}
 #winClose:hover{background:rgba(255,255,255,.24)}
-#updatesBtn{position:relative}
-#updateDot:not([hidden]){display:inline-block;width:5px;height:5px;border-radius:50%;margin-left:6px;background:#eee;box-shadow:0 0 8px #fff}
+#settingsUpdates{position:relative}
+#updateDot:not([hidden]){display:inline-block;margin-left:8px;color:#eee;text-shadow:0 0 8px #fff}
 .brand h1.pywebview-drag-region{user-select:none;cursor:move;padding:9px 8px 9px 0}
 body:not(.native-shell) .brand h1{cursor:default}
 .updates-dialog{border:1px solid #444;color:#f5f5f5;background:rgba(12,12,12,.97);border-radius:13px;width:min(480px,92vw);padding:0;box-shadow:0 24px 70px #000b}
@@ -626,11 +626,6 @@ body.native-shell .window-chrome{display:none!important}
       <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="currentColor" fill="none" stroke-width="2"/><path d="m20 20-4.2-4.2" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/></svg>
       <input id="search" type="search" placeholder="Search your songs..." autocomplete="off">
     </label>
-    <div class="actions pywebview-drag-region">
-      <button id="rescanBtn">Rescan</button>
-      <button class="primary" id="changeFolderBtn">Change Folder</button>
-      <button id="updatesBtn" title="Check for WRLD updates" aria-label="Check for updates">Updates<span id="updateDot" hidden></span></button>
-    </div>
     <nav id="windowChrome" class="window-chrome" aria-label="Window controls" hidden>
       <button id="winMin" type="button" aria-label="Minimize window" title="Minimize">−</button>
       <button id="winClose" type="button" aria-label="Close WRLD" title="Close">×</button>
@@ -699,9 +694,12 @@ body.native-shell .window-chrome{display:none!important}
           </div>
         </div>
         <div class="settings-heading">Library</div>
-        <div class="settings-card"><button type="button" id="settingsRescan" class="settings-button">Rescan music library <span>↻</span></button></div>
+        <div class="settings-card">
+          <button type="button" id="settingsRescan" class="settings-button">Rescan music library <span>↻</span></button>
+          <button type="button" id="changeFolderBtn" class="settings-button">Change music folder <span>↗</span></button>
+        </div>
         <div class="settings-heading">About</div>
-        <div class="settings-card"><div class="settings-about"><strong>999 · WRLD</strong><small id="desktopVersion">Windows v1.8.6</small><p>Local and Cloudflare R2 music player powered by Windows WebView2. Cloud songs stream securely from your private Worker; likes, playlists and preferences stay on this computer.</p></div><button type="button" class="settings-button" id="settingsUpdates">GitHub Releases <span>↗</span></button></div>
+        <div class="settings-card"><div class="settings-about"><strong>999 · WRLD</strong><small id="desktopVersion">Windows v1.8.8</small><p>Local and Cloudflare R2 music player powered by Windows WebView2. Cloud songs stream securely from your private Worker; likes, playlists and preferences stay on this computer.</p></div><button type="button" class="settings-button" id="settingsUpdates" title="Check for WRLD updates">Check for updates <span id="updateDot" hidden>●</span></button></div>
       </div>
       </div>
     </div>
@@ -1207,7 +1205,13 @@ $('settingsPanel').addEventListener('change',e=>{
 $('fadeDuration').addEventListener('input',e=>{
  $('fadeDurationLabel').textContent=(Number(e.target.value)/1000).toFixed(1)+' s';
 });
-$('settingsRescan').addEventListener('click',()=>{if(state.cloudSource==='cloud')loadTracks();else $('rescanBtn').click()});
+$('settingsRescan').addEventListener('click',async()=>{
+ try{
+   if(state.cloudSource==='cloud')await loadTracks();
+   else{await post('/api/rescan');await loadTracks()}
+   toast('Library refreshed');
+ }catch(e){toast(e.message)}
+});
 async function selectLibrarySource(source){
  state.cloudSource=source;
  try{localStorage.setItem('wrld-library-source',source)}catch{}
@@ -1231,7 +1235,7 @@ $('cloudConnect').addEventListener('click',async()=>{
    toast('Check the access key and try again');
  }
 });
-$('settingsUpdates').addEventListener('click',()=>$('updatesBtn').click());
+
 $('songList').addEventListener('click',e=>{
   const like=e.target.closest('[data-like]');
   if(like){changeLike(like.dataset.like,!state.liked.has(like.dataset.like));return}
@@ -1250,7 +1254,6 @@ $('nextBtn').addEventListener('click',()=>moveTrack(1));
 $('repeatBtn').addEventListener('click',cycleRepeat);
 $('repeatBtn').addEventListener('animationend',()=>{$('repeatBtn').classList.remove('repeat-tap')});
 $('prevBtn').addEventListener('click',()=>{if(audio.currentTime>3){audio.currentTime=0}else moveTrack(-1)});
-$('rescanBtn').addEventListener('click',async()=>{try{if(state.cloudSource==='cloud')await loadTracks();else{await post('/api/rescan');await loadTracks()}toast('Library refreshed')}catch(e){toast(e.message)}});
 $('changeFolderBtn').addEventListener('click',()=>{$('folderInput').value=state.folder||'';$('folderDialog').showModal()});
 $('browseFolderBtn').addEventListener('click',async()=>{try{let d;if(window.pywebview?.api?.choose_folder){const folder=await window.pywebview.api.choose_folder();if(!folder)return;d=await post('/api/change-folder',{folder});}else{d=await post('/api/browse-folder');if(d.cancelled)return;}$('folderDialog').close();await loadTracks();toast(`${d.count} tracks loaded`)}catch(e){toast(e.message)}});
 $('folderForm').addEventListener('submit',async e=>{e.preventDefault();const folder=$('folderInput').value.trim();if(!folder)return;try{const d=await post('/api/change-folder',{folder});$('folderDialog').close();await loadTracks();toast(`${d.count} tracks loaded`)}catch(e){toast(e.message)}});
@@ -1804,7 +1807,7 @@ async function checkForUpdates(quiet){
     if(!quiet||info.available)updateStatus(info.available?`Version ${info.latest} is available. You can install and restart now.`:info.message);
   }catch(e){if(!quiet)updateStatus('Update check failed: '+String(e))}
 }
-$('updatesBtn').addEventListener('click',openUpdateDialog);
+$('settingsUpdates').addEventListener('click',openUpdateDialog);
 $('closeUpdates').addEventListener('click',()=> $('updatesDialog').close());
 $('saveUpdateRepo').addEventListener('click',async()=>{
   if(!nativeUI()?.configure_update_repo)return updateStatus('Run the Windows EXE to configure updates.');
