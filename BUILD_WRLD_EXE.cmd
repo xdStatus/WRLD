@@ -7,7 +7,7 @@ echo ============================================================
 echo                WRLD - BUILD WINDOWS EXE
 echo ============================================================
 echo.
-echo This prepares WRLD v1.8.0 on your Windows PC.
+echo This prepares WRLD v1.8.1 on your Windows PC.
 echo It downloads build tools. The finished WRLD.exe runs without Python.
 echo.
 echo Build directory: %CD%
@@ -45,7 +45,7 @@ echo.
 echo [2/4] Installing/updating WebView2 wrapper and EXE packager...
 "%PY%" -m pip install --disable-pip-version-check --upgrade pip
 if errorlevel 1 goto failed
-"%PY%" -m pip install --disable-pip-version-check --upgrade "pyinstaller>=6.21" "pywebview>=5.3.1"
+"%PY%" -m pip install --disable-pip-version-check --upgrade "pyinstaller>=6.21" "pywebview>=6.1,<7"
 if errorlevel 1 goto failed
 
 echo.

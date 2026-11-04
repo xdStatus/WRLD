@@ -99,7 +99,7 @@ class NativeAPI:
     """Native window, folder picker, and controlled release update bridge."""
 
     def __init__(self):
-        self._maximized = False
+        pass
 
     def choose_folder(self) -> str:
         import webview
@@ -132,10 +132,6 @@ class NativeAPI:
         if not webview.windows: return False
         win = webview.windows[0]
         if action == 'minimize': win.minimize()
-        elif action == 'maximize':
-            if self._maximized: win.restore()
-            else: win.maximize()
-            self._maximized = not self._maximized
         elif action == 'fullscreen': win.toggle_fullscreen()
         elif action == 'close': win.destroy()
         else: return False
@@ -154,6 +150,9 @@ def run_desktop() -> None:
     address = f'http://{HOST}:{server.server_port}/'
     try:
         import webview
+        # In pywebview 6.1+, enable dragging from blank elements while
+        # excluding nested interactive controls.
+        webview.settings['DRAG_REGION_DIRECT_TARGET_ONLY'] = True
         webview.create_window(
             'WRLD', address, js_api=NativeAPI(), width=1480, height=910, min_size=(920, 650),
             resizable=True, frameless=True, easy_drag=False, shadow=False, background_color='#050505',

@@ -1,38 +1,74 @@
 name: Build and publish WRLD for Windows
+
+# Push source and bump app_version.py: GitHub does the rest.
+# No local Windows build, tag push, or manual Release creation required.
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main
+    paths:
+      - 'app_version.py'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
 permissions:
   contents: write
+
+concurrency:
+  group: wrld-windows-release
+  cancel-in-progress: false
+
 jobs:
   windows-release:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - name: Install build tools
-        run: python -m pip install "pyinstaller>=6.11,<7" "pywebview>=5.3.1,<7"
-      - name: Check version matches release tag
-        shell: pwsh
-        run: |
-          $v = (python -c "from app_version import APP_VERSION; print(APP_VERSION)").Trim()
-          if ("v$v" -ne "${{ github.ref_name }}") { throw "Tag must match app_version.py ($v)" }
-      - name: Build Windows EXE
-        shell: pwsh
-        run: |
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name WRLD --icon web/favicon.ico --add-data "web;web" --collect-all webview --hidden-import clr --hidden-import webview.platforms.edgechromium native.py
-      - name: Make release checksum
-        shell: pwsh
-        run: |
-          $h = (Get-FileHash -LiteralPath dist/WRLD.exe -Algorithm SHA256).Hash.ToLower()
-          "$h  WRLD.exe" | Set-Content -Path dist/WRLD.exe.sha256 -NoNewline -Encoding ascii
-      - name: Publish GitHub Release
+
+      - name: Read version and skip existing releases
+        id: release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "${{ github.ref_name }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --title "WRLD $tag" --notes "WRLD for Windows (WebView2 required)."
+          $version = (python -c "from app_version import APP_VERSION; print(APP_VERSION)").Trim()
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Invalid version in app_version.py: $version" }
+          $tag = "v$version"
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          gh release view "$tag" --repo "$env:GITHUB_REPOSITORY" > $null 2>&1
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "$tag is already published; nothing to build."
+            "publish=false" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "Preparing new release $tag"
+            "publish=true" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Install build tools
+        if: steps.release.outputs.publish == 'true'
+        run: python -m pip install "pyinstaller>=6.11,<7" "pywebview>=6.1,<7"
+
+      - name: Build Windows EXE
+        if: steps.release.outputs.publish == 'true'
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name WRLD --icon web/favicon.ico --add-data "web;web" --collect-all webview --hidden-import clr --hidden-import webview.platforms.edgechromium native.py
+
+      - name: Make release checksum
+        if: steps.release.outputs.publish == 'true'
+        shell: pwsh
+        run: |
+          $h = (Get-FileHash -LiteralPath dist/WRLD.exe -Algorithm SHA256).Hash.ToLower()
+          "$h  WRLD.exe" | Set-Content -Path dist/WRLD.exe.sha256 -NoNewline -Encoding ascii
+
+      - name: Publish versioned release
+        if: steps.release.outputs.publish == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ steps.release.outputs.tag }}"
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD for Windows. Borderless window drag improvements. Requires the WebView2 runtime."

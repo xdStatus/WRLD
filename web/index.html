@@ -425,6 +425,13 @@ dialog{border-radius:10px}
 @media(prefers-reduced-motion:reduce){.brand-badge svg .logo-wave-digit{animation:none}}
 
 
+/* V18.1 — Only blank elements are native window drag targets.
+   Controls, songs, search, seek bars and sliders stay interactive. */
+body.native-shell .pywebview-drag-region{user-select:none}
+body.native-shell .topbar.pywebview-drag-region{cursor:default}
+body.native-shell .brand h1.pywebview-drag-region{cursor:grab}
+body.native-shell .brand h1.pywebview-drag-region:active{cursor:grabbing}
+
 /* V18 — Frameless desktop controls, minimal and unobtrusive. */
 .window-chrome{display:flex;align-items:center;gap:3px;flex:none;margin-left:0}
 .window-chrome[hidden]{display:none!important}
@@ -458,9 +465,9 @@ body:not(.native-shell) .brand h1{cursor:default}
 <body>
 <canvas id="starfield" aria-hidden="true"></canvas>
 <div class="space-haze" aria-hidden="true"></div>
-<div class="app">
-  <header class="topbar glass">
-    <div class="brand">
+<div class="app pywebview-drag-region">
+  <header class="topbar glass pywebview-drag-region">
+    <div class="brand pywebview-drag-region">
       <button class="brand-badge" id="logoCometBtn" type="button" title="A little surprise" aria-label="Summon a comet"><svg viewBox="0 0 112 64" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"><g class="logo-wave-digit logo-wave-1"><path d="M30 18C30 10.5 24 5 17 5S4 10.5 4 19s5 12.5 12.5 12.5C24 31.5 29 26 29 19v15c0 11-7 18.5-18 19.5"/></g>
 <g class="logo-wave-digit logo-wave-2"><path d="M67 17C67 9.5 61 4 54 4S41 9.5 41 18s5 12.5 12.5 12.5C61 30.5 66 25 66 18v15c0 11-7 18.5-18 19.5"/></g>
 <g class="logo-wave-digit logo-wave-3"><path d="M104 18C104 10.5 98 5 91 5S78 10.5 78 19s5 12.5 12.5 12.5C98 31.5 103 26 103 19v15c0 11-7 18.5-18 19.5"/></g>
@@ -473,34 +480,32 @@ body:not(.native-shell) .brand h1{cursor:default}
       <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="currentColor" fill="none" stroke-width="2"/><path d="m20 20-4.2-4.2" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/></svg>
       <input id="search" type="search" placeholder="Search your songs..." autocomplete="off">
     </label>
-    <div class="actions">
+    <div class="actions pywebview-drag-region">
       <button id="rescanBtn">Rescan</button>
       <button class="primary" id="changeFolderBtn">Change Folder</button>
       <button id="updatesBtn" title="Check for WRLD updates" aria-label="Check for updates">Updates<span id="updateDot" hidden></span></button>
     </div>
     <nav id="windowChrome" class="window-chrome" aria-label="Window controls" hidden>
       <button id="winMin" type="button" aria-label="Minimize window" title="Minimize">−</button>
-      <button id="winMax" type="button" aria-label="Maximize window" title="Maximize">□</button>
-      <button id="winFull" type="button" aria-label="Fullscreen" title="Fullscreen (F11)">⛶</button>
       <button id="winClose" type="button" aria-label="Close WRLD" title="Close">×</button>
     </nav>
   </header>
 
-  <section class="main">
-    <div class="library glass">
-      <div class="library-nav" role="tablist" aria-label="Music collections">
+  <section class="main pywebview-drag-region">
+    <div class="library glass pywebview-drag-region">
+      <div class="library-nav pywebview-drag-region" role="tablist" aria-label="Music collections">
         <button class="collection-tab active" id="tabAll" role="tab" aria-selected="true" data-view="all">All songs</button>
         <button class="collection-tab" id="tabLiked" role="tab" aria-selected="false" data-view="liked">Liked <span class="tiny-counter" id="likedNavCount"></span></button>
         <button class="collection-tab" id="tabPlaylists" role="tab" aria-selected="false" data-view="playlists">Playlists</button>
         <button class="new-playlist" id="newPlaylistBtn" type="button" title="Create playlist" aria-label="Create playlist">+ New</button>
       </div>
-      <div class="library-head">
+      <div class="library-head pywebview-drag-region">
         <div>
           <button class="playlist-back hidden" id="backPlaylistsBtn" type="button">← All playlists</button>
-          <h2 id="libraryTitle">Library</h2>
+          <h2 class="pywebview-drag-region" id="libraryTitle">Library</h2>
           <p id="folderText">Loading your local collection...</p>
         </div>
-        <div class="meta">
+        <div class="meta pywebview-drag-region">
           <button class="playlist-manage hidden" id="renamePlaylistBtn" title="Rename playlist" type="button">Rename</button>
           <button class="playlist-manage hidden" id="deletePlaylistBtn" title="Delete playlist" type="button">Delete</button>
           <label class="sort-control" id="sortControl"><span>Sort</span><select id="sortSelect" aria-label="Sort songs">
@@ -517,22 +522,22 @@ body:not(.native-shell) .brand h1{cursor:default}
           <span id="formatText">Local audio only</span>
         </div>
       </div>
-      <div class="playlist-grid hidden" id="playlistGrid" aria-label="Your playlists"></div>
-      <div class="list-wrap" id="listWrap">
-        <div class="song-list" id="songList"></div>
+      <div class="playlist-grid hidden pywebview-drag-region" id="playlistGrid" aria-label="Your playlists"></div>
+      <div class="list-wrap pywebview-drag-region" id="listWrap">
+        <div class="song-list pywebview-drag-region" id="songList"></div>
         <div class="empty hidden" id="emptyState">No songs found. Rescan or choose a different folder.</div>
       </div>
     </div>
 
-    <aside class="side glass">
-      <div class="now-badge">Now Playing</div>
-      <div class="visualizer-wrap" id="visualizerWrap">
-        <div class="visualizer-head">
+    <aside class="side glass pywebview-drag-region">
+      <div class="now-badge pywebview-drag-region">Now Playing</div>
+      <div class="visualizer-wrap pywebview-drag-region" id="visualizerWrap">
+        <div class="visualizer-head pywebview-drag-region">
           <span class="visualizer-kicker">AUDIO REACTIVE</span>
           <span class="viz-status" id="vizStatus"><span class="viz-indicator"></span><span id="vizStatusText">READY</span></span>
         </div>
-        <canvas id="visualizer" role="img" aria-label="Live audio spectrum reacting to the current song"></canvas>
-        <div class="visualizer-footer">
+        <canvas class="pywebview-drag-region" id="visualizer" role="img" aria-label="Live audio spectrum reacting to the current song"></canvas>
+        <div class="visualizer-footer pywebview-drag-region">
           <div class="viz-modes" role="group" aria-label="Visualizer style">
             <button type="button" class="viz-mode" id="vizBars" aria-pressed="true">Spectrum</button>
             <button type="button" class="viz-mode" id="vizWave" aria-pressed="false">Waveform</button>
@@ -545,15 +550,15 @@ body:not(.native-shell) .brand h1{cursor:default}
         <p class="now-sub" id="nowArtist">Pick a song from your library</p>
         <div class="now-playing-note"><span class="live-line"></span><span id="nowPlayingNote">Ready when you are</span></div>
       </div>
-      <div class="side-divider-faint" aria-hidden="true"></div>
-      <div class="side-hint"><kbd>Space</kbd> play / pause &nbsp; · &nbsp; <kbd>←</kbd> <kbd>→</kbd> seek</div>
+      <div class="side-divider-faint pywebview-drag-region" aria-hidden="true"></div>
+      <div class="side-hint pywebview-drag-region"<kbd>Space</kbd> play / pause &nbsp; · &nbsp; <kbd>←</kbd> <kbd>→</kbd> seek</div>
     </aside>
   </section>
 
-  <footer class="player glass" id="playerDock">
-    <div class="player-left">
+  <footer class="player glass pywebview-drag-region" id="playerDock">
+    <div class="player-left pywebview-drag-region"
       <div class="mini-art" id="miniArt"><span class="letter">W</span><img alt="Album art"></div>
-      <div class="player-text">
+      <div class="player-text pywebview-drag-region">
         <b id="playerTitle">Choose a track</b>
         <span id="playerSubtitle">WRLD</span>
       </div>
@@ -562,8 +567,8 @@ body:not(.native-shell) .brand h1{cursor:default}
       </button>
     </div>
 
-    <div class="center">
-      <div class="timeline" aria-label="Playback position">
+    <div class="center pywebview-drag-region">
+      <div class="timeline pywebview-drag-region" aria-label="Playback position">
         <span class="time" id="currentTime">0:00</span>
         <div class="seek-shell" id="seekShell">
           <div class="seek-track" aria-hidden="true"><div class="seek-fill" id="seekFill"><span class="seek-head"></span></div></div>
@@ -572,7 +577,7 @@ body:not(.native-shell) .brand h1{cursor:default}
         </div>
         <span class="time" id="duration">0:00</span>
       </div>
-      <div class="controls" role="group" aria-label="Music playback controls">
+      <div class="controls pywebview-drag-region" role="group" aria-label="Music playback controls">
         <button class="circle" id="prevBtn" aria-label="Previous song" title="Previous song">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M18 6l-9 6 9 6"/></svg>
         </button>
@@ -589,7 +594,7 @@ body:not(.native-shell) .brand h1{cursor:default}
       </div>
     </div>
 
-    <div class="player-right">
+    <div class="player-right pywebview-drag-region"
       <span class="volume-label">Volume</span>
       <button type="button" id="muteBtn" class="mute-control" aria-label="Mute sound" aria-pressed="false" title="Mute">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="unmuted-path" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/><path class="muted-path" d="m17 9 5 6m0-6-5 6" style="display:none"/></svg>
@@ -1439,7 +1444,7 @@ function connectNativeChrome(){
   if(!api?.window_action)return;
   document.body.classList.add('native-shell');
   $('windowChrome').hidden=false;
-  for(const [btn,action] of [['winMin','minimize'],['winMax','maximize'],['winFull','fullscreen'],['winClose','close']]){
+  for(const [btn,action] of [['winMin','minimize'],['winClose','close']]){
     $(btn).addEventListener('click',()=>api.window_action(action));
   }
   document.addEventListener('keydown', e=>{
