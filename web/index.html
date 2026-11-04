@@ -607,24 +607,19 @@ body.native-shell .window-chrome{display:none!important}
 @media(prefers-reduced-motion:reduce){.tab-indicator,.library-stage,.queue-drawer,.settings-toggle,.player-left.now-queue-trigger{transition:none!important;animation:none!important}}
 
 
-/* WRLD v1.8.13 — two-second cinematic opening and clear source health. */
-.wrld-intro{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;background:#050608;color:#f4f4f4;opacity:1;visibility:visible;transition:opacity .62s ease,visibility .62s ease;pointer-events:all}
+
+/* WRLD cinematic ColorOS-inspired startup */
+.wrld-intro{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:#040507;color:#f6f6f7;overflow:hidden;transition:opacity .65s cubic-bezier(.22,1,.36,1),visibility .65s}
 .wrld-intro.is-finished{opacity:0;visibility:hidden;pointer-events:none}
-.wrld-intro:before{content:'';position:absolute;inset:-20%;background:radial-gradient(ellipse at 50% 48%,rgba(145,164,204,.14),transparent 31%),radial-gradient(circle at 30% 70%,rgba(255,255,255,.05),transparent 18%);animation:introGlow 2s ease-in-out both}
-.wrld-intro-stars{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 20% 27%,#ffffffb0 90%,transparent),radial-gradient(2px 2px at 81% 19%,#fff 85%,transparent),radial-gradient(1px 1px at 70% 72%,#ffffff9c 90%,transparent),radial-gradient(1px 1px at 34% 83%,#ffffffc0 90%,transparent),radial-gradient(1px 1px at 59% 40%,#fff 90%,transparent);background-repeat:no-repeat;animation:introStars 2s ease-in-out both}
-.wrld-intro-center{position:relative;display:flex;flex-direction:column;align-items:center;gap:17px;text-align:center;transform:translateY(-8px);animation:introReveal .75s cubic-bezier(.2,.7,.2,1) both}
-.wrld-intro-orbit{position:absolute;width:205px;height:205px;top:-52px;border:1px solid rgba(220,230,255,.13);border-radius:50%;box-shadow:0 0 50px rgba(188,209,255,.035);animation:introOrbit 2s linear infinite;pointer-events:none}
-.wrld-intro-orbit:after{content:'';position:absolute;top:14px;left:29px;width:5px;height:5px;border-radius:50%;background:#e1eeff;box-shadow:0 0 16px 4px #c2dcff66}
-.wrld-intro-number{position:relative;font-size:clamp(54px,11vw,88px);font-weight:200;letter-spacing:.22em;margin-right:-.22em;line-height:1;text-shadow:0 0 35px #dbe7ff27}
-.wrld-intro-wordmark{font-size:12px;letter-spacing:.65em;margin-right:-.65em;font-weight:600}
-.wrld-intro-subtitle{font-size:9px;letter-spacing:.3em;color:#858b9a;text-transform:uppercase}
-.wrld-intro-progress{width:145px;height:2px;background:#ffffff1d;overflow:hidden;border-radius:99px;margin-top:6px}
-.wrld-intro-progress:before{content:'';display:block;width:100%;height:100%;background:linear-gradient(90deg,#707a90,#fff);transform:scaleX(0);transform-origin:left;animation:introFill 1.9s ease-in-out forwards}
+.wrld-intro:before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 45% at 50% 50%,rgba(165,190,245,.09),transparent 80%)}
+.intro-stars-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.wrld-intro-center{position:relative;display:flex;flex-direction:column;align-items:center;gap:15px;text-align:center;animation:introLogoAppear .8s ease-out both;pointer-events:none}
+.wrld-intro-number{font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;font-size:clamp(65px,11vw,112px);font-weight:200;letter-spacing:-.08em;padding-right:.08em;line-height:1;text-shadow:0 0 34px #ffffff2b}
+.wrld-intro-wordmark{font-size:clamp(12px,1.6vw,16px);letter-spacing:.62em;padding-left:.62em;font-weight:550}
+.wrld-intro-progress{width:125px;height:2px;border-radius:99px;background:#ffffff20;overflow:hidden;margin-top:12px}
+.wrld-intro-progress:before{content:'';display:block;width:100%;height:100%;background:#fff;transform:scaleX(0);transform-origin:left;animation:introFill 1.9s ease-in-out forwards}
 @keyframes introFill{to{transform:scaleX(1)}}
-@keyframes introReveal{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:translateY(-8px) scale(1)}}
-@keyframes introGlow{0%{opacity:.3;transform:scale(.9)}80%{opacity:1}100%{opacity:.7;transform:scale(1.08)}}
-@keyframes introOrbit{to{transform:rotate(360deg)}}
-@keyframes introStars{0%{opacity:0}45%{opacity:1}100%{opacity:.7}}
+@keyframes introLogoAppear{from{opacity:0;transform:translateY(13px) scale(.96);filter:blur(5px)}to{opacity:1;transform:none;filter:blur(0)}}
 #cloudConnectionStatus{display:block;font-weight:600;letter-spacing:.025em;color:#a2a2a2}
 #cloudConnectionStatus.is-connected{color:#65d68c;text-shadow:0 0 10px rgba(89,218,129,.24)}
 #cloudConnectionStatus.is-error{color:#f29898}
@@ -639,12 +634,12 @@ body.native-shell .window-chrome{display:none!important}
 </head>
 <body>
 <div id="wrldIntro" class="wrld-intro" aria-label="WRLD starting" role="status">
-  <div class="wrld-intro-stars" aria-hidden="true"></div>
+  <canvas id="introStars" class="intro-stars-canvas" aria-hidden="true"></canvas>
   <div class="wrld-intro-center">
-    <div class="wrld-intro-orbit" aria-hidden="true"></div>
+
     <div class="wrld-intro-number">999</div>
     <div class="wrld-intro-wordmark">WRLD</div>
-    <div class="wrld-intro-subtitle">Your music, your universe</div>
+
     <div class="wrld-intro-progress" aria-hidden="true"></div>
   </div>
 </div>
@@ -876,10 +871,44 @@ body.native-shell .window-chrome{display:none!important}
 const $ = id => document.getElementById(id);
 const audio = $('audio');
 const intro=$('wrldIntro');
-setTimeout(()=>{
- intro.classList.add('is-finished');
- setTimeout(()=>intro.remove(),700);
-},2000);
+function runIntroStars(){
+ const canvas=$('introStars'),ctx=canvas.getContext('2d');
+ const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+ const started=performance.now(),rand=(a,b)=>a+Math.random()*(b-a);
+ let w=1,h=1,frame=0,stopped=false;
+ function resize(){w=Math.max(1,innerWidth);h=Math.max(1,innerHeight);const dpr=Math.min(devicePixelRatio||1,1.5);canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+ resize();
+ const stars=Array.from({length:55},(_,i)=>({angle:i/55*Math.PI*2+rand(-.23,.23),offset:rand(16,100),speed:rand(650,1300),size:rand(.7,1.8),alpha:rand(.5,1),delay:rand(0,.12)}));
+ function position(star,p){const t=Math.max(0,Math.min(1,(p-star.delay)/(1-star.delay))),r=star.offset+star.speed*(.05*t+.95*t*t*t),velocity=star.speed*(.05+2.85*t*t)/2;return {x:w/2+Math.cos(star.angle)*r,y:h/2+Math.sin(star.angle)*r,velocity}}
+ function paint(now){
+  if(stopped)return;
+  const p=Math.min(1,(now-started)/2000);
+  ctx.clearRect(0,0,w,h);
+  for(const star of stars){
+   const pos=position(star,p),dx=Math.cos(star.angle),dy=Math.sin(star.angle),tail=Math.min(160,8+pos.velocity*.14);
+   const fade=Math.min(1,p*5)*star.alpha;
+   if(pos.x<-170||pos.x>w+170||pos.y<-170||pos.y>h+170)continue;
+   const grad=ctx.createLinearGradient(pos.x,pos.y,pos.x-dx*tail,pos.y-dy*tail);
+   grad.addColorStop(0,'rgba(255,255,255,'+fade+')');
+   grad.addColorStop(.32,'rgba(213,229,255,'+fade*.43+')');
+   grad.addColorStop(1,'rgba(213,229,255,0)');
+   ctx.strokeStyle=grad;ctx.lineWidth=star.size;ctx.lineCap='round';
+   ctx.beginPath();ctx.moveTo(pos.x,pos.y);ctx.lineTo(pos.x-dx*tail,pos.y-dy*tail);ctx.stroke();
+  }
+  if(p<1)frame=requestAnimationFrame(paint);
+ }
+ if(ctx&&!reduced)frame=requestAnimationFrame(paint);
+ setTimeout(()=>{
+  if(!reduced&&window.__wrldInjectShootingStars)window.__wrldInjectShootingStars(stars.map(star=>{
+   const pos=position(star,.9),dx=Math.cos(star.angle),dy=Math.sin(star.angle);
+   return {x:pos.x,y:pos.y,vx:dx*pos.velocity,vy:dy*pos.velocity,tail:Math.min(160,pos.velocity*.14),life:0,duration:1.7};
+  }));
+  intro.classList.add('is-finished');
+ },1800);
+ setTimeout(()=>{stopped=true;cancelAnimationFrame(frame);intro.remove();removeEventListener('resize',resize)},2600);
+ addEventListener('resize',resize,{passive:true});
+}
+runIntroStars();
 let cloudConnected=false;
 let cloudKeyEditing=false;
 function renderCloudKeyControls(){
@@ -1819,8 +1848,9 @@ function initStarfield(){
    meteors=[];lastPaint=0;
  }
  function spawnMeteor(){
-   const vx=-random(480,690),vy=random(35,80);
-   meteors.push({x:width+20,y:random(height*.12,height*.65),vx,vy,tail:random(96,150),life:0,duration:random(2.1,3.0)});
+   const angle=random(0,Math.PI*2),speed=random(480,690);
+   const vx=Math.cos(angle)*speed,vy=Math.sin(angle)*speed;
+   meteors.push({x:vx<0?width+20:-20,y:vy<0?height+20:-20,vx,vy,tail:random(96,150),life:0,duration:random(2.1,3.0)});
  }
 
  function summonGiantComet(){
@@ -1865,7 +1895,8 @@ function initStarfield(){
  function drawMeteor(m,dt){
    m.life+=dt;m.x+=m.vx*dt;m.y+=m.vy*dt;
    const fade=Math.max(0,Math.min(1,m.life/.2,(m.duration-m.life)/.30));
-   const tailX=m.x+m.tail,tailY=m.y-m.tail*m.vy/Math.abs(m.vx);
+   const magnitude=Math.max(1,Math.hypot(m.vx,m.vy));
+   const tailX=m.x-m.tail*m.vx/magnitude,tailY=m.y-m.tail*m.vy/magnitude;
    const gradient=ctx.createLinearGradient(m.x,m.y,tailX,tailY);
    gradient.addColorStop(0,`rgba(255,255,255,${.94*fade})`);
    gradient.addColorStop(.3,`rgba(255,255,255,${.51*fade})`);
@@ -1874,7 +1905,7 @@ function initStarfield(){
    ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(tailX,tailY);ctx.stroke();
    ctx.fillStyle=`rgba(255,255,255,${fade})`;
    ctx.fillRect(m.x-1,m.y-1,2,2);
-   return m.life<m.duration&&m.x>-m.tail-20&&m.y<height+20;
+   return m.life<m.duration&&m.x>-m.tail-20&&m.x<width+m.tail+20&&m.y>-m.tail-20&&m.y<height+m.tail+20;
  }
  function frame(t){
    requestAnimationFrame(frame);
@@ -1917,7 +1948,8 @@ function initStarfield(){
  resize();
  window.addEventListener('resize',()=>{clearTimeout(resize.t);resize.t=setTimeout(resize,130)},{passive:true});
  requestAnimationFrame(frame);
- window.__wrldStarStatus=()=>({frames:starsDrawn,numberOfStars:stars.length,firstStarX:stars[0]?.x,direction:'right-to-left',twinkling:twinkleCount,targetFPS:STAR_FPS});
+ window.__wrldInjectShootingStars=items=>{if(Array.isArray(items))meteors.push(...items.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&Number.isFinite(p.vx)&&Number.isFinite(p.vy)).slice(0,55))};
+  window.__wrldStarStatus=()=>({frames:starsDrawn,numberOfStars:stars.length,firstStarX:stars[0]?.x,direction:'right-to-left',twinkling:twinkleCount,targetFPS:STAR_FPS});
  window.__wrldCometStatus=()=>({triggered:cometCount,active:giantComets.length});
 }
 initStarfield();loadTracks();updateProgress();updateVisualizerLabels();
