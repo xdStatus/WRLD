@@ -630,6 +630,8 @@ body.native-shell .window-chrome{display:none!important}
 #cloudConnectionStatus.is-error{color:#f29898}
 #cloudConnectionStatus.is-connected:before{content:'●';font-size:8px;margin-right:7px;vertical-align:1px}
 #cloudConnectionStatus.is-error:before{content:'●';font-size:8px;margin-right:7px;vertical-align:1px}
+.cloud-key-editor{display:flex;flex-direction:column;gap:9px}
+.cloud-change-key{align-self:flex-start;min-height:36px}
 .cloud-config.is-local{display:none!important}
 @media(prefers-reduced-motion:reduce){.wrld-intro *,.wrld-intro:before{animation:none!important}.wrld-intro{transition:none}}
 
@@ -723,10 +725,13 @@ body.native-shell .window-chrome{display:none!important}
           <div class="cloud-source-switch"><button id="sourceLocal" type="button">On this computer</button><button id="sourceCloud" type="button">WRLD Cloud</button></div>
           <div class="cloud-config is-local">
             <label>Cloudflare Worker: https://wrld-cloud.zaavangonzaless.workers.dev</label>
-            <label for="cloudAccessKey">Private access key (encrypted for your Windows account)</label>
-            <input id="cloudAccessKey" type="password" autocomplete="new-password" placeholder="Paste WRLD_ACCESS_TOKEN">
-            <button type="button" id="cloudConnect">Save key &amp; connect</button>
-            <small id="cloudConnectionStatus">Cloud is not connected.</small>
+            <small id="cloudConnectionStatus" aria-live="polite">Cloud is not connected.</small>
+            <div id="cloudKeyEditor" class="cloud-key-editor hidden">
+              <label for="cloudAccessKey">Private access key (encrypted for your Windows account)</label>
+              <input id="cloudAccessKey" type="password" autocomplete="new-password" placeholder="Paste WRLD_ACCESS_TOKEN">
+              <button type="button" id="cloudConnect">Save key &amp; connect</button>
+            </div>
+            <button type="button" id="cloudChangeKey" class="cloud-change-key hidden">Change access key</button>
             <small>Your music stays in your private R2 bucket. Windows and Tailscale do not need to remain running for Android streaming.</small>
           </div>
         </div>
@@ -875,11 +880,24 @@ setTimeout(()=>{
  intro.classList.add('is-finished');
  setTimeout(()=>intro.remove(),700);
 },2000);
+let cloudConnected=false;
+let cloudKeyEditing=false;
+function renderCloudKeyControls(){
+ const cloudSelected=state.cloudSource==='cloud';
+ $('cloudKeyEditor').classList.toggle('hidden',!cloudSelected||(cloudConnected&&!cloudKeyEditing));
+ $('cloudChangeKey').classList.toggle('hidden',!cloudSelected||!cloudConnected);
+ $('cloudChangeKey').textContent=cloudKeyEditing?'Cancel changing key':'Change access key';
+}
 function setCloudConnectionStatus(message,mode='idle'){
  const node=$('cloudConnectionStatus');
  node.textContent=message;
  node.classList.toggle('is-connected',mode==='connected');
  node.classList.toggle('is-error',mode==='error');
+ if(state.cloudSource==='cloud'){
+   cloudConnected=mode==='connected';
+   if(cloudConnected)cloudKeyEditing=false;
+ }
+ renderCloudKeyControls();
 }
 
 let trackIndex=new Map();
@@ -1155,6 +1173,7 @@ function renderSettings(){
  $('sourceLocal').classList.toggle('active',state.cloudSource==='local');
  $('sourceCloud').classList.toggle('active',state.cloudSource==='cloud');
   document.querySelector('.cloud-config').classList.toggle('is-local',state.cloudSource!=='cloud');
+  renderCloudKeyControls();
 }
 function saveAudioSettings(){
  try{localStorage.setItem('wrld-desktop-settings-v1',JSON.stringify(state.settings))}catch{}
@@ -1331,6 +1350,12 @@ async function selectLibrarySource(source){
 }
 $('sourceLocal').addEventListener('click',()=>selectLibrarySource('local'));
 $('sourceCloud').addEventListener('click',()=>selectLibrarySource('cloud'));
+$('cloudChangeKey').addEventListener('click',()=>{
+ cloudKeyEditing=!cloudKeyEditing;
+ $('cloudAccessKey').value='';
+ renderCloudKeyControls();
+ if(cloudKeyEditing)$('cloudAccessKey').focus();
+});
 $('cloudConnect').addEventListener('click',async()=>{
  const field=$('cloudAccessKey'),key=field.value.trim();
  field.value='';
@@ -1340,7 +1365,10 @@ $('cloudConnect').addEventListener('click',async()=>{
  try{
    const result=await api.configure_cloud(key);
    setCloudConnectionStatus(result.configured?'Access key saved securely · Connecting...':'Could not save access key',result.configured?'idle':'error');
-   await selectLibrarySource('cloud');
+   if(result.configured){
+     cloudKeyEditing=false;
+     await selectLibrarySource('cloud');
+   }
  }catch(e){
    setCloudConnectionStatus('Access key could not be saved','error');
    toast('Check the access key and try again');
