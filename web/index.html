@@ -606,9 +606,46 @@ body.native-shell .window-chrome{display:none!important}
 @media(max-width:780px){.app{grid-template-rows:auto minmax(0,1fr) auto}.queue-list{max-height:min(25vh,160px)}.library-nav{gap:11px}}
 @media(prefers-reduced-motion:reduce){.tab-indicator,.library-stage,.queue-drawer,.settings-toggle,.player-left.now-queue-trigger{transition:none!important;animation:none!important}}
 
+
+/* WRLD v1.8.13 — two-second cinematic opening and clear source health. */
+.wrld-intro{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;background:#050608;color:#f4f4f4;opacity:1;visibility:visible;transition:opacity .62s ease,visibility .62s ease;pointer-events:all}
+.wrld-intro.is-finished{opacity:0;visibility:hidden;pointer-events:none}
+.wrld-intro:before{content:'';position:absolute;inset:-20%;background:radial-gradient(ellipse at 50% 48%,rgba(145,164,204,.14),transparent 31%),radial-gradient(circle at 30% 70%,rgba(255,255,255,.05),transparent 18%);animation:introGlow 2s ease-in-out both}
+.wrld-intro-stars{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 20% 27%,#ffffffb0 90%,transparent),radial-gradient(2px 2px at 81% 19%,#fff 85%,transparent),radial-gradient(1px 1px at 70% 72%,#ffffff9c 90%,transparent),radial-gradient(1px 1px at 34% 83%,#ffffffc0 90%,transparent),radial-gradient(1px 1px at 59% 40%,#fff 90%,transparent);background-repeat:no-repeat;animation:introStars 2s ease-in-out both}
+.wrld-intro-center{position:relative;display:flex;flex-direction:column;align-items:center;gap:17px;text-align:center;transform:translateY(-8px);animation:introReveal .75s cubic-bezier(.2,.7,.2,1) both}
+.wrld-intro-orbit{position:absolute;width:205px;height:205px;top:-52px;border:1px solid rgba(220,230,255,.13);border-radius:50%;box-shadow:0 0 50px rgba(188,209,255,.035);animation:introOrbit 2s linear infinite;pointer-events:none}
+.wrld-intro-orbit:after{content:'';position:absolute;top:14px;left:29px;width:5px;height:5px;border-radius:50%;background:#e1eeff;box-shadow:0 0 16px 4px #c2dcff66}
+.wrld-intro-number{position:relative;font-size:clamp(54px,11vw,88px);font-weight:200;letter-spacing:.22em;margin-right:-.22em;line-height:1;text-shadow:0 0 35px #dbe7ff27}
+.wrld-intro-wordmark{font-size:12px;letter-spacing:.65em;margin-right:-.65em;font-weight:600}
+.wrld-intro-subtitle{font-size:9px;letter-spacing:.3em;color:#858b9a;text-transform:uppercase}
+.wrld-intro-progress{width:145px;height:2px;background:#ffffff1d;overflow:hidden;border-radius:99px;margin-top:6px}
+.wrld-intro-progress:before{content:'';display:block;width:100%;height:100%;background:linear-gradient(90deg,#707a90,#fff);transform:scaleX(0);transform-origin:left;animation:introFill 1.9s ease-in-out forwards}
+@keyframes introFill{to{transform:scaleX(1)}}
+@keyframes introReveal{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:translateY(-8px) scale(1)}}
+@keyframes introGlow{0%{opacity:.3;transform:scale(.9)}80%{opacity:1}100%{opacity:.7;transform:scale(1.08)}}
+@keyframes introOrbit{to{transform:rotate(360deg)}}
+@keyframes introStars{0%{opacity:0}45%{opacity:1}100%{opacity:.7}}
+#cloudConnectionStatus{display:block;font-weight:600;letter-spacing:.025em;color:#a2a2a2}
+#cloudConnectionStatus.is-connected{color:#65d68c;text-shadow:0 0 10px rgba(89,218,129,.24)}
+#cloudConnectionStatus.is-error{color:#f29898}
+#cloudConnectionStatus.is-connected:before{content:'●';font-size:8px;margin-right:7px;vertical-align:1px}
+#cloudConnectionStatus.is-error:before{content:'●';font-size:8px;margin-right:7px;vertical-align:1px}
+.cloud-config.is-local{display:none!important}
+@media(prefers-reduced-motion:reduce){.wrld-intro *,.wrld-intro:before{animation:none!important}.wrld-intro{transition:none}}
+
 </style>
 </head>
 <body>
+<div id="wrldIntro" class="wrld-intro" aria-label="WRLD starting" role="status">
+  <div class="wrld-intro-stars" aria-hidden="true"></div>
+  <div class="wrld-intro-center">
+    <div class="wrld-intro-orbit" aria-hidden="true"></div>
+    <div class="wrld-intro-number">999</div>
+    <div class="wrld-intro-wordmark">WRLD</div>
+    <div class="wrld-intro-subtitle">Your music, your universe</div>
+    <div class="wrld-intro-progress" aria-hidden="true"></div>
+  </div>
+</div>
 <canvas id="starfield" aria-hidden="true"></canvas>
 <div class="space-haze" aria-hidden="true"></div>
 <div class="app pywebview-drag-region">
@@ -684,7 +721,7 @@ body.native-shell .window-chrome{display:none!important}
         <div class="settings-heading">Music source</div>
         <div class="settings-card">
           <div class="cloud-source-switch"><button id="sourceLocal" type="button">On this computer</button><button id="sourceCloud" type="button">WRLD Cloud</button></div>
-          <div class="cloud-config">
+          <div class="cloud-config is-local">
             <label>Cloudflare Worker: https://wrld-cloud.zaavangonzaless.workers.dev</label>
             <label for="cloudAccessKey">Private access key (encrypted for your Windows account)</label>
             <input id="cloudAccessKey" type="password" autocomplete="new-password" placeholder="Paste WRLD_ACCESS_TOKEN">
@@ -833,6 +870,18 @@ body.native-shell .window-chrome{display:none!important}
 'use strict';
 const $ = id => document.getElementById(id);
 const audio = $('audio');
+const intro=$('wrldIntro');
+setTimeout(()=>{
+ intro.classList.add('is-finished');
+ setTimeout(()=>intro.remove(),700);
+},2000);
+function setCloudConnectionStatus(message,mode='idle'){
+ const node=$('cloudConnectionStatus');
+ node.textContent=message;
+ node.classList.toggle('is-connected',mode==='connected');
+ node.classList.toggle('is-error',mode==='error');
+}
+
 let trackIndex=new Map();
 const state = {cloudSource:'local',tracks:[], filtered:[], currentId:null, playOrder:[], folder:'', query:'', volume:0.10, view:'all', activePlaylist:null, liked:new Set(), playlists:[], collectionsReady:false, repeatMode:'off',sort:'title',history:[],settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000}};
 try{const saved=localStorage.getItem('wrld-repeat-mode');if(['off','all','one'].includes(saved))state.repeatMode=saved}catch{}
@@ -848,6 +897,7 @@ try{
   if(Number.isFinite(saved.fadeDurationMs)&&saved.fadeDurationMs>=500&&saved.fadeDurationMs<=5000)state.settings.fadeDurationMs=saved.fadeDurationMs;
  }
 }catch{}
+// First launch starts on this computer; after choosing WRLD Cloud, remember it.
 try{state.cloudSource=localStorage.getItem('wrld-library-source')==='cloud'?'cloud':'local'}catch{}
 $('sortSelect').value=state.sort;
 const clean = s => String(s??'').replace(/[&<>"']/g, v => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[v]));
@@ -980,10 +1030,10 @@ async function loadTracks(){
    applyFilter();syncTrackUI();
     if(cloud)probeCloudDurations(state.tracks);
    if(!data.folder_exists&&!cloud)toast('Choose a music folder to begin');
-   $('cloudConnectionStatus').textContent=cloud?'Connected · '+state.tracks.length+' cloud songs':'Local music selected';
+   setCloudConnectionStatus(cloud?'Connected · '+state.tracks.length+' cloud songs':'Local music selected',cloud?'connected':'idle');
  }catch(e){
    toast(e.message||'Failed to load library');
-   $('cloudConnectionStatus').textContent=e.message||'Could not load WRLD Cloud';
+   setCloudConnectionStatus(e.message||'Could not load WRLD Cloud','error');
  }
 }
 function activePlaylist(){return state.playlists.find(p=>p.id===state.activePlaylist)||null}
@@ -1104,6 +1154,7 @@ function renderSettings(){
  $('fadeDurationLabel').textContent=(s.fadeDurationMs/1000).toFixed(1)+' s';
  $('sourceLocal').classList.toggle('active',state.cloudSource==='local');
  $('sourceCloud').classList.toggle('active',state.cloudSource==='cloud');
+  document.querySelector('.cloud-config').classList.toggle('is-local',state.cloudSource!=='cloud');
 }
 function saveAudioSettings(){
  try{localStorage.setItem('wrld-desktop-settings-v1',JSON.stringify(state.settings))}catch{}
@@ -1288,10 +1339,10 @@ $('cloudConnect').addEventListener('click',async()=>{
  if(!api?.configure_cloud){toast('Install the latest Windows WRLD app to connect to Cloud');return}
  try{
    const result=await api.configure_cloud(key);
-   $('cloudConnectionStatus').textContent=result.configured?'Access key saved securely':'Could not save access key';
+   setCloudConnectionStatus(result.configured?'Access key saved securely · Connecting...':'Could not save access key',result.configured?'idle':'error');
    await selectLibrarySource('cloud');
  }catch(e){
-   $('cloudConnectionStatus').textContent='Access key could not be saved';
+   setCloudConnectionStatus('Access key could not be saved','error');
    toast('Check the access key and try again');
  }
 });
