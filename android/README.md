@@ -1,4 +1,4 @@
-# WRLD Android — first playable beta (v0.1.12)
+# WRLD Android — first playable beta (v0.1.13)
 
 Native Android music playback with a monochrome WebView interface. The Windows
 Python/WebView2 player and its releases remain unchanged.
@@ -15,7 +15,7 @@ Python/WebView2 player and its releases remain unchanged.
 ## How to try it
 
 1. Open GitHub Actions in xdStatus/WRLD and verify **Build WRLD Android APK** succeeded.
-2. Open the **android-v0.1.12** release and download **WRLD-Android-v0.1.12.apk** to your Android device.
+2. Open the **android-v0.1.13** release and download **WRLD-Android-v0.1.13.apk** to your Android device.
 3. Allow APK installation from your browser or file manager when Android prompts.
 4. Open WRLD and grant **Music and audio** access.
 5. Put music files in your phone's Music folder if the library is empty, then reopen/Rescan.
@@ -226,7 +226,7 @@ untouched. The app still uses temporary debug APK signing keys, so installing
 this build over an older beta may require uninstalling it first; music files
 are not deleted, but saved app preferences/playlists/likes may be cleared.
 
-## Android beta v0.1.12 — WRLD Cloud (personal Windows server)
+## Android beta v0.1.13 — WRLD Cloud (personal Windows server)
 
 WRLD can now stream from the music collection on your own Windows computer
 without copying the songs onto Android. Settings → Music source → WRLD Cloud
@@ -249,3 +249,13 @@ The Windows desktop app itself still plays music locally as before.
 Debug APK signing remains temporary; switching APK versions may require
 uninstalling WRLD, which clears app-specific preferences, liked songs and
 playlists but does not delete your music files.
+
+## Android v0.1.13 — Cloudflare R2 streaming
+
+WRLD Cloud now streams from the private Cloudflare Worker and R2 storage,
+not a Windows/Tailscale server. Enter a secret Worker access key once in
+Settings; the token is encrypted with Android Keystore and used for Media3
+background audio requests. No public R2 bucket, phone Tailscale app or
+running PC required. Local playback is still supported. See
+WRLD_CLOUD_SETUP.md for current steps. Older PC-server information above is
+retained for historical version notes only.

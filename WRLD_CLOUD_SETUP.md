@@ -1,63 +1,41 @@
-# WRLD Cloud — private Windows PC streaming setup
+# WRLD Cloud — Cloudflare R2 private streaming
 
-WRLD Cloud turns your Windows PC into a personal music server for Android.
-No music is uploaded to a third-party cloud provider. Stream only files you
-are authorized to store and stream. This MVP is intentionally private and
-read-only: there are no public user accounts or public music catalog.
+The music files are stored in the private Cloudflare R2 bucket `wrld-music`, not
+on a Windows server. Both Android and Windows connect over HTTPS to the Worker
+`https://wrld-cloud.zaavangonzaless.workers.dev`. Your computer may be off.
 
-## Windows setup
+Cloudflare must have a Worker with the `MUSIC_BUCKET` R2 binding and a secret
+named `WRLD_ACCESS_TOKEN`. The Worker source uses that secret to authenticate
+requests to `/api/tracks` and `/api/stream/<encoded object key>`. The R2 bucket
+must remain **private**. Test that visiting `/api/tracks` without a token
+returns HTTP 401 Unauthorized. Do not publish the key in GitHub or share it.
 
-1. Update the installed **WRLD Windows** app to **v1.8.5** using
-   **Updates → Check Now → Update & Restart**, or get the published WRLD.exe.
-2. Install the official Tailscale app for Windows and sign in to your account:
-   https://tailscale.com/download
-3. Leave the Windows WRLD app open; it starts a small, **read-only** server on
-   **127.0.0.1:18766** while the app is running. If WRLD is closed, streaming
-   stops until you reopen it.
-4. Open **Windows Terminal (Admin)** and run:
-   
-   ```powershell
-   tailscale serve --bg 18766
-   tailscale serve status
-   ```
+## Android v0.1.13
 
-   Enable tailnet HTTPS certificates if Tailscale prompts. The status output
-   displays a private HTTPS URL similar to
-   `https://your-pc.your-tailnet.ts.net`. Copy *your actual* address.
-   Never use the `tailscale funnel` command or router port-forwarding.
+Open WRLD → Settings → Music source → WRLD Cloud. Paste the *secret value*
+(not the name `WRLD_ACCESS_TOKEN`) and tap Connect. Your key is encrypted
+locally using Android Keystore. Music will stream through the existing
+Media3 player and background session. Select "On this device" for local music.
 
-## Android setup
+## Windows v1.8.6
 
-1. Install Tailscale for Android and sign in to the **same private tailnet**.
-2. Update **WRLD Android** to **v0.1.12**.
-3. In WRLD open **Settings → Music source → WRLD Cloud**.
-4. Paste the URL reported by `tailscale serve status`, e.g.
-   `https://your-pc.your-tailnet.ts.net`, then tap **Connect**.
-5. The library should show the songs on the PC. Tap a song to stream it.
-   Up Next, background playback, seeking, likes, and local Android playlists
-   continue to operate. Use **On this device** to return to local tracks.
+Open Settings → Music source, paste the same secret key, and choose
+"Save key & connect". WRLD encrypts the key with Windows DPAPI for the
+current Windows user. The local WebView never receives the saved key.
+Choose "On this computer" to return to local playback.
 
-## Important details and troubleshooting
+No Tailscale, router port forwarding, or permanently running PC is needed.
 
-- **Keep Windows awake** and both devices connected to Tailscale. Streaming
-  requires the PC and an internet connection; sleep/offline devices cannot play.
-- Streaming from your PC consumes the PC's upstream internet bandwidth and the
-  Android phone's network data. Performance depends on both connections.
-- **No public exposure.** The server binds only to 127.0.0.1 and only serves
-  `/cloud/tracks` metadata and `/cloud/media/<song-id>` file streams.
-  It rejects modifying requests and does not expose the Windows admin API.
-  Tailscale Serve handles HTTPS and private tailnet access. Limit which devices
-  have access to your tailnet; all authorized devices may be able to access the
-  streaming endpoint depending on your Tailscale access policy.
-- In a browser, `https://your-pc.your-tailnet.ts.net/cloud/tracks` on an
-  authenticated Tailscale device should show a JSON library. If you see a
-  certificate/connection error, check Tailscale Serve and its HTTPS settings.
-- If WRLD Cloud fails to connect, first verify Windows WRLD is running,
-  `tailscale serve status` shows the 18766 proxy, and both devices are online.
-- This MVP has **no offline cloud caching**, cross-device likes/playlists/history
-  synchronization, or perfect gapless streaming guarantee. Songs remain on PC.
-- The URL entered in Android is saved to private app preferences locally. No
-  password or Tailscale access token is saved by WRLD.
-- To turn off private sharing, run `tailscale serve off` on Windows.
-- Android beta APKs are still signed with temporary CI keys; uninstalling an
-  older version first may clear WRLD app data but never deletes device audio.
+## Next steps
+
+Verify the one MP3 already uploaded appears in both cloud libraries, and
+test play, pause, seeking, and background playback. Then upload more of
+your music files that you are authorized to store and stream.
+
+The private storage service may incur charges for storage and operations.
+Cross-device playlists, likes, history and offline cloud downloads are not
+yet implemented. Durations can be unknown in the cloud list until playback.
+
+Android preview builds use temporary signing keys. Installing an update may
+require uninstalling the older beta and clearing WRLD's in-app settings,
+playlists and likes; your device's actual audio files remain untouched.
