@@ -108,4 +108,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.15: ColorOS-style centered 999 WRLD logo, stars accelerating outward into multi-direction shooting stars that continue in the music player's background; secure cloud access key controls retained."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.16: refined ColorOS-inspired luminous glass-morph 999 WRLD intro with fluid aurora lighting; removed the R2 storage note from Cloud settings."
