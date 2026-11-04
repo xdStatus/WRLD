@@ -460,6 +460,17 @@ body:not(.native-shell) .brand h1{cursor:default}
 @media(max-width:1120px){.topbar{gap:14px}.brand{min-width:auto}.actions{gap:5px}.window-chrome{gap:0}.window-chrome button{width:25px}}
 @media(max-width:780px){.window-chrome{margin-left:auto}.actions{order:2}.window-chrome{order:1}.search{order:3}}
 
+
+/* V1.8.2 — Like mirrors Repeat: heart / previous / play / next / repeat. */
+.player .controls > .now-like{margin-left:0;flex:none}
+.player button.now-like{opacity:.55;transition:opacity .24s ease,transform .32s cubic-bezier(.22,1,.36,1),filter .25s ease!important}
+.player button.now-like:hover:not(:disabled){opacity:.96}
+.player button.now-like.is-liked{opacity:1;color:#fff;filter:drop-shadow(0 0 7px rgba(255,255,255,.28))}
+.player button.now-like.is-liked svg{fill:currentColor;stroke:currentColor}
+.player button.now-like.is-liked::after{content:'';position:absolute;bottom:-3px;left:50%;width:3px;height:3px;border-radius:50%;background:#fff;transform:translateX(-50%);box-shadow:0 0 8px rgba(255,255,255,.7)}
+.player button.now-like:disabled{opacity:.25;cursor:default;filter:none!important}
+.player button.now-like:disabled:hover{transform:none!important;background:transparent!important}
+
 </style>
 </head>
 <body>
@@ -556,15 +567,12 @@ body:not(.native-shell) .brand h1{cursor:default}
   </section>
 
   <footer class="player glass pywebview-drag-region" id="playerDock">
-    <div class="player-left pywebview-drag-region"
+    <div class="player-left pywebview-drag-region">
       <div class="mini-art" id="miniArt"><span class="letter">W</span><img alt="Album art"></div>
       <div class="player-text pywebview-drag-region">
         <b id="playerTitle">Choose a track</b>
         <span id="playerSubtitle">WRLD</span>
       </div>
-      <button class="now-like" id="nowLikeBtn" type="button" aria-label="Like current song" title="Like current song" aria-pressed="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 5.2a5.7 5.7 0 0 0-8.1 0l-.7.7-.7-.7a5.7 5.7 0 0 0-8.1 8.1L12 22l8.8-8.7a5.7 5.7 0 0 0 0-8.1Z"/></svg>
-      </button>
     </div>
 
     <div class="center pywebview-drag-region">
@@ -578,6 +586,9 @@ body:not(.native-shell) .brand h1{cursor:default}
         <span class="time" id="duration">0:00</span>
       </div>
       <div class="controls pywebview-drag-region" role="group" aria-label="Music playback controls">
+        <button class="circle now-like" id="nowLikeBtn" type="button" aria-label="Like current song" title="Like current song" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 5.2a5.7 5.7 0 0 0-8.1 0l-.7.7-.7-.7a5.7 5.7 0 0 0-8.1 8.1L12 22l8.8-8.7a5.7 5.7 0 0 0 0-8.1Z"/></svg>
+      </button>
         <button class="circle" id="prevBtn" aria-label="Previous song" title="Previous song">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M18 6l-9 6 9 6"/></svg>
         </button>
@@ -594,7 +605,7 @@ body:not(.native-shell) .brand h1{cursor:default}
       </div>
     </div>
 
-    <div class="player-right pywebview-drag-region"
+    <div class="player-right pywebview-drag-region">
       <span class="volume-label">Volume</span>
       <button type="button" id="muteBtn" class="mute-control" aria-label="Mute sound" aria-pressed="false" title="Mute">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="unmuted-path" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/><path class="muted-path" d="m17 9 5 6m0-6-5 6" style="display:none"/></svg>
