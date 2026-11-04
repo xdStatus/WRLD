@@ -645,6 +645,18 @@ body.native-shell .window-chrome{display:none!important}
 .cloud-config.is-local{display:none!important}
 @media(prefers-reduced-motion:reduce){.wrld-intro *,.wrld-intro:before{animation:none!important}.wrld-intro{transition:none}}
 
+/* Compact alphabet navigation and glowing hover */
+.library-list-layout{display:flex;flex:1;min-width:0;min-height:0;overflow:hidden}
+.library-list-layout .list-wrap{flex:1;min-width:0;min-height:0}
+.alphabet-rail{display:flex;flex:0 0 25px;flex-direction:column;justify-content:space-evenly;align-items:center;min-height:0;margin-right:8px;padding:3px 0;border-right:1px solid #ffffff16}
+.alphabet-letter{display:grid;place-items:center;flex:1 1 auto;width:21px;min-height:0;max-height:24px;border:0;border-radius:6px;padding:0;background:transparent;font-size:clamp(7px,1.13vh,10px);font-weight:620;color:#888;transition:background .2s,color .2s,text-shadow .2s,box-shadow .2s,transform .2s}
+.alphabet-letter:disabled{color:#363636;opacity:.7;cursor:default}
+.alphabet-letter:not(:disabled):hover,.alphabet-letter:not(:disabled):focus-visible{color:white;background:#ffffff24;text-shadow:0 0 10px #fff;box-shadow:0 0 14px #cde3ff55;transform:scale(1.2)}
+.alphabet-letter.is-current{color:white;text-shadow:0 0 8px #ffffffbc}
+.sort-tools{display:flex;align-items:center;gap:5px;min-width:0}
+.sort-flip{display:grid;place-items:center;width:29px;min-width:29px;height:29px;padding:0;border:1px solid #ffffff35;border-radius:8px;background:#ffffff0c;font-size:17px;transition:background .2s,box-shadow .2s}
+.sort-flip:hover{background:#ffffff25;box-shadow:0 0 14px #ffffff35}
+@media(max-height:650px){.alphabet-letter{font-size:7px}}
 </style>
 </head>
 <body>
@@ -704,25 +716,16 @@ body.native-shell .window-chrome{display:none!important}
         <div class="meta pywebview-drag-region">
           <button class="playlist-manage hidden" id="renamePlaylistBtn" title="Rename playlist" type="button">Rename</button>
           <button class="playlist-manage hidden" id="deletePlaylistBtn" title="Delete playlist" type="button">Delete</button>
-          <label class="sort-control" id="sortControl"><span>Sort</span><select id="sortSelect" aria-label="Sort songs">
-<option value="title">Title A–Z</option>
-<option value="title-desc">Title Z–A</option>
-<option value="duration-asc">Length · Shortest</option>
-<option value="duration-desc">Length · Longest</option>
-<option value="added-desc">Recently added</option>
-<option value="added-asc">Oldest first</option>
-<option value="artist">Artist A–Z</option>
-<option value="format">File type</option>
-</select></label>
+          <div id="sortControl" class="sort-tools"><label class="sort-control"><span>Sort</span><select id="sortSelect" aria-label="Sort songs"><option value="title">Title</option><option value="duration">Length</option><option value="added">Date added</option><option value="artist">Artist</option><option value="format">File type</option></select></label><button id="sortReverse" type="button" class="sort-flip" title="Reverse sorting direction" aria-label="Reverse sorting direction">↓</button></div>
 <span id="countText">0 songs</span>
           <span id="formatText">Local audio only</span>
         </div>
       </div>
       <div class="playlist-grid hidden pywebview-drag-region" id="playlistGrid" aria-label="Your playlists"></div>
-      <div class="list-wrap pywebview-drag-region" id="listWrap">
+      <div class="library-list-layout" id="libraryListLayout"><nav id="alphabetRail" class="alphabet-rail" aria-label="Jump to letter"></nav><div class="list-wrap pywebview-drag-region" id="listWrap">
         <div class="song-list pywebview-drag-region" id="songList"></div>
         <div class="empty hidden" id="emptyState">No songs found. Rescan or choose a different folder.</div>
-      </div>
+      </div></div>
       <div class="settings-panel hidden" id="settingsPanel" aria-label="Playback and general settings">
         <div class="settings-heading">Playback</div>
         <div class="settings-card">
@@ -913,9 +916,15 @@ function setCloudConnectionStatus(message,mode='idle'){
 }
 
 let trackIndex=new Map();
-const state = {cloudSource:'local',tracks:[], filtered:[], currentId:null, playOrder:[], folder:'', query:'', volume:0.10, view:'all', activePlaylist:null, liked:new Set(), playlists:[], collectionsReady:false, repeatMode:'off',sort:'title',history:[],settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000}};
+const state = {cloudSource:'local',tracks:[], filtered:[], currentId:null, playOrder:[], folder:'', query:'', volume:0.10, view:'all', activePlaylist:null, liked:new Set(), playlists:[], collectionsReady:false, repeatMode:'off',sort:'title',sortReversed:false,history:[],settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000}};
 try{const saved=localStorage.getItem('wrld-repeat-mode');if(['off','all','one'].includes(saved))state.repeatMode=saved}catch{}
-try{const saved=localStorage.getItem('wrld-sort');if(['title','title-desc','duration-asc','duration-desc','added-desc','added-asc','artist','format'].includes(saved))state.sort=saved}catch{}
+try{
+ const saved=localStorage.getItem('wrld-sort');
+ const old={'title-desc':['title',true],'duration-asc':['duration',false],'duration-desc':['duration',true],'added-desc':['added',false],'added-asc':['added',true]};
+ if(old[saved]){[state.sort,state.sortReversed]=old[saved]}
+ else if(['title','duration','added','artist','format'].includes(saved))state.sort=saved;
+ const reverse=localStorage.getItem('wrld-sort-reversed');if(reverse!==null)state.sortReversed=reverse==='true';
+}catch{}
 try{
  const saved=JSON.parse(localStorage.getItem('wrld-desktop-history-v1')||'[]');
  if(Array.isArray(saved))state.history=[...new Set(saved.filter(id=>typeof id==='string'&&id.length<=64))].slice(0,50);
@@ -930,6 +939,17 @@ try{
 // First launch starts on this computer; after choosing WRLD Cloud, remember it.
 try{state.cloudSource=localStorage.getItem('wrld-library-source')==='cloud'?'cloud':'local'}catch{}
 $('sortSelect').value=state.sort;
+function refreshSortDirection(){
+ const labels={title:['A–Z','Z–A'],duration:['Shortest first','Longest first'],added:['Newest first','Oldest first'],artist:['A–Z','Z–A'],format:['A–Z','Z–A']};
+ const label=labels[state.sort][Number(state.sortReversed)],button=$('sortReverse');
+ button.textContent=state.sortReversed?'↑':'↓';
+ button.title='Sort: '+label;button.setAttribute('aria-label','Sort: '+label+'. Reverse direction');
+}
+function saveSortDirection(){
+ try{localStorage.setItem('wrld-sort',state.sort);localStorage.setItem('wrld-sort-reversed',String(state.sortReversed))}catch{}
+ refreshSortDirection();
+}
+refreshSortDirection();
 const clean = s => String(s??'').replace(/[&<>"']/g, v => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[v]));
 const fmt = s => Number.isFinite(s) && s>=0 ? `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}` : '0:00';
 let noticeTimer;
@@ -1117,21 +1137,40 @@ function updateCollectionNav(){
 }
 
 function sortTracks(tracks){
-  const sorted=[...tracks];
-  const alpha=(a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'});
-  const title=(a,b)=>alpha(a.title||'',b.title||'');
-  const duration=(a)=>Number.isFinite(a.duration)&&a.duration>=0?a.duration:null;
-  switch(state.sort){
-    case 'title-desc':sorted.sort((a,b)=>-title(a,b));break;
-    case 'duration-asc':sorted.sort((a,b)=>duration(a)===null?(duration(b)===null?title(a,b):1):duration(b)===null?-1:duration(a)-duration(b)||title(a,b));break;
-    case 'duration-desc':sorted.sort((a,b)=>duration(a)===null?(duration(b)===null?title(a,b):1):duration(b)===null?-1:duration(b)-duration(a)||title(a,b));break;
-    case 'added-desc':sorted.sort((a,b)=>(b.modified||0)-(a.modified||0)||title(a,b));break;
-    case 'added-asc':sorted.sort((a,b)=>(a.modified||0)-(b.modified||0)||title(a,b));break;
-    case 'artist':sorted.sort((a,b)=>alpha(a.artist||'',b.artist||'')||title(a,b));break;
-    case 'format':sorted.sort((a,b)=>alpha(a.format||'',b.format||'')||title(a,b));break;
-    default:sorted.sort(title);
-  }
-  return sorted;
+ const sorted=[...tracks],alpha=(x,y)=>String(x||'').localeCompare(String(y||''),undefined,{numeric:true,sensitivity:'base'});
+ const title=(x,y)=>alpha(x.title,y.title),direction=state.sortReversed?-1:1;
+ sorted.sort((x,y)=>{
+  let d=0;
+  if(state.sort==='duration'){
+   const a=Number.isFinite(x.duration)&&x.duration>0?x.duration:null;
+   const b=Number.isFinite(y.duration)&&y.duration>0?y.duration:null;
+   if(a===null||b===null)return a===null?(b===null?title(x,y):1):-1;
+   d=a-b;
+  }else if(state.sort==='added')d=(y.modified||0)-(x.modified||0);
+  else if(state.sort==='artist')d=alpha(x.artist,y.artist);
+  else if(state.sort==='format')d=alpha(x.format,y.format);
+  else d=title(x,y);
+  return d*direction||title(x,y);
+ });
+ return sorted;
+}
+const alphabetRail=$('alphabetRail');
+for(const letter of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'){
+ const button=document.createElement('button');button.type='button';button.className='alphabet-letter';
+ button.dataset.letter=letter;button.textContent=letter;button.title='Jump to '+letter;
+ button.setAttribute('aria-label','Jump to '+letter);
+ button.addEventListener('click',()=>jumpToLetter(letter));alphabetRail.appendChild(button);
+}
+function updateAlphabetRail(){
+ const letters=new Set(state.filtered.map(t=>String(t.title||'').trim().charAt(0).toUpperCase()));
+ for(const b of alphabetRail.children)b.disabled=!letters.has(b.dataset.letter);
+}
+function jumpToLetter(letter){
+ if(!state.filtered.some(t=>String(t.title||'').trim().toUpperCase().startsWith(letter)))return;
+ if(state.sort!=='title'||state.sortReversed){state.sort='title';state.sortReversed=false;$('sortSelect').value='title';saveSortDirection();applyFilter()}
+ const index=state.filtered.findIndex(t=>String(t.title||'').trim().toUpperCase().startsWith(letter));
+ const row=$('songList').children[index];
+ if(row){row.scrollIntoView({block:'start',behavior:reducedMotion?'auto':'smooth'});for(const b of alphabetRail.children)b.classList.toggle('is-current',b.dataset.letter===letter)}
 }
 
 function applyFilter(){
@@ -1150,7 +1189,8 @@ function applyFilter(){
   $('libraryTitle').textContent=settingsView?'Settings':state.view==='history'?'Recently Played':state.view==='liked'?'Liked Songs':gridView?'Your Playlists':state.view==='playlist'?(playlist?.name||'Playlist'):'Library';
   $('folderText').textContent=settingsView?'Playback and general preferences':state.view==='history'?'Up to 50 recent songs':state.folder?'Folder: '+state.folder:'Choose a folder to begin';
   $('playlistGrid').classList.toggle('hidden',!gridView);
-  $('listWrap').classList.toggle('hidden',gridView||settingsView);
+  $('libraryListLayout').classList.toggle('hidden',gridView||settingsView);
+  alphabetRail.classList.toggle('hidden',state.view!=='all'&&state.view!=='liked');
   $('settingsPanel').classList.toggle('hidden',!settingsView);
   $('countText').textContent=settingsView?'LOCAL':gridView?`${state.playlists.length} PLAYLIST${state.playlists.length===1?'':'S'}`:`${state.filtered.length} SONG${state.filtered.length===1?'':'S'}`;
   if(settingsView){state.filtered=[];renderSettings();updateCollectionNav();return}
@@ -1173,6 +1213,7 @@ function applyFilter(){
     list.replaceChildren(frag);
   }
   state.highlightedId=state.currentId;
+  updateAlphabetRail();
   updateCollectionNav();
 }
 function renderSettings(){
@@ -1451,7 +1492,8 @@ $('songList').addEventListener('click',e=>{
 });
 let searchDelay=0;
 $('search').addEventListener('input',e=>{state.query=e.target.value;clearTimeout(searchDelay);searchDelay=setTimeout(applyFilter,55)});
-$('sortSelect').addEventListener('change',e=>{state.sort=e.target.value;try{localStorage.setItem('wrld-sort',state.sort)}catch{};applyFilter()});
+$('sortSelect').addEventListener('change',e=>{state.sort=e.target.value;state.sortReversed=false;saveSortDirection();applyFilter()});
+$('sortReverse').addEventListener('click',()=>{state.sortReversed=!state.sortReversed;saveSortDirection();applyFilter()});
 window.addEventListener('resize',()=>moveCollectionIndicator(),{passive:true});
 requestAnimationFrame(()=>moveCollectionIndicator(true));
 $('playBtn').addEventListener('click',()=>{const btn=$('playBtn');btn.classList.remove('tap-bloom');void btn.offsetWidth;btn.classList.add('tap-bloom');togglePlay()});
