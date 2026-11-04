@@ -1,4 +1,4 @@
-# WRLD Android — first playable beta (v0.1.5)
+# WRLD Android — first playable beta (v0.1.6)
 
 Native Android music playback with a monochrome WebView interface. The Windows
 Python/WebView2 player and its releases remain unchanged.
@@ -15,7 +15,7 @@ Python/WebView2 player and its releases remain unchanged.
 ## How to try it
 
 1. Open GitHub Actions in xdStatus/WRLD and verify **Build WRLD Android APK** succeeded.
-2. Open the **android-v0.1.5** release and download **WRLD-Android-v0.1.5.apk** to your Android device.
+2. Open the **android-v0.1.6** release and download **WRLD-Android-v0.1.6.apk** to your Android device.
 3. Allow APK installation from your browser or file manager when Android prompts.
 4. Open WRLD and grant **Music and audio** access.
 5. Put music files in your phone's Music folder if the library is empty, then reopen/Rescan.
@@ -124,3 +124,16 @@ and isn't uploaded or synchronized with Windows. Uninstalling WRLD clears it.
 The CI workflow validates the WebView JavaScript and launches the APK on an
 Android emulator before publishing. APK signing is still temporary; installing
 a different beta may require uninstalling the current one first.
+
+## Android beta v0.1.6 — matching ColorOS volume bar
+
+The bottom-right Volume slider shares the same soft gray track, bright
+white gradient fill and glowing playhead as the progress scrubber. On touch,
+the track expands and shows a floating volume percentage. The accessible
+native HTML range remains the touch/keyboard input and still controls the
+Media3 app volume (0–100%); the default remains 10%.
+
+Only Android files have changed. This beta uses temporary debug APK signing,
+so you may need to uninstall the old beta before installing the new APK.
+Music files on the phone will not be deleted, but uninstalling the beta
+clears its locally stored playlists, favorites and history.
