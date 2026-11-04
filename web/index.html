@@ -758,9 +758,20 @@ body:not(.native-shell) .brand h1{cursor:default}
 const $ = id => document.getElementById(id);
 const audio = $('audio');
 let trackIndex=new Map();
-const state = {tracks:[], filtered:[], currentId:null, playOrder:[], folder:'', query:'', volume:0.10, view:'all', activePlaylist:null, liked:new Set(), playlists:[], collectionsReady:false, repeatMode:'off',sort:'title'};
+const state = {tracks:[], filtered:[], currentId:null, playOrder:[], folder:'', query:'', volume:0.10, view:'all', activePlaylist:null, liked:new Set(), playlists:[], collectionsReady:false, repeatMode:'off',sort:'title',history:[],settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000}};
 try{const saved=localStorage.getItem('wrld-repeat-mode');if(['off','all','one'].includes(saved))state.repeatMode=saved}catch{}
 try{const saved=localStorage.getItem('wrld-sort');if(['title','title-desc','duration-asc','duration-desc','added-desc','added-asc','artist','format'].includes(saved))state.sort=saved}catch{}
+try{
+ const saved=JSON.parse(localStorage.getItem('wrld-desktop-history-v1')||'[]');
+ if(Array.isArray(saved))state.history=[...new Set(saved.filter(id=>typeof id==='string'&&id.length<=64))].slice(0,50);
+}catch{}
+try{
+ const saved=JSON.parse(localStorage.getItem('wrld-desktop-settings-v1')||'{}');
+ if(saved&&typeof saved==='object'){
+  for(const key of ['fadeIn','fadeOut','gapless'])if(typeof saved[key]==='boolean')state.settings[key]=saved[key];
+  if(Number.isFinite(saved.fadeDurationMs)&&saved.fadeDurationMs>=500&&saved.fadeDurationMs<=5000)state.settings.fadeDurationMs=saved.fadeDurationMs;
+ }
+}catch{}
 $('sortSelect').value=state.sort;
 const clean = s => String(s??'').replace(/[&<>"']/g, v => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[v]));
 const fmt = s => Number.isFinite(s) && s>=0 ? `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}` : '0:00';
@@ -831,12 +842,39 @@ async function loadTracks(){
  }catch(e){toast(e.message||'Failed to load library')}
 }
 function activePlaylist(){return state.playlists.find(p=>p.id===state.activePlaylist)||null}
+const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let viewTransitionTimer=0,viewTransitionSequence=0;
+function moveCollectionIndicator(initial=false){
+ const nav=document.querySelector('.library-nav');
+ const tab=nav.querySelector('.collection-tab.active');
+ const indicator=$('tabIndicator');
+ if(!tab||!indicator)return;
+ if(initial)indicator.style.transition='none';
+ indicator.style.width=tab.offsetWidth+'px';
+ indicator.style.transform='translate3d('+tab.offsetLeft+'px,0,0)';
+ if(initial)requestAnimationFrame(()=>{indicator.style.transition=''});
+ nav.scrollTo({left:Math.max(0,tab.offsetLeft+tab.offsetWidth/2-nav.clientWidth/2),behavior:reducedMotion?'auto':'smooth'});
+}
 function setView(view,playlistId=null){
-  state.view=view;
-  state.activePlaylist=view==='playlist'?playlistId:null;
-  state.query=$('search').value;
-  closeTrackMenu();
+ const nextPlaylist=view==='playlist'?playlistId:null;
+ const changed=view!==state.view||state.activePlaylist!==nextPlaylist;
+ state.view=view;state.activePlaylist=nextPlaylist;
+ state.query=$('search').value;
+ closeTrackMenu();
+ updateCollectionNav();
+ moveCollectionIndicator();
+ if(viewTransitionTimer){clearTimeout(viewTransitionTimer);viewTransitionTimer=0}
+ const stage=$('libraryStage'),sequence=++viewTransitionSequence;
+ if(!changed||reducedMotion){
+  stage.classList.remove('view-changing');applyFilter();return;
+ }
+ stage.classList.add('view-changing');
+ viewTransitionTimer=setTimeout(()=>{
+  if(sequence!==viewTransitionSequence)return;
+  viewTransitionTimer=0;
   applyFilter();
+  requestAnimationFrame(()=>{if(sequence===viewTransitionSequence)stage.classList.remove('view-changing')});
+ },105);
 }
 function updateCollectionNav(){
   const nav=state.view==='playlist'?'playlists':state.view;
@@ -849,6 +887,7 @@ function updateCollectionNav(){
   $('backPlaylistsBtn').classList.toggle('hidden',state.view!=='playlist');
   $('renamePlaylistBtn').classList.toggle('hidden',state.view!=='playlist');
   $('deletePlaylistBtn').classList.toggle('hidden',state.view!=='playlist');
+  $('newPlaylistBtn').classList.toggle('hidden',state.view==='settings');
 }
 
 function sortTracks(tracks){
@@ -874,21 +913,25 @@ function applyFilter(){
   const matches=t=>!q||[t.title,t.artist,t.album,t.relative].join(' ').toLowerCase().includes(q);
   const playlist=activePlaylist();
   let source;
-  if(state.view==='liked') source=state.tracks.filter(t=>state.liked.has(t.id));
+  if(state.view==='liked')source=state.tracks.filter(t=>state.liked.has(t.id));
   else if(state.view==='playlist')source=(playlist?.ids||[]).map(id=>trackById(id)).filter(Boolean);
+  else if(state.view==='history')source=state.history.map(trackById).filter(Boolean);
   else source=state.tracks;
-  state.filtered=state.view==='playlist'?source.filter(matches):sortTracks(source.filter(matches));
-  $('sortControl').classList.toggle('hidden',state.view==='playlist'||state.view==='playlists');
+  state.filtered=state.view==='playlist'||state.view==='history'?source.filter(matches):sortTracks(source.filter(matches));
+  const settingsView=state.view==='settings',gridView=state.view==='playlists';
+  $('sortControl').classList.toggle('hidden',settingsView||state.view==='history'||state.view==='playlist'||gridView);
   const list=$('songList');
-  $('libraryTitle').textContent=state.view==='liked'?'Liked Songs':state.view==='playlists'?'Your Playlists':state.view==='playlist'?(playlist?.name||'Playlist'):'Library';
-  const gridView=state.view==='playlists';
+  $('libraryTitle').textContent=settingsView?'Settings':state.view==='history'?'Recently Played':state.view==='liked'?'Liked Songs':gridView?'Your Playlists':state.view==='playlist'?(playlist?.name||'Playlist'):'Library';
+  $('folderText').textContent=settingsView?'Playback and general preferences':state.view==='history'?'Up to 50 recent songs':state.folder?'Folder: '+state.folder:'Choose a folder to begin';
   $('playlistGrid').classList.toggle('hidden',!gridView);
-  $('listWrap').classList.toggle('hidden',gridView);
-  $('countText').textContent=gridView?`${state.playlists.length} PLAYLIST${state.playlists.length===1?'':'S'}`:`${state.filtered.length} SONG${state.filtered.length===1?'':'S'}`;
+  $('listWrap').classList.toggle('hidden',gridView||settingsView);
+  $('settingsPanel').classList.toggle('hidden',!settingsView);
+  $('countText').textContent=settingsView?'LOCAL':gridView?`${state.playlists.length} PLAYLIST${state.playlists.length===1?'':'S'}`:`${state.filtered.length} SONG${state.filtered.length===1?'':'S'}`;
+  if(settingsView){state.filtered=[];renderSettings();updateCollectionNav();return}
   if(gridView){renderPlaylistGrid();$('emptyState').classList.add('hidden');}
   else if(!state.filtered.length){
     list.replaceChildren();$('emptyState').classList.remove('hidden');
-    $('emptyState').textContent=state.view==='liked'?'No liked songs yet. Use the heart beside any song to save it.':state.view==='playlist'?'Nothing here yet. Add a song using its + menu.':q?'No matching songs. Try another search.':'No songs found. Rescan or choose a folder.';
+    $('emptyState').textContent=state.view==='history'?'No recently played songs. Play a track to start your history.':state.view==='liked'?'No liked songs yet. Use the heart beside any song to save it.':state.view==='playlist'?'Nothing here yet. Add a song using its + menu.':q?'No matching songs. Try another search.':'No songs found. Rescan or choose a folder.';
   }else{
     $('emptyState').classList.add('hidden');
     const frag=document.createDocumentFragment();
@@ -905,6 +948,35 @@ function applyFilter(){
   }
   state.highlightedId=state.currentId;
   updateCollectionNav();
+}
+function renderSettings(){
+ const s=state.settings;
+ $('settingFadeIn').checked=s.fadeIn;
+ $('settingFadeOut').checked=s.fadeOut;
+ $('settingGapless').checked=s.gapless;
+ $('fadeDuration').value=String(s.fadeDurationMs);
+ $('fadeDurationLabel').textContent=(s.fadeDurationMs/1000).toFixed(1)+' s';
+}
+function saveAudioSettings(){
+ try{localStorage.setItem('wrld-desktop-settings-v1',JSON.stringify(state.settings))}catch{}
+ applyVolumeEnvelope();
+}
+function recordPlayed(id){
+ if(!trackById(id))return;
+ state.history=[id,...state.history.filter(old=>old!==id)].slice(0,50);
+ try{localStorage.setItem('wrld-desktop-history-v1',JSON.stringify(state.history))}catch{}
+ if(state.view==='history'&&viewTransitionTimer===0)applyFilter();
+}
+function shuffleAll(){
+ const ids=state.tracks.map(t=>t.id);
+ if(!ids.length){toast('No songs to shuffle');return}
+ for(let i=ids.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [ids[i],ids[j]]=[ids[j],ids[i]];
+ }
+ state.playOrder=ids;
+ playTrack(ids[0],true);
+ toast('Shuffling '+ids.length+' songs');
 }
 function heartSVG(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 5.2a5.7 5.7 0 0 0-8.1 0l-.7.7-.7-.7a5.7 5.7 0 0 0-8.1 8.1L12 22l8.8-8.7a5.7 5.7 0 0 0 0-8.1Z"/></svg>'}
 function moreSVG(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'}
@@ -939,9 +1011,14 @@ async function playTrack(id, preserveOrder=false){
  if(!preserveOrder)state.playOrder=state.filtered.map(t=>t.id);
  state.currentId=id;
  audio.src=`/media/${encodeURIComponent(id)}`;
+ applyVolumeEnvelope();
  ensureAudioAnalysis();
  syncTrackUI();
- try{await audio.play()}catch(e){toast('This file could not be played in the browser')}
+ renderQueue();
+ try{
+  await audio.play();
+  if(state.currentId===id)recordPlayed(id);
+ }catch(e){toast('This file could not be played in the browser')}
 }
 function togglePlay(){
  if(!state.currentId){if(state.filtered.length)playTrack(state.filtered[0].id);return}
@@ -976,6 +1053,71 @@ function cycleRepeat(){
  toast(state.repeatMode==='off'?'Repeat off':state.repeatMode==='all'?'Repeating current list':'Repeating current song');
 }
 renderRepeat();
+let queueOpen=false,queueShown=0,queueEntries=[];
+function setQueueOpen(value){
+ if(value&&!state.currentId){toast('Select a song to view the queue');return}
+ queueOpen=!!value;
+ $('playerDock').classList.toggle('queue-open',queueOpen);
+ const drawer=$('queueDrawer');
+ drawer.setAttribute('aria-hidden',String(!queueOpen));
+ drawer.inert=!queueOpen;
+ $('queueGrip').setAttribute('aria-expanded',String(queueOpen));
+ $('openQueueButton').setAttribute('aria-expanded',String(queueOpen));
+ if(queueOpen)renderQueue();
+}
+function renderQueue(){
+ if(!queueOpen)return;
+ const order=state.playOrder,index=order.indexOf(state.currentId);
+ queueEntries=(index<0?(state.currentId?[{id:state.currentId,index:-1}]:[]):order.slice(index).map((id,n)=>({id,index:index+n}))).filter(item=>!!trackById(item.id));
+ const upcoming=Math.max(0,queueEntries.length-1);
+ $('queueMeta').textContent=upcoming+' upcoming song'+(upcoming===1?'':'s');
+ $('queueList').replaceChildren();queueShown=0;
+ appendQueueRows();
+}
+function appendQueueRows(){
+ if(!queueOpen)return;
+ const end=Math.min(queueShown+50,queueEntries.length),frag=document.createDocumentFragment();
+ for(let i=queueShown;i<end;i++){
+  const entry=queueEntries[i],track=trackById(entry.id),current=i===0;
+  if(!track)continue;
+  const row=document.createElement('div');
+  row.className='queue-row'+(current?' is-current':'');
+  row.innerHTML='<button type="button" class="queue-track" '+(current?'disabled':'data-queue-jump="'+entry.index+'"')+' aria-label="Play '+clean(track.title)+'"><span class="queue-number">'+(current?'♫':i)+'</span><span class="queue-copy"><strong>'+clean(track.title)+'</strong><small>'+clean(track.artist||'Unknown artist')+(current?' · Now playing':'')+'</small></span></button>'+(current?'':'<button type="button" class="queue-remove" data-queue-remove="'+entry.index+'" aria-label="Remove '+clean(track.title)+' from queue">×</button>');
+  frag.appendChild(row);
+ }
+ $('queueList').appendChild(frag);queueShown=end;
+}
+$('openQueueButton').addEventListener('click',()=>setQueueOpen(!queueOpen));
+$('queueGrip').addEventListener('click',()=>setQueueOpen(!queueOpen));
+$('queueClose').addEventListener('click',()=>setQueueOpen(false));
+$('queueList').addEventListener('scroll',e=>{
+ if(e.target.scrollTop+e.target.clientHeight>=e.target.scrollHeight-100)appendQueueRows();
+},{passive:true});
+$('queueList').addEventListener('click',e=>{
+ const remove=e.target.closest('[data-queue-remove]'),jump=e.target.closest('[data-queue-jump]');
+ if(!remove&&!jump)return;
+ const index=Number(remove?remove.dataset.queueRemove:jump.dataset.queueJump);
+ if(!Number.isInteger(index)||index<0||index>=state.playOrder.length)return;
+ const id=state.playOrder[index];
+ if(id===state.currentId)return;
+ if(remove){state.playOrder.splice(index,1);renderQueue()}
+ else if(id){playTrack(id,true);setQueueOpen(false)}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&queueOpen)setQueueOpen(false)});
+$('shuffleAllBtn').addEventListener('click',shuffleAll);
+$('settingsPanel').addEventListener('change',e=>{
+ const key=e.target.dataset.setting;
+ if(key&&['fadeIn','fadeOut','gapless'].includes(key)){
+  state.settings[key]=!!e.target.checked;saveAudioSettings();
+ }else if(e.target.id==='fadeDuration'){
+  state.settings.fadeDurationMs=Number(e.target.value);saveAudioSettings();renderSettings();
+ }
+});
+$('fadeDuration').addEventListener('input',e=>{
+ $('fadeDurationLabel').textContent=(Number(e.target.value)/1000).toFixed(1)+' s';
+});
+$('settingsRescan').addEventListener('click',()=>$('rescanBtn').click());
+$('settingsUpdates').addEventListener('click',()=>$('updatesBtn').click());
 $('songList').addEventListener('click',e=>{
   const like=e.target.closest('[data-like]');
   if(like){changeLike(like.dataset.like,!state.liked.has(like.dataset.like));return}
@@ -986,6 +1128,8 @@ $('songList').addEventListener('click',e=>{
 let searchDelay=0;
 $('search').addEventListener('input',e=>{state.query=e.target.value;clearTimeout(searchDelay);searchDelay=setTimeout(applyFilter,55)});
 $('sortSelect').addEventListener('change',e=>{state.sort=e.target.value;try{localStorage.setItem('wrld-sort',state.sort)}catch{};applyFilter()});
+window.addEventListener('resize',()=>moveCollectionIndicator(),{passive:true});
+requestAnimationFrame(()=>moveCollectionIndicator(true));
 $('playBtn').addEventListener('click',()=>{const btn=$('playBtn');btn.classList.remove('tap-bloom');void btn.offsetWidth;btn.classList.add('tap-bloom');togglePlay()});
 $('playBtn').addEventListener('animationend',()=>{$('playBtn').classList.remove('tap-bloom')});
 $('nextBtn').addEventListener('click',()=>moveTrack(1));
@@ -1114,6 +1258,7 @@ function displayProgress(value, timeValue){
   $('duration').textContent=fmt(audio.duration);
 }
 function updateProgress(){
+  applyVolumeEnvelope();
   if(scrubbing)return;
   const duration=audio.duration;
   const value=Number.isFinite(duration)&&duration>0?100*audio.currentTime/duration:0;
@@ -1140,10 +1285,13 @@ audio.addEventListener('seeking',updateProgress);
 audio.addEventListener('play',syncTrackUI);audio.addEventListener('pause',syncTrackUI);
 audio.addEventListener('ended',()=>{
  if(state.repeatMode==='one'){
-   audio.currentTime=0;
-   audio.play().catch(()=>toast('Could not repeat this song'));
- }else{
+   audio.currentTime=0;applyVolumeEnvelope();
+   audio.play().then(()=>recordPlayed(state.currentId)).catch(()=>toast('Could not repeat this song'));
+ }else if(state.settings.gapless){
    moveTrack(1,true);
+ }else{
+   const finishedId=state.currentId;
+   setTimeout(()=>{if(state.currentId===finishedId)moveTrack(1,true)},400);
  }
 });
 audio.addEventListener('error',()=>{if(state.currentId)toast('Audio could not load; try rescanning')});
@@ -1170,7 +1318,17 @@ try{
    if(Number.isFinite(parsed)&&parsed>=0&&parsed<=1)targetVolume=parsed;
  }
 }catch{}
+let smoothBaseVolume=targetVolume;
 audio.volume=targetVolume;state.volume=targetVolume;
+function applyVolumeEnvelope(){
+ let gain=1;
+ const duration=audio.duration,position=Math.max(0,audio.currentTime||0);
+ const fadeLength=Number.isFinite(duration)&&duration>0?Math.max(.01,Math.min(state.settings.fadeDurationMs/1000,duration/2)):state.settings.fadeDurationMs/1000;
+ if(state.settings.fadeIn&&position<fadeLength)gain=Math.min(gain,position/fadeLength);
+ if(state.settings.fadeOut&&Number.isFinite(duration)&&duration>0&&duration-position<fadeLength)
+  gain=Math.min(gain,Math.max(0,duration-position)/fadeLength);
+ audio.volume=Math.max(0,Math.min(1,smoothBaseVolume*gain));
+}
 function volumeVisual(){
  $('volume').value=String(targetVolume);
  $('volume').style.setProperty('--progress',(targetVolume*100)+'%');
@@ -1183,10 +1341,12 @@ function volumeVisual(){
   $('muteBtn').querySelector('.unmuted-path').style.display=audio.muted?'none':'';
 }
 function animateVolume(){
- const difference=targetVolume-audio.volume;
- if(Math.abs(difference)<0.001){audio.volume=targetVolume;volumeFrame=0;return}
- audio.volume=Math.max(0,Math.min(1,audio.volume+difference*.32));
- volumeFrame=requestAnimationFrame(animateVolume);
+ const difference=targetVolume-smoothBaseVolume;
+ if(Math.abs(difference)<0.001){
+  smoothBaseVolume=targetVolume;volumeFrame=0;applyVolumeEnvelope();return;
+ }
+ smoothBaseVolume=Math.max(0,Math.min(1,smoothBaseVolume+difference*.32));
+ applyVolumeEnvelope();volumeFrame=requestAnimationFrame(animateVolume);
 }
 function setVolume(value){
  targetVolume=Math.max(0,Math.min(1,Number(value)||0));
