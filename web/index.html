@@ -902,6 +902,62 @@ async function post(url,payload={}){
  const data=await response.json().catch(()=>({}));
  if(!response.ok)throw new Error(data.error||'Request failed');return data;
 }
+// Cloud tracks may lack duration metadata in the R2 listing. Cache audio
+// metadata by stable object identifier and size, using bounded probes.
+const cloudDurationCacheKey='wrld-cloud-duration-v1';
+let cloudDurationCache={};
+try{
+ const saved=JSON.parse(localStorage.getItem(cloudDurationCacheKey)||'{}');
+ if(saved&&typeof saved==='object'&&!Array.isArray(saved))cloudDurationCache=saved;
+}catch{}
+function hydrateCloudDurations(tracks){
+ for(const t of tracks){
+   const cached=cloudDurationCache[t.id];
+   if(cached&&cached.bytes===t.bytes&&Number.isFinite(cached.duration)&&cached.duration>0)t.duration=cached.duration;
+ }
+}
+function rememberCloudDuration(track,seconds){
+ if(!track||!track.id?.startsWith('r2_')||!Number.isFinite(seconds)||seconds<=0)return;
+ if(Math.abs((track.duration||0)-seconds)<0.4)return;
+ track.duration=seconds;
+ cloudDurationCache[track.id]={bytes:track.bytes,duration:seconds};
+ try{localStorage.setItem(cloudDurationCacheKey,JSON.stringify(cloudDurationCache))}catch{}
+ if(state.view!=='settings')applyFilter();
+}
+function rememberPlayingDuration(){
+ const track=trackById(state.currentId);
+ if(track?.id?.startsWith('r2_'))rememberCloudDuration(track,audio.duration);
+}
+let cloudProbeGeneration=0;
+async function probeCloudDurations(tracks){
+ const generation=++cloudProbeGeneration;
+ // Cap background requests; subsequent playback caches other durations.
+ const pending=tracks.filter(t=>t.id?.startsWith('r2_')&&!(t.duration>0)).slice(0,30);
+ for(const track of pending){
+   if(generation!==cloudProbeGeneration||state.cloudSource!=='cloud')return;
+   await new Promise(resolve=>{
+     const probe=document.createElement('audio');
+     let finished=false;
+     const finish=()=>{
+       if(finished)return;
+       finished=true;
+       clearTimeout(timeout);
+       probe.removeAttribute('src');
+       probe.load();
+       resolve();
+     };
+     const timeout=setTimeout(finish,6000);
+     probe.preload='metadata';
+     probe.addEventListener('loadedmetadata',()=>{
+       if(generation===cloudProbeGeneration)rememberCloudDuration(track,probe.duration);
+       finish();
+     },{once:true});
+     probe.addEventListener('error',finish,{once:true});
+     probe.src='/cloud/media/'+encodeURIComponent(track.id);
+     probe.load();
+   });
+ }
+}
 async function loadTracks(){
  try{
    const cloud=state.cloudSource==='cloud';
@@ -913,6 +969,7 @@ async function loadTracks(){
    }
    const data=await response.json();
    state.tracks=Array.isArray(data.tracks)?data.tracks:[];
+    if(cloud)hydrateCloudDurations(state.tracks);
    trackIndex=new Map(state.tracks.map(t=>[t.id,t]));
    state.folder=data.folder||'';
    $('folderText').textContent=state.folder?`Folder: ${state.folder}`:'Choose a folder to begin';
@@ -921,6 +978,7 @@ async function loadTracks(){
      audio.pause();audio.removeAttribute('src');audio.load();state.currentId=null;state.playOrder=[];
    }
    applyFilter();syncTrackUI();
+    if(cloud)probeCloudDurations(state.tracks);
    if(!data.folder_exists&&!cloud)toast('Choose a music folder to begin');
    $('cloudConnectionStatus').textContent=cloud?'Connected · '+state.tracks.length+' cloud songs':'Local music selected';
  }catch(e){
@@ -970,7 +1028,8 @@ function updateCollectionNav(){
     tab.classList.toggle('active',active);
     tab.setAttribute('aria-selected',String(active));
   }
-  $('likedNavCount').textContent=state.liked.size?String(state.liked.size):'';
+  const visibleLikes=state.tracks.reduce((total,t)=>total+(state.liked.has(t.id)?1:0),0);
+  $('likedNavCount').textContent=visibleLikes?String(visibleLikes):'';
   $('backPlaylistsBtn').classList.toggle('hidden',state.view!=='playlist');
   $('renamePlaylistBtn').classList.toggle('hidden',state.view!=='playlist');
   $('deletePlaylistBtn').classList.toggle('hidden',state.view!=='playlist');
@@ -1028,7 +1087,7 @@ function applyFilter(){
       row.dataset.id=t.id;
       row.title=t.title;
       const liked=state.liked.has(t.id);
-      row.innerHTML=`<div class="song-index">${i+1}</div><div class="song-info"><div class="song-title">${clean(t.title)}</div><div class="song-sub">${clean(t.artist||'Juice WRLD')} · ${clean(t.format||'Audio')}</div></div><div class="song-format" title="Song length">${Number.isFinite(t.duration)?fmt(t.duration):'—'}</div><button class="song-tool like-action ${liked?'is-liked':''}" data-like="${clean(t.id)}" type="button" aria-label="${liked?'Unlike':'Like'} ${clean(t.title)}" aria-pressed="${liked}" title="${liked?'Remove from Liked Songs':'Like song'}">${heartSVG()}</button><button class="song-tool add-action" data-more="${clean(t.id)}" type="button" aria-label="Song options for ${clean(t.title)}" title="Add to playlist / options">${moreSVG()}</button>`;
+      row.innerHTML=`<div class="song-index">${i+1}</div><div class="song-info"><div class="song-title">${clean(t.title)}</div><div class="song-sub">${clean(t.artist||'Juice WRLD')} · ${clean(t.format||'Audio')}</div></div><div class="song-format" title="Song length">${Number.isFinite(t.duration)&&t.duration>0?fmt(t.duration):'—'}</div><button class="song-tool like-action ${liked?'is-liked':''}" data-like="${clean(t.id)}" type="button" aria-label="${liked?'Unlike':'Like'} ${clean(t.title)}" aria-pressed="${liked}" title="${liked?'Remove from Liked Songs':'Like song'}">${heartSVG()}</button><button class="song-tool add-action" data-more="${clean(t.id)}" type="button" aria-label="Song options for ${clean(t.title)}" title="Add to playlist / options">${moreSVG()}</button>`;
       frag.appendChild(row);
     });
     list.replaceChildren(frag);
@@ -1213,6 +1272,7 @@ $('settingsRescan').addEventListener('click',async()=>{
  }catch(e){toast(e.message)}
 });
 async function selectLibrarySource(source){
+ ++cloudProbeGeneration;
  state.cloudSource=source;
  try{localStorage.setItem('wrld-library-source',source)}catch{}
  renderSettings();
@@ -1372,7 +1432,7 @@ function displayProgress(value, timeValue){
   $('seekShell').style.setProperty('--tip-left',Math.max(5,Math.min(95,percent))+'%');
   $('scrubTooltip').textContent=fmt(timeValue);
   $('currentTime').textContent=fmt(timeValue);
-  $('duration').textContent=fmt(audio.duration);
+  $('duration').textContent=Number.isFinite(audio.duration)&&audio.duration>0?fmt(audio.duration):'—';
 }
 function updateProgress(){
   applyVolumeEnvelope();
@@ -1396,8 +1456,8 @@ audio.addEventListener('pause',stopProgress);
 audio.addEventListener('ended',stopProgress);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopProgress();else if(!audio.paused)startProgress()});
 audio.addEventListener('timeupdate',updateProgress);
-audio.addEventListener('loadedmetadata',updateProgress);
-audio.addEventListener('durationchange',updateProgress);
+audio.addEventListener('loadedmetadata',()=>{rememberPlayingDuration();updateProgress()});
+audio.addEventListener('durationchange',()=>{rememberPlayingDuration();updateProgress()});
 audio.addEventListener('seeking',updateProgress);
 audio.addEventListener('play',syncTrackUI);audio.addEventListener('pause',syncTrackUI);
 audio.addEventListener('ended',()=>{
