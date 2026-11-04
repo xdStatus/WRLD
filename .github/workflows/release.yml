@@ -108,4 +108,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.10: WRLD Cloud uses the Windows certificate store to securely validate TLS, fixing certificate-chain verification failures without disabling HTTPS checks."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.11: WRLD Cloud requests use a dedicated WRLD-Player User-Agent to avoid Python-urllib request filtering. Secure TLS and encrypted credentials remain enabled."
