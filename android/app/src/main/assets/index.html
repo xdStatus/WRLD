@@ -55,6 +55,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 /* Mobile WRLD settings, visually consistent with playlists and controls. */
 .settings-page{display:flex;flex-direction:column;gap:10px;padding:12px 0 23px}
 .settings-heading{color:#979797;text-transform:uppercase;letter-spacing:.22em;font-size:10px;margin:17px 1px 6px;font-weight:650}
+.cloud-source-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:15px}
+.cloud-source-btn{min-height:43px;border:1px solid rgba(255,255,255,.2);border-radius:11px;color:#aaa;background:rgba(255,255,255,.03);font-size:12px}
+.cloud-source-btn.active{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.55);color:#fff}
+.cloud-source-label{display:block;padding:1px 15px 7px;color:#aaa;font-size:11px}
+.cloud-input-row{display:flex;gap:8px;padding:0 15px 12px}
+.cloud-input-row input{min-width:0;flex:1;padding:11px 10px;border:1px solid rgba(255,255,255,.2);background:#171717;color:#fff;border-radius:10px;font-size:12px}
+.cloud-input-row button{border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.09);border-radius:10px;padding:0 12px;font-size:12px}
+.cloud-status{font-size:11px;color:#a7a7a7;padding:0 15px 15px;line-height:1.5}
+.cloud-help{color:#989898;font-size:10px;line-height:1.6;padding:0 15px 16px}
 .settings-panel{border:1px solid rgba(255,255,255,.15);border-radius:17px;background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.019));overflow:hidden}
 .settings-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;min-height:77px;position:relative}
 .settings-item+.settings-item{border-top:1px solid rgba(255,255,255,.09)}
@@ -297,7 +306,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 "use strict";
 const el=function(id){return document.getElementById(id)};
 const call=function(method){try{if(!window.WRLDNative)return;var args=Array.prototype.slice.call(arguments,1);return window.WRLDNative[method].apply(window.WRLDNative,args)}catch(error){notice("Android connection unavailable");}};
-const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000},view:"all",playlistId:"",query:"",sort:"title",visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false};
+const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],cloud:{source:"device",url:"",status:"Select a music source."},settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000},view:"all",playlistId:"",query:"",sort:"title",visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false};
 const heart='<svg viewBox="0 0 24 24"><path d="M20.7 5.1a5.6 5.6 0 0 0-7.9 0L12 6l-.8-.9a5.6 5.6 0 0 0-7.9 7.9L12 22l8.7-9a5.6 5.6 0 0 0 0-7.9Z"/></svg>';
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function fmt(ms){var seconds=Math.floor(Math.max(0,Number(ms)||0)/1000);return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")}
@@ -343,7 +352,7 @@ function moveTabIndicator(first){
 }
 function refreshTabData(name){
  if(name==="history")call("requestHistory");
- if(name==="settings")call("requestAudioSettings");
+ if(name==="settings"){call("requestAudioSettings");call("requestCloudConfig")}
 }
 function setView(name,id){
  var targetId=id||"";
@@ -447,12 +456,23 @@ function renderSettings(){
     '<span class="settings-copy"><small>Applies to both fades, when enabled.</small></span></div>'+
    toggle('gapless','Gapless playback','Play tracks without an added pause when the format supports it. Off adds a brief gap.')+
   '</div>'+
+  '<div class="settings-heading">Music source</div>'+
+  '<div class="settings-panel">'+
+   '<div class="cloud-source-row">'+
+    '<button class="cloud-source-btn'+(app.cloud.source==='device'?' active':'')+'" data-music-source="device" type="button">On this device</button>'+
+    '<button class="cloud-source-btn'+(app.cloud.source==='cloud'?' active':'')+'" data-music-source="cloud" type="button">WRLD Cloud</button>'+
+   '</div>'+
+   '<label class="cloud-source-label" for="cloudServerUrl">Your PC’s private Tailscale HTTPS address</label>'+
+   '<div class="cloud-input-row"><input id="cloudServerUrl" type="url" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="https://your-pc.your-tailnet.ts.net" value="'+esc(app.cloud.url)+'"><button type="button" data-save-cloud="1">Connect</button></div>'+
+   '<div class="cloud-status" id="cloudStatus">'+esc(app.cloud.status)+'</div>'+
+   '<div class="cloud-help">Windows WRLD must be running on your PC, with Tailscale connected on both devices. No public port forwarding is needed.</div>'+
+  '</div>'+
   '<div class="settings-heading">Library</div>'+
   '<div class="settings-panel"><button class="settings-action" data-rescan-library="1"><span>Rescan music library<small>Refresh songs indexed on your phone</small></span><span aria-hidden="true">↻</span></button></div>'+
   '<div class="settings-heading">About</div>'+
   '<div class="settings-panel"><div class="settings-about"><div class="settings-about-title">999 · WRLD</div>'+
-   '<div class="settings-about-version">Android v0.1.10 (beta)</div>'+
-   '<div class="settings-about-desc">Offline music player powered by Android Media3. Your music, favorites, playlists, history, and audio preferences stay on this device. No account required.</div></div>'+
+   '<div class="settings-about-version">Android v0.1.12 (beta)</div>'+
+   '<div class="settings-about-desc">Local and private WRLD Cloud playback powered by Android Media3. Cloud music streams from your own Windows PC using Tailscale HTTPS. Your playback preferences stay on this device.</div></div>'+
    '<button class="settings-action" data-open-updates="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>GitHub Releases<small>View the latest Android updates</small></span><span aria-hidden="true">↗</span></button></div>'+
   '</div>';
  el("list").innerHTML=out;
@@ -600,9 +620,15 @@ function openTrackMenu(id){
 }
 function createDialog(){showSheet("New playlist",'<p>Name your collection.</p><input id="newPlaylistName" maxlength="70" placeholder="Playlist name" autocomplete="off"><button class="sheet-primary" id="confirmPlaylist">Create playlist</button>');setTimeout(function(){el("newPlaylistName")&&el("newPlaylistName").focus()},100)}
 el("list").addEventListener("click",function(event){
- var b=event.target.closest("[data-like],[data-menu],[data-create],[data-open],[data-delete],[data-back],[data-song],[data-rescan-library],[data-open-updates]");
+ var b=event.target.closest("[data-like],[data-menu],[data-create],[data-open],[data-delete],[data-back],[data-song],[data-rescan-library],[data-open-updates],[data-music-source],[data-save-cloud]");
  if(!b)return;
- if(b.dataset.rescanLibrary){call("requestLibrary");notice("Scanning library…");return}
+ if(b.dataset.musicSource){call("setMusicSource",b.dataset.musicSource);return}
+ if(b.dataset.saveCloud!==undefined){
+  var field=el("cloudServerUrl");
+  if(field){call("setCloudServer",field.value.trim());app.cloud.status="Connecting…";var status=el("cloudStatus");if(status)status.textContent=app.cloud.status}
+  return;
+ }
+ if(b.dataset.rescanLibrary){call("requestLibrary");notice("Refreshing library…");return}
  if(b.dataset.openUpdates){call("openUpdates");return}
  if(b.dataset.like){call("setLike",b.dataset.like,!app.liked.has(b.dataset.like));return}
  if(b.dataset.menu){openTrackMenu(b.dataset.menu);return}
@@ -733,7 +759,17 @@ el("volume").addEventListener("blur",function(){
 });
 el("updatesButton").addEventListener("click",function(){call("openUpdates")});
 window.WRLD={
- receiveLibrary:function(data){app.songs=Array.isArray(data.songs)?data.songs:[];app.map=new Map(app.songs.map(function(s){s.id=String(s.id);return [s.id,s]}));app.permission=false;el("folderStatus").textContent=app.songs.length+" local audio files found";el("shuffleAllBtn").disabled=app.songs.length===0;render();renderNow()},
+ receiveCloudConfig:function(data){
+  if(!data)return;
+  app.cloud.source=data.source==="cloud"?"cloud":"device";
+  app.cloud.url=String(data.url||"");
+  if(app.view==="settings")renderSettings();
+ },
+ receiveCloudStatus:function(message){
+  app.cloud.status=String(message||"");
+  var label=el("cloudStatus");if(label)label.textContent=app.cloud.status;
+ },
+ receiveLibrary:function(data){app.songs=Array.isArray(data.songs)?data.songs:[];app.map=new Map(app.songs.map(function(s){s.id=String(s.id);return [s.id,s]}));app.permission=false;el("folderStatus").textContent=app.songs.length+(app.cloud.source==="cloud"?" songs from WRLD Cloud":" local audio files found");el("shuffleAllBtn").disabled=app.songs.length===0;render();renderNow()},
  receiveCollections:function(data){app.liked=new Set((data.liked||[]).map(String));app.playlists=Array.isArray(data.playlists)?data.playlists.map(function(p){return {id:String(p.id),name:String(p.name),ids:(p.ids||[]).map(String)}}):[];render();renderNow()},
  receiveHistory:function(data){
   app.history=Array.isArray(data)?data.slice(0,50).map(String):[];
