@@ -575,6 +575,10 @@ body.native-shell .window-chrome{display:none!important}
 .settings-about p{font-size:11px;line-height:1.7;color:#a0a0a0;margin:10px 0 0}
 .settings-button{display:flex;justify-content:space-between;align-items:center;text-align:left;width:100%;height:auto;padding:14px 19px;border:0;background:transparent;border-top:1px solid #ffffff19;font-size:12px}
 .settings-button:hover{border:0;background:#ffffff11}
+.missing-cloud-songs{margin:8px 15px 14px;padding:12px 13px;border:1px solid #ffffff24;border-radius:10px;background:#ffffff08;font-size:12px;line-height:1.6;color:#ddd;overflow-wrap:anywhere;white-space:pre-wrap}
+.missing-cloud-songs strong{color:#fff}
+.missing-cloud-songs .missing-file{display:block;color:#a8f0ba;font-weight:550;padding-top:5px}
+.missing-cloud-songs button{display:block;margin-top:11px;padding:8px 11px;border:1px solid #ffffff4a;background:#ffffff15;color:white;border-radius:8px;cursor:pointer}
 .player-left.now-queue-trigger{height:auto;min-height:44px;cursor:pointer;border:0;padding:0;background:transparent;text-align:left;color:inherit;transition:transform .2s}
 .player-left.now-queue-trigger:hover{background:#ffffff08;border:0}
 .player-left.now-queue-trigger:active{transform:scale(.985)}
@@ -745,6 +749,8 @@ body.native-shell .window-chrome{display:none!important}
         <div class="settings-heading">Library</div>
         <div class="settings-card">
           <button type="button" id="settingsRescan" class="settings-button">Rescan music library <span>↻</span></button>
+          <button type="button" id="compareCloudSongs" class="settings-button">Find missing cloud songs <span>⌕</span></button>
+          <div id="missingCloudSongs" class="missing-cloud-songs hidden" aria-live="polite"></div>
           <button type="button" id="changeFolderBtn" class="settings-button">Change music folder <span>↗</span></button>
         </div>
         <div class="settings-heading">About</div>
@@ -1339,6 +1345,61 @@ $('settingsPanel').addEventListener('change',e=>{
 });
 $('fadeDuration').addEventListener('input',e=>{
  $('fadeDurationLabel').textContent=(Number(e.target.value)/1000).toFixed(1)+' s';
+});
+// Compare the complete folder index against authenticated R2 objects.
+// Filenames are compared case-insensitively, with occurrence counts, so
+// identical names in separate local folders remain distinguishable.
+$('compareCloudSongs').addEventListener('click',async()=>{
+ const button=$('compareCloudSongs'),panel=$('missingCloudSongs');
+ button.disabled=true;panel.classList.remove('hidden');
+ panel.textContent='Comparing your computer against WRLD Cloud…';
+ try{
+  const [localResponse,cloudResponse]=await Promise.all([
+   fetch('/api/tracks',{cache:'no-store'}),
+   fetch('/api/cloud/tracks',{cache:'no-store'})
+  ]);
+  const errors=[];
+  if(!localResponse.ok)errors.push('Could not read your local music folder.');
+  if(!cloudResponse.ok)errors.push('Could not read WRLD Cloud. Check your access key and connection.');
+  if(errors.length)throw new Error(errors.join(' '));
+  const [local,cloud]=await Promise.all([localResponse.json(),cloudResponse.json()]);
+  const localTracks=Array.isArray(local.tracks)?local.tracks:[];
+  const cloudTracks=Array.isArray(cloud.tracks)?cloud.tracks:[];
+  if(!local.folder_exists)throw new Error('Choose your local music folder first.');
+  const basename=t=>String(t.relative||t.title||'').replace(/\\/g,'/').split('/').pop().normalize('NFC').trim().toLocaleLowerCase();
+  const counts=new Map();
+  for(const track of cloudTracks){
+   const name=basename(track);
+   counts.set(name,(counts.get(name)||0)+1);
+  }
+  const missing=[];
+  for(const track of localTracks){
+   const name=basename(track),remaining=counts.get(name)||0;
+   if(remaining)counts.set(name,remaining-1);
+   else missing.push(String(track.relative||track.title||'Unknown filename'));
+  }
+  panel.replaceChildren();
+  const summary=document.createElement('strong');
+  summary.textContent=localTracks.length+' local songs · '+cloudTracks.length+' cloud songs · '+missing.length+' missing';
+  panel.appendChild(summary);
+  if(!missing.length){
+   panel.appendChild(document.createTextNode('\nAll local filenames are present in WRLD Cloud.'));
+  }else{
+   missing.forEach(name=>{
+    const entry=document.createElement('span');
+    entry.className='missing-file';entry.textContent=name;
+    panel.appendChild(entry);
+   });
+   const copy=document.createElement('button');
+   copy.type='button';copy.textContent='Copy missing filenames';
+   copy.addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(missing.join('\n'));toast('Missing filenames copied')}
+    catch{toast('Could not copy filenames')}
+   });
+   panel.appendChild(copy);
+  }
+ }catch(error){panel.textContent=error.message||'Could not compare libraries'}
+ finally{button.disabled=false}
 });
 $('settingsRescan').addEventListener('click',async()=>{
  try{
