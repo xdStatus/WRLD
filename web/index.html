@@ -486,6 +486,14 @@ body:not(.native-shell) .brand h1{cursor:default}
 .tab-indicator{position:absolute;left:0;bottom:0;width:0;height:2px;pointer-events:none;background:#fff;border-radius:5px;box-shadow:0 0 12px #fff5;transform:translate3d(0,0,0);transition:transform .4s cubic-bezier(.2,.85,.22,1),width .4s cubic-bezier(.2,.85,.22,1)}
 .library-stage{display:flex;flex:1;flex-direction:column;min-height:0;overflow:hidden;transition:opacity .30s cubic-bezier(.22,1,.36,1),transform .36s cubic-bezier(.22,1,.36,1)}
 .library-stage.view-changing{opacity:0;transform:translate3d(0,9px,0) scale(.995);pointer-events:none}
+.cloud-source-switch{display:flex;gap:9px;padding:16px 18px 8px}
+.cloud-source-switch button{flex:1;min-height:42px;border:1px solid #555;border-radius:11px;background:#ffffff09;color:#bdbdbd;font-size:12px}
+.cloud-source-switch button.active{background:#ffffff26;border-color:#aaa;color:#fff}
+.cloud-config{display:flex;flex-direction:column;gap:9px;padding:11px 18px 17px}
+.cloud-config label{font-size:11px;color:#aaa}
+.cloud-config input{width:100%;background:#171717;color:#eee;border:1px solid #555;border-radius:10px;padding:11px 12px;font-size:12px}
+.cloud-config button{padding:11px 16px;border-radius:10px;border:1px solid #777;background:#ffffff18;color:#fff;font-size:12px}
+.cloud-config small{color:#aaa;line-height:1.5;font-size:11px}
 .settings-panel{display:flex;flex-direction:column;flex:1;min-height:0;gap:13px;overflow:auto;padding:2px 5px 22px;scrollbar-width:thin}
 .settings-heading{margin:14px 0 0;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#999;font-weight:650}
 .settings-card{border:1px solid rgba(255,255,255,.15);border-radius:16px;overflow:hidden;background:linear-gradient(135deg,#ffffff10,#ffffff04)}
@@ -620,10 +628,22 @@ body:not(.native-shell) .brand h1{cursor:default}
           <div class="settings-duration"><div class="settings-duration-top"><strong>Fade duration</strong><output id="fadeDurationLabel">2.0 s</output></div><input id="fadeDuration" type="range" min="500" max="5000" step="500" value="2000" aria-label="Fade duration"></div>
           <label class="settings-row"><span class="settings-copy"><strong>Gapless playback</strong><small>No added pause when the audio format and player allow it.</small></span><input type="checkbox" class="settings-toggle" id="settingGapless" data-setting="gapless" checked></label>
         </div>
+        <div class="settings-heading">Music source</div>
+        <div class="settings-card">
+          <div class="cloud-source-switch"><button id="sourceLocal" type="button">On this computer</button><button id="sourceCloud" type="button">WRLD Cloud</button></div>
+          <div class="cloud-config">
+            <label>Cloudflare Worker: https://wrld-cloud.zaavangonzaless.workers.dev</label>
+            <label for="cloudAccessKey">Private access key (encrypted for your Windows account)</label>
+            <input id="cloudAccessKey" type="password" autocomplete="new-password" placeholder="Paste WRLD_ACCESS_TOKEN">
+            <button type="button" id="cloudConnect">Save key &amp; connect</button>
+            <small id="cloudConnectionStatus">Cloud is not connected.</small>
+            <small>Your music stays in your private R2 bucket. Windows and Tailscale do not need to remain running for Android streaming.</small>
+          </div>
+        </div>
         <div class="settings-heading">Library</div>
         <div class="settings-card"><button type="button" id="settingsRescan" class="settings-button">Rescan music library <span>↻</span></button></div>
         <div class="settings-heading">About</div>
-        <div class="settings-card"><div class="settings-about"><strong>999 · WRLD</strong><small id="desktopVersion">Windows v1.8.4</small><p>Offline music player powered by Windows WebView2. Your music files stay on your computer, and liked songs, playlists, history and preferences are saved locally.</p></div><button type="button" class="settings-button" id="settingsUpdates">GitHub Releases <span>↗</span></button></div>
+        <div class="settings-card"><div class="settings-about"><strong>999 · WRLD</strong><small id="desktopVersion">Windows v1.8.6</small><p>Local and Cloudflare R2 music player powered by Windows WebView2. Cloud songs stream securely from your private Worker; likes, playlists and preferences stay on this computer.</p></div><button type="button" class="settings-button" id="settingsUpdates">GitHub Releases <span>↗</span></button></div>
       </div>
       </div>
     </div>
@@ -758,7 +778,7 @@ body:not(.native-shell) .brand h1{cursor:default}
 const $ = id => document.getElementById(id);
 const audio = $('audio');
 let trackIndex=new Map();
-const state = {tracks:[], filtered:[], currentId:null, playOrder:[], folder:'', query:'', volume:0.10, view:'all', activePlaylist:null, liked:new Set(), playlists:[], collectionsReady:false, repeatMode:'off',sort:'title',history:[],settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000}};
+const state = {cloudSource:'local',tracks:[], filtered:[], currentId:null, playOrder:[], folder:'', query:'', volume:0.10, view:'all', activePlaylist:null, liked:new Set(), playlists:[], collectionsReady:false, repeatMode:'off',sort:'title',history:[],settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000}};
 try{const saved=localStorage.getItem('wrld-repeat-mode');if(['off','all','one'].includes(saved))state.repeatMode=saved}catch{}
 try{const saved=localStorage.getItem('wrld-sort');if(['title','title-desc','duration-asc','duration-desc','added-desc','added-asc','artist','format'].includes(saved))state.sort=saved}catch{}
 try{
@@ -772,6 +792,7 @@ try{
   if(Number.isFinite(saved.fadeDurationMs)&&saved.fadeDurationMs>=500&&saved.fadeDurationMs<=5000)state.settings.fadeDurationMs=saved.fadeDurationMs;
  }
 }catch{}
+try{state.cloudSource=localStorage.getItem('wrld-library-source')==='cloud'?'cloud':'local'}catch{}
 $('sortSelect').value=state.sort;
 const clean = s => String(s??'').replace(/[&<>"']/g, v => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[v]));
 const fmt = s => Number.isFinite(s) && s>=0 ? `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}` : '0:00';
@@ -793,6 +814,7 @@ function setArt(node,track){
   letter.textContent='W';
   img.onload=()=>{if(node.dataset.trackId===String(id))node.classList.add('has-image')};
   img.onerror=()=>node.classList.remove('has-image');
+  if(id.startsWith('r2_')){img.removeAttribute('src');return}
   img.src=`/api/art/${encodeURIComponent(id)}`;
 }
 function syncTrackUI(){
@@ -826,8 +848,13 @@ async function post(url,payload={}){
 }
 async function loadTracks(){
  try{
-   const response=await fetch('/api/tracks',{cache:'no-store'});
-   if(!response.ok)throw new Error('Could not scan the music folder');
+   const cloud=state.cloudSource==='cloud';
+   const response=await fetch(cloud?'/api/cloud/tracks':'/api/tracks',{cache:'no-store'});
+   if(!response.ok){
+     let message=cloud?'Could not reach WRLD Cloud':'Could not scan the music folder';
+     try{const issue=await response.json();message=issue.error||message}catch{}
+     throw new Error(message);
+   }
    const data=await response.json();
    state.tracks=Array.isArray(data.tracks)?data.tracks:[];
    trackIndex=new Map(state.tracks.map(t=>[t.id,t]));
@@ -838,8 +865,12 @@ async function loadTracks(){
      audio.pause();audio.removeAttribute('src');audio.load();state.currentId=null;state.playOrder=[];
    }
    applyFilter();syncTrackUI();
-   if(!data.folder_exists)toast('Choose a music folder to begin');
- }catch(e){toast(e.message||'Failed to load library')}
+   if(!data.folder_exists&&!cloud)toast('Choose a music folder to begin');
+   $('cloudConnectionStatus').textContent=cloud?'Connected · '+state.tracks.length+' cloud songs':'Local music selected';
+ }catch(e){
+   toast(e.message||'Failed to load library');
+   $('cloudConnectionStatus').textContent=e.message||'Could not load WRLD Cloud';
+ }
 }
 function activePlaylist(){return state.playlists.find(p=>p.id===state.activePlaylist)||null}
 const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -956,6 +987,8 @@ function renderSettings(){
  $('settingGapless').checked=s.gapless;
  $('fadeDuration').value=String(s.fadeDurationMs);
  $('fadeDurationLabel').textContent=(s.fadeDurationMs/1000).toFixed(1)+' s';
+ $('sourceLocal').classList.toggle('active',state.cloudSource==='local');
+ $('sourceCloud').classList.toggle('active',state.cloudSource==='cloud');
 }
 function saveAudioSettings(){
  try{localStorage.setItem('wrld-desktop-settings-v1',JSON.stringify(state.settings))}catch{}
@@ -1010,7 +1043,7 @@ async function playTrack(id, preserveOrder=false){
  }
  if(!preserveOrder)state.playOrder=state.filtered.map(t=>t.id);
  state.currentId=id;
- audio.src=`/media/${encodeURIComponent(id)}`;
+ audio.src=(id.startsWith('r2_')?'/cloud/media/':'/media/')+encodeURIComponent(id);
  applyVolumeEnvelope();
  ensureAudioAnalysis();
  syncTrackUI();
@@ -1116,7 +1149,30 @@ $('settingsPanel').addEventListener('change',e=>{
 $('fadeDuration').addEventListener('input',e=>{
  $('fadeDurationLabel').textContent=(Number(e.target.value)/1000).toFixed(1)+' s';
 });
-$('settingsRescan').addEventListener('click',()=>$('rescanBtn').click());
+$('settingsRescan').addEventListener('click',()=>{if(state.cloudSource==='cloud')loadTracks();else $('rescanBtn').click()});
+async function selectLibrarySource(source){
+ state.cloudSource=source;
+ try{localStorage.setItem('wrld-library-source',source)}catch{}
+ renderSettings();
+ await loadTracks();
+}
+$('sourceLocal').addEventListener('click',()=>selectLibrarySource('local'));
+$('sourceCloud').addEventListener('click',()=>selectLibrarySource('cloud'));
+$('cloudConnect').addEventListener('click',async()=>{
+ const field=$('cloudAccessKey'),key=field.value.trim();
+ field.value='';
+ if(!key){toast('Paste the private WRLD_ACCESS_TOKEN first');return}
+ const api=window.pywebview?.api;
+ if(!api?.configure_cloud){toast('Install the latest Windows WRLD app to connect to Cloud');return}
+ try{
+   const result=await api.configure_cloud(key);
+   $('cloudConnectionStatus').textContent=result.configured?'Access key saved securely':'Could not save access key';
+   await selectLibrarySource('cloud');
+ }catch(e){
+   $('cloudConnectionStatus').textContent='Access key could not be saved';
+   toast('Check the access key and try again');
+ }
+});
 $('settingsUpdates').addEventListener('click',()=>$('updatesBtn').click());
 $('songList').addEventListener('click',e=>{
   const like=e.target.closest('[data-like]');
@@ -1136,7 +1192,7 @@ $('nextBtn').addEventListener('click',()=>moveTrack(1));
 $('repeatBtn').addEventListener('click',cycleRepeat);
 $('repeatBtn').addEventListener('animationend',()=>{$('repeatBtn').classList.remove('repeat-tap')});
 $('prevBtn').addEventListener('click',()=>{if(audio.currentTime>3){audio.currentTime=0}else moveTrack(-1)});
-$('rescanBtn').addEventListener('click',async()=>{try{await post('/api/rescan');await loadTracks();toast('Library rescanned')}catch(e){toast(e.message)}});
+$('rescanBtn').addEventListener('click',async()=>{try{if(state.cloudSource==='cloud')await loadTracks();else{await post('/api/rescan');await loadTracks()}toast('Library refreshed')}catch(e){toast(e.message)}});
 $('changeFolderBtn').addEventListener('click',()=>{$('folderInput').value=state.folder||'';$('folderDialog').showModal()});
 $('browseFolderBtn').addEventListener('click',async()=>{try{let d;if(window.pywebview?.api?.choose_folder){const folder=await window.pywebview.api.choose_folder();if(!folder)return;d=await post('/api/change-folder',{folder});}else{d=await post('/api/browse-folder');if(d.cancelled)return;}$('folderDialog').close();await loadTracks();toast(`${d.count} tracks loaded`)}catch(e){toast(e.message)}});
 $('folderForm').addEventListener('submit',async e=>{e.preventDefault();const folder=$('folderInput').value.trim();if(!folder)return;try{const d=await post('/api/change-folder',{folder});$('folderDialog').close();await loadTracks();toast(`${d.count} tracks loaded`)}catch(e){toast(e.message)}});
