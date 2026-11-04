@@ -45,12 +45,12 @@ echo.
 echo [2/4] Installing/updating WebView2 wrapper and EXE packager...
 "%PY%" -m pip install --disable-pip-version-check --upgrade pip
 if errorlevel 1 goto failed
-"%PY%" -m pip install --disable-pip-version-check --upgrade "pyinstaller>=6.21" "pywebview>=6.1,<7"
+"%PY%" -m pip install --disable-pip-version-check --upgrade "pyinstaller>=6.21" "pywebview>=6.1,<7" "truststore>=0.10,<1"
 if errorlevel 1 goto failed
 
 echo.
 echo [3/4] Building WRLD.exe with custom 999 icon...
-"%PY%" -m PyInstaller --noconfirm --clean --onefile --windowed --name WRLD --icon "web\favicon.ico" --add-data "web;web" --collect-all webview --hidden-import clr --hidden-import webview.platforms.edgechromium "native.py"
+"%PY%" -m PyInstaller --noconfirm --clean --onefile --windowed --name WRLD --icon "web\favicon.ico" --add-data "web;web" --collect-all webview --collect-all truststore --hidden-import clr --hidden-import webview.platforms.edgechromium "native.py"
 if errorlevel 1 goto failed
 
 if not exist "dist\WRLD.exe" (
