@@ -41,6 +41,7 @@ class MainActivity : Activity() {
     private var songs: List<Song> = emptyList()
     private var webReady = false
     private var libraryLoading = false
+    private var queueOpened = false
 
     private val tick = object : Runnable {
         override fun run() {
@@ -159,6 +160,11 @@ class MainActivity : Activity() {
                     player.addListener(object : Player.Listener {
                         override fun onEvents(player: Player, events: Player.Events) {
                             sendPlayerState()
+                            if (queueOpened &&
+                                (events.contains(Player.EVENT_TIMELINE_CHANGED) ||
+                                    events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION))) {
+                                sendQueue()
+                            }
                         }
                     })
                 }
@@ -186,6 +192,28 @@ class MainActivity : Activity() {
 
     private fun sendAudioSettings() {
         sendScript("window.WRLD.receiveAudioSettings(" + audioSettings.read().toJson().toString() + ");")
+    }
+
+    private fun sendQueue() {
+        if (!queueOpened) return
+        val player = controller ?: run {
+            sendScript("window.WRLD.receiveQueue(" +
+                JSONObject().put("items", JSONArray()).toString() + ");")
+            return
+        }
+        val payload = JSONArray()
+        val start = player.currentMediaItemIndex.coerceAtLeast(0)
+        for (i in start until player.mediaItemCount) {
+            val item = player.getMediaItemAt(i)
+            payload.put(JSONObject()
+                .put("index", i)
+                .put("id", item.mediaId)
+                .put("title", item.mediaMetadata.title?.toString() ?: "Track " + (i + 1))
+                .put("artist", item.mediaMetadata.artist?.toString() ?: "Unknown artist")
+            )
+        }
+        sendScript("window.WRLD.receiveQueue(" +
+            JSONObject().put("items", payload).toString() + ");")
     }
 
     private fun loadLibrary() {
@@ -242,6 +270,42 @@ class MainActivity : Activity() {
     }
 
     inner class NativeBridge {
+        @JavascriptInterface fun requestQueue() {
+            runOnUiThread {
+                queueOpened = true
+                sendQueue()
+            }
+        }
+
+        @JavascriptInterface fun closeQueue() {
+            runOnUiThread { queueOpened = false }
+        }
+
+        @JavascriptInterface fun removeQueued(index: Int, mediaId: String) {
+            runOnUiThread {
+                val player = controller ?: return@runOnUiThread
+                if (index > player.currentMediaItemIndex &&
+                    index >= 0 && index < player.mediaItemCount &&
+                    player.getMediaItemAt(index).mediaId == mediaId) {
+                    player.removeMediaItem(index)
+                }
+                sendQueue()
+            }
+        }
+
+        @JavascriptInterface fun jumpToQueued(index: Int, mediaId: String) {
+            runOnUiThread {
+                val player = controller ?: return@runOnUiThread
+                if (index > player.currentMediaItemIndex &&
+                    index >= 0 && index < player.mediaItemCount &&
+                    player.getMediaItemAt(index).mediaId == mediaId) {
+                    player.seekTo(index, 0L)
+                    player.play()
+                }
+                sendQueue()
+            }
+        }
+
         @JavascriptInterface fun requestAudioSettings() {
             runOnUiThread { sendAudioSettings() }
         }

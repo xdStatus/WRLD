@@ -1,4 +1,4 @@
-# WRLD Android — first playable beta (v0.1.7)
+# WRLD Android — first playable beta (v0.1.8)
 
 Native Android music playback with a monochrome WebView interface. The Windows
 Python/WebView2 player and its releases remain unchanged.
@@ -15,7 +15,7 @@ Python/WebView2 player and its releases remain unchanged.
 ## How to try it
 
 1. Open GitHub Actions in xdStatus/WRLD and verify **Build WRLD Android APK** succeeded.
-2. Open the **android-v0.1.7** release and download **WRLD-Android-v0.1.7.apk** to your Android device.
+2. Open the **android-v0.1.8** release and download **WRLD-Android-v0.1.8.apk** to your Android device.
 3. Allow APK installation from your browser or file manager when Android prompts.
 4. Open WRLD and grant **Music and audio** access.
 5. Put music files in your phone's Music folder if the library is empty, then reopen/Rescan.
@@ -164,3 +164,21 @@ The APK is compiled, JavaScript-validated and launched in the Android emulator
 before publication. The beta uses temporary per-build signing, so installation
 may require uninstalling an older version first (clearing app-specific settings,
 liked songs and playlists, but **never** the phone's music files).
+
+## Android beta v0.1.8 — fix Settings bleed and manage Up Next
+
+The global infinite-scroll handler could append a stale list of songs below
+Settings/About and Playlists. It now only runs on song-list tabs; changing to
+Settings/Playlists clears the previous song-list pagination state. Scrolling
+the Settings page cannot add tracks under About anymore.
+
+Tap the **currently playing song** in the bottom player to open **Up Next**.
+WRLD shows the playing track followed by the queued tracks. Tap an upcoming
+song to jump to it, or tap × to remove just that upcoming entry. These changes
+are made in the existing Media3 MediaController queue, so they also apply while
+listening in the background. Removing a queued entry does **not** delete the
+music file or modify any playlist. The current song is protected from removal.
+Long queues load incrementally inside the sheet to keep scrolling responsive.
+
+APK signing is still temporary in this preview. Android may require removing
+the previous app before installing; this clears local WRLD data but not songs.
