@@ -13,6 +13,8 @@ import json
 import os
 from pathlib import Path
 import re
+import ssl
+import socket
 import threading
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
@@ -28,6 +30,26 @@ _remote_tracks = {}
 
 class CloudError(Exception):
     pass
+
+
+def _connection_error(exc: BaseException) -> CloudError:
+    """Explain connection failures without exposing URLs, headers, or credentials."""
+    reason = exc.reason if isinstance(exc, URLError) else exc
+    if isinstance(reason, ssl.SSLCertVerificationError):
+        return CloudError("WRLD Cloud TLS certificate verification failed (Windows/Python trust store).")
+    if isinstance(reason, ssl.SSLError):
+        return CloudError("WRLD Cloud TLS handshake failed.")
+    if isinstance(reason, (socket.timeout, TimeoutError)):
+        return CloudError("WRLD Cloud connection timed out.")
+    if isinstance(reason, socket.gaierror):
+        return CloudError("WRLD Cloud DNS lookup failed.")
+    if isinstance(reason, ConnectionRefusedError):
+        return CloudError("WRLD Cloud connection was refused.")
+    if isinstance(reason, ConnectionResetError):
+        return CloudError("WRLD Cloud connection was reset.")
+    if isinstance(reason, OSError):
+        return CloudError("WRLD Cloud connection failed (" + type(reason).__name__ + ", Windows error " + str(getattr(reason, "winerror", None) or getattr(reason, "errno", "unknown")) + ").")
+    return CloudError("WRLD Cloud connection failed (" + type(reason).__name__ + ").")
 
 class DATA_BLOB(ctypes.Structure):
     _fields_ = [("cbData", wintypes.DWORD),
@@ -118,7 +140,7 @@ def list_tracks() -> dict:
     except HTTPError as exc:
         raise CloudError("Access key rejected (401)." if exc.code == 401 else "Worker returned HTTP " + str(exc.code)) from None
     except (URLError, TimeoutError, OSError) as exc:
-        raise CloudError("Could not reach WRLD Cloud. Check your internet connection.") from None
+        raise _connection_error(exc) from None
     if not isinstance(payload, dict) or not isinstance(payload.get("tracks"), list):
         raise CloudError("Invalid cloud library response.")
     songs, lookup = [], {}
