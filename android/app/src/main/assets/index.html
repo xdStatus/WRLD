@@ -306,7 +306,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 "use strict";
 const el=function(id){return document.getElementById(id)};
 const call=function(method){try{if(!window.WRLDNative)return;var args=Array.prototype.slice.call(arguments,1);return window.WRLDNative[method].apply(window.WRLDNative,args)}catch(error){notice("Android connection unavailable");}};
-const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],cloud:{source:"device",url:"",status:"Select a music source."},settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000},view:"all",playlistId:"",query:"",sort:"title",visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false};
+const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],cloud:{source:"device",url:"https://wrld-cloud.zaavangonzaless.workers.dev",configured:false,status:"Enter your access key to connect."},settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000},view:"all",playlistId:"",query:"",sort:"title",visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false};
 const heart='<svg viewBox="0 0 24 24"><path d="M20.7 5.1a5.6 5.6 0 0 0-7.9 0L12 6l-.8-.9a5.6 5.6 0 0 0-7.9 7.9L12 22l8.7-9a5.6 5.6 0 0 0 0-7.9Z"/></svg>';
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function fmt(ms){var seconds=Math.floor(Math.max(0,Number(ms)||0)/1000);return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")}
@@ -462,17 +462,18 @@ function renderSettings(){
     '<button class="cloud-source-btn'+(app.cloud.source==='device'?' active':'')+'" data-music-source="device" type="button">On this device</button>'+
     '<button class="cloud-source-btn'+(app.cloud.source==='cloud'?' active':'')+'" data-music-source="cloud" type="button">WRLD Cloud</button>'+
    '</div>'+
-   '<label class="cloud-source-label" for="cloudServerUrl">Your PC’s private Tailscale HTTPS address</label>'+
-   '<div class="cloud-input-row"><input id="cloudServerUrl" type="url" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="https://your-pc.your-tailnet.ts.net" value="'+esc(app.cloud.url)+'"><button type="button" data-save-cloud="1">Connect</button></div>'+
+   '<label class="cloud-source-label">Cloudflare Worker · https://wrld-cloud.zaavangonzaless.workers.dev</label>'+
+   '<label class="cloud-source-label" for="cloudAccessKey">Private access key (saved securely on this phone)</label>'+
+   '<div class="cloud-input-row"><input id="cloudAccessKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+(app.cloud.configured?'Key saved · leave blank to keep':'Paste WRLD_ACCESS_TOKEN')+'"><button type="button" data-save-cloud="1">Connect</button></div>'+
    '<div class="cloud-status" id="cloudStatus">'+esc(app.cloud.status)+'</div>'+
-   '<div class="cloud-help">Windows WRLD must be running on your PC, with Tailscale connected on both devices. No public port forwarding is needed.</div>'+
+   '<div class="cloud-help">Your music streams from your private Cloudflare R2 bucket. No Tailscale, Windows server or local music files required. Do not share your access key.</div>'+
   '</div>'+
   '<div class="settings-heading">Library</div>'+
   '<div class="settings-panel"><button class="settings-action" data-rescan-library="1"><span>Rescan music library<small>Refresh songs indexed on your phone</small></span><span aria-hidden="true">↻</span></button></div>'+
   '<div class="settings-heading">About</div>'+
   '<div class="settings-panel"><div class="settings-about"><div class="settings-about-title">999 · WRLD</div>'+
-   '<div class="settings-about-version">Android v0.1.12 (beta)</div>'+
-   '<div class="settings-about-desc">Local and private WRLD Cloud playback powered by Android Media3. Cloud music streams from your own Windows PC using Tailscale HTTPS. Your playback preferences stay on this device.</div></div>'+
+   '<div class="settings-about-version">Android v0.1.13 (beta)</div>'+
+   '<div class="settings-about-desc">Local and private WRLD Cloud playback powered by Android Media3. Cloud music streams from your private Cloudflare R2 library over HTTPS. Your playback preferences stay on this device.</div></div>'+
    '<button class="settings-action" data-open-updates="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>GitHub Releases<small>View the latest Android updates</small></span><span aria-hidden="true">↗</span></button></div>'+
   '</div>';
  el("list").innerHTML=out;
@@ -624,8 +625,13 @@ el("list").addEventListener("click",function(event){
  if(!b)return;
  if(b.dataset.musicSource){call("setMusicSource",b.dataset.musicSource);return}
  if(b.dataset.saveCloud!==undefined){
-  var field=el("cloudServerUrl");
-  if(field){call("setCloudServer",field.value.trim());app.cloud.status="Connecting…";var status=el("cloudStatus");if(status)status.textContent=app.cloud.status}
+  var field=el("cloudAccessKey");
+  if(field){
+   var token=field.value.trim();field.value="";
+   if(!token){call("setMusicSource","cloud");call("requestLibrary")}
+   else call("setCloudToken",token);
+   app.cloud.status="Connecting…";var status=el("cloudStatus");if(status)status.textContent=app.cloud.status;
+  }
   return;
  }
  if(b.dataset.rescanLibrary){call("requestLibrary");notice("Refreshing library…");return}
@@ -763,6 +769,7 @@ window.WRLD={
   if(!data)return;
   app.cloud.source=data.source==="cloud"?"cloud":"device";
   app.cloud.url=String(data.url||"");
+  app.cloud.configured=!!data.configured;
   if(app.view==="settings")renderSettings();
  },
  receiveCloudStatus:function(message){

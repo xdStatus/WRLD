@@ -63,7 +63,7 @@ class MainActivity : Activity() {
         history = HistoryStore(this)
         audioSettings = AudioSettingsStore(this)
         val cloudPrefs = getSharedPreferences("wrld-cloud", MODE_PRIVATE)
-        cloudAddress = cloudPrefs.getString("address", "") ?: ""
+        cloudAddress = CloudLibrary.BASE_URL
         musicSource = if (cloudPrefs.getString("source", "device") == "cloud") "cloud" else "device"
         web = WebView(this).apply {
             setBackgroundColor(Color.rgb(5, 5, 5))
@@ -229,7 +229,8 @@ class MainActivity : Activity() {
     private fun sendCloudConfig() {
         sendScript("window.WRLD.receiveCloudConfig(" + JSONObject()
             .put("source", musicSource)
-            .put("url", cloudAddress)
+            .put("url", CloudLibrary.BASE_URL)
+            .put("configured", CloudSecrets.read(this).isNotBlank())
             .toString() + ");")
     }
 
@@ -243,18 +244,19 @@ class MainActivity : Activity() {
 
     private fun loadCloudLibrary() {
         val version = ++cloudRequestVersion
-        if (cloudAddress.isBlank()) {
+        val token = CloudSecrets.read(this)
+        if (token.isBlank()) {
             sendScript("window.WRLD.receiveCloudStatus(" +
-                JSONObject.quote("Set your Windows server address in Settings.") + ");")
+                JSONObject.quote("Enter your WRLD Cloud access key in Settings.") + ");")
             sendSongs(emptyList())
             return
         }
         sendScript("window.WRLD.receiveCloudStatus(" +
-            JSONObject.quote("Connecting to your Windows computer…") + ");")
+            JSONObject.quote("Connecting to WRLD Cloud…") + ");")
         val requestedAddress = cloudAddress
         executor.execute {
             try {
-                val scanned = CloudLibrary.fetch(requestedAddress)
+                val scanned = CloudLibrary.fetch(token)
                 runOnUiThread {
                     // Ignore responses from stale connections and source switches.
                     if (musicSource != "cloud" || cloudAddress != requestedAddress ||
@@ -269,7 +271,7 @@ class MainActivity : Activity() {
                     if (musicSource != "cloud" || cloudAddress != requestedAddress ||
                         version != cloudRequestVersion) return@runOnUiThread
                     sendSongs(emptyList())
-                    val message = error.message ?: "Could not contact your Windows PC."
+                    val message = error.message ?: "Could not contact WRLD Cloud."
                     sendScript("window.WRLD.receiveCloudStatus(" +
                         JSONObject.quote("Connection failed: " + message) + ");")
                 }
@@ -347,20 +349,18 @@ class MainActivity : Activity() {
             }
         }
 
-        @JavascriptInterface fun setCloudServer(value: String) {
+        @JavascriptInterface fun setCloudToken(value: String) {
             runOnUiThread {
-                val normalized = CloudLibrary.normalizeAddress(value)
-                if (normalized == null) {
-                    showError("Use your private Tailscale HTTPS address ending in .ts.net")
-                    return@runOnUiThread
+                try {
+                    CloudSecrets.save(this@MainActivity, value.trim())
+                    musicSource = "cloud"
+                    getSharedPreferences("wrld-cloud", MODE_PRIVATE).edit()
+                        .putString("source", "cloud").apply()
+                    sendCloudConfig()
+                    loadCloudLibrary()
+                } catch (_: Exception) {
+                    showError("Could not securely save the access key. It must be at least 32 characters.")
                 }
-                cloudAddress = normalized
-                musicSource = "cloud"
-                getSharedPreferences("wrld-cloud", MODE_PRIVATE).edit()
-                    .putString("address", normalized)
-                    .putString("source", "cloud").apply()
-                sendCloudConfig()
-                loadCloudLibrary()
             }
         }
 

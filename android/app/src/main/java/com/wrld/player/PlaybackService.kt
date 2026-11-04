@@ -9,6 +9,9 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 
@@ -23,6 +26,18 @@ class PlaybackService : MediaSessionService() {
     private lateinit var audioStore: AudioSettingsStore
     private var audioSettings = AudioSettings()
     private var baseVolume = 0.10f
+    private lateinit var cloudHttpFactory: DefaultHttpDataSource.Factory
+    private val cloudPrefs by lazy { getSharedPreferences("wrld-cloud", MODE_PRIVATE) }
+    private val cloudListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "worker_token_ciphertext" || key == "worker_token_nonce") refreshCloudAuthorization()
+    }
+
+    private fun refreshCloudAuthorization() {
+        val token = CloudSecrets.read(this)
+        cloudHttpFactory.setDefaultRequestProperties(
+            if (token.isBlank()) emptyMap() else mapOf("Authorization" to "Bearer $token")
+        )
+    }
     private val mainHandler = Handler(Looper.getMainLooper())
 
     private val fadeTick = object : Runnable {
@@ -53,7 +68,13 @@ class PlaybackService : MediaSessionService() {
         audioSettings = audioStore.read()
         baseVolume = audioStore.prefs.getFloat("volume", 0.10f).coerceIn(0f, 1f)
 
-        val player = ExoPlayer.Builder(this).build().apply {
+        cloudHttpFactory = DefaultHttpDataSource.Factory()
+            .setAllowCrossProtocolRedirects(false)
+        refreshCloudAuthorization()
+        val streamFactory = DefaultDataSource.Factory(this, cloudHttpFactory)
+        val player = ExoPlayer.Builder(this)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(streamFactory))
+            .build().apply {
             setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_MEDIA)
@@ -65,6 +86,7 @@ class PlaybackService : MediaSessionService() {
         }
         activePlayer = player
         audioStore.prefs.registerOnSharedPreferenceChangeListener(preferenceListener)
+        cloudPrefs.registerOnSharedPreferenceChangeListener(cloudListener)
 
         // History continues to be tracked independently of the Activity/UI.
         val history = HistoryStore(applicationContext)
@@ -133,6 +155,7 @@ class PlaybackService : MediaSessionService() {
         mainHandler.removeCallbacks(fadeTick)
         if (::audioStore.isInitialized)
             audioStore.prefs.unregisterOnSharedPreferenceChangeListener(preferenceListener)
+        cloudPrefs.unregisterOnSharedPreferenceChangeListener(cloudListener)
         activePlayer = null
         mediaSession?.player?.release()
         mediaSession?.release()
