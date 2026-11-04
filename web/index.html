@@ -471,6 +471,75 @@ body:not(.native-shell) .brand h1{cursor:default}
 .player button.now-like:disabled{opacity:.25;cursor:default;filter:none!important}
 .player button.now-like:disabled:hover{transform:none!important;background:transparent!important}
 
+
+/* Windows 1.8.4: integrated ColorOS-like player queue and fluid library tabs. */
+.app{grid-template-rows:82px minmax(0,1fr) auto}
+.library-nav{position:relative;flex:none;gap:14px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.library-nav::-webkit-scrollbar{display:none}
+.library-nav .collection-tab{flex:none}
+.library-nav .collection-tab:after,.library-nav .collection-tab.active:after{display:none!important}
+.library-nav .collection-tab:active{transform:scale(.96)}
+.library-nav .new-playlist{margin-left:0;flex:none}
+.shuffle-all-btn{margin-left:auto;flex:none;height:31px;border:1px solid rgba(255,255,255,.22);border-radius:10px;background:rgba(255,255,255,.07);padding:0 10px;font-size:11px}
+.shuffle-all-btn:hover{background:rgba(255,255,255,.13)}
+.shuffle-all-btn:disabled{opacity:.4;cursor:default}
+.tab-indicator{position:absolute;left:0;bottom:0;width:0;height:2px;pointer-events:none;background:#fff;border-radius:5px;box-shadow:0 0 12px #fff5;transform:translate3d(0,0,0);transition:transform .4s cubic-bezier(.2,.85,.22,1),width .4s cubic-bezier(.2,.85,.22,1)}
+.library-stage{display:flex;flex:1;flex-direction:column;min-height:0;overflow:hidden;transition:opacity .30s cubic-bezier(.22,1,.36,1),transform .36s cubic-bezier(.22,1,.36,1)}
+.library-stage.view-changing{opacity:0;transform:translate3d(0,9px,0) scale(.995);pointer-events:none}
+.settings-panel{display:flex;flex-direction:column;flex:1;min-height:0;gap:13px;overflow:auto;padding:2px 5px 22px;scrollbar-width:thin}
+.settings-heading{margin:14px 0 0;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#999;font-weight:650}
+.settings-card{border:1px solid rgba(255,255,255,.15);border-radius:16px;overflow:hidden;background:linear-gradient(135deg,#ffffff10,#ffffff04)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:72px;padding:15px 19px;cursor:pointer}
+.settings-row+.settings-row,.settings-duration{border-top:1px solid rgba(255,255,255,.09)}
+.settings-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.settings-copy strong{font-size:12px;font-weight:600;color:#eee}
+.settings-copy small{font-size:11px;color:#a0a0a0;line-height:1.5}
+.settings-toggle{appearance:none;-webkit-appearance:none;position:relative;flex:none;width:43px;height:24px;background:#292929;border:1px solid #666;border-radius:99px;cursor:pointer;transition:background .22s,border-color .22s}
+.settings-toggle:after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#ddd;transition:transform .25s cubic-bezier(.22,1,.36,1)}
+.settings-toggle:checked{background:#eee;border-color:#eee}
+.settings-toggle:checked:after{transform:translateX(18px);background:#111}
+.settings-toggle:focus-visible{outline:2px solid white;outline-offset:4px}
+.settings-duration{padding:17px 19px}
+.settings-duration-top{display:flex;justify-content:space-between;gap:14px;font-size:12px;margin-bottom:13px}
+.settings-duration-top output{font-variant-numeric:tabular-nums;color:#ccc}
+#fadeDuration{width:100%}
+.settings-about{padding:20px 19px}
+.settings-about strong{display:block;font-size:17px;letter-spacing:.12em}
+.settings-about small{color:#aaa;font-size:11px}
+.settings-about p{font-size:11px;line-height:1.7;color:#a0a0a0;margin:10px 0 0}
+.settings-button{display:flex;justify-content:space-between;align-items:center;text-align:left;width:100%;height:auto;padding:14px 19px;border:0;background:transparent;border-top:1px solid #ffffff19;font-size:12px}
+.settings-button:hover{border:0;background:#ffffff11}
+.player-left.now-queue-trigger{height:auto;min-height:44px;cursor:pointer;border:0;padding:0;background:transparent;text-align:left;color:inherit;transition:transform .2s}
+.player-left.now-queue-trigger:hover{background:#ffffff08;border:0}
+.player-left.now-queue-trigger:active{transform:scale(.985)}
+.queue-grip{display:grid;place-items:center;align-self:stretch;width:100%;height:13px;min-height:13px;padding:0;border:0;background:none;cursor:pointer}
+.queue-grip:hover{border:0;background:none}
+.queue-grip span{width:31px;height:3px;border-radius:99px;background:#ffffff66}
+.player.queue-open .queue-grip span{background:#ffffffbc}
+.queue-drawer{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .48s cubic-bezier(.2,.88,.22,1),opacity .27s}
+.player.queue-open .queue-drawer{grid-template-rows:1fr;opacity:1}
+.queue-drawer-inner{min-height:0;overflow:hidden}
+.queue-drawer-body{padding:4px 2px 12px}
+.queue-drawer-head{display:flex;justify-content:space-between;align-items:center;margin:4px 0 8px}
+.queue-drawer-head h3{font-size:14px;font-weight:620;margin:0}
+.queue-drawer-head button{height:28px;padding:0 8px;border:0;background:transparent;font-size:20px}
+.queue-meta{font-size:10px;color:#aaa;margin:3px 0 9px}
+.queue-list{min-height:0;max-height:min(32vh,270px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.queue-row{display:grid;grid-template-columns:minmax(0,1fr) 29px;min-height:48px;gap:4px;align-items:center;border-top:1px solid #ffffff1a}
+.queue-row.is-current{background:#ffffff0d;border-left:2px solid #eee}
+.queue-track{display:flex;gap:9px;align-items:center;min-width:0;width:100%;padding:8px 3px;text-align:left;border:0;height:auto;border-radius:6px}
+.queue-track:hover{background:#ffffff0e;border:0}
+.queue-track:disabled{cursor:default;opacity:1}
+.queue-number{flex:none;min-width:24px;text-align:center;color:#999;font-size:10px}
+.queue-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.queue-copy strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.queue-copy small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:#999}
+.queue-remove{width:28px;height:30px;border:0;background:transparent;border-radius:8px;padding:0;font-size:19px;color:#aaa}
+.queue-remove:hover{border:0;background:#ffffff19;color:#fff}
+.queue-note{font-size:10px;color:#999;margin:9px 0 0;line-height:1.5}
+@media(max-width:780px){.app{grid-template-rows:auto minmax(0,1fr) auto}.queue-list{max-height:min(25vh,160px)}.library-nav{gap:11px}}
+@media(prefers-reduced-motion:reduce){.tab-indicator,.library-stage,.queue-drawer,.settings-toggle,.player-left.now-queue-trigger{transition:none!important;animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -507,9 +576,14 @@ body:not(.native-shell) .brand h1{cursor:default}
       <div class="library-nav pywebview-drag-region" role="tablist" aria-label="Music collections">
         <button class="collection-tab active" id="tabAll" role="tab" aria-selected="true" data-view="all">All songs</button>
         <button class="collection-tab" id="tabLiked" role="tab" aria-selected="false" data-view="liked">Liked <span class="tiny-counter" id="likedNavCount"></span></button>
+        <button class="collection-tab" id="tabHistory" role="tab" aria-selected="false" data-view="history">History</button>
         <button class="collection-tab" id="tabPlaylists" role="tab" aria-selected="false" data-view="playlists">Playlists</button>
+        <button class="collection-tab" id="tabSettings" role="tab" aria-selected="false" data-view="settings">Settings</button>
+        <button class="shuffle-all-btn" id="shuffleAllBtn" type="button" aria-label="Shuffle all songs" title="Shuffle every song on your computer">Shuffle All</button>
         <button class="new-playlist" id="newPlaylistBtn" type="button" title="Create playlist" aria-label="Create playlist">+ New</button>
+        <span class="tab-indicator" id="tabIndicator" aria-hidden="true"></span>
       </div>
+      <div class="library-stage" id="libraryStage">
       <div class="library-head pywebview-drag-region">
         <div>
           <button class="playlist-back hidden" id="backPlaylistsBtn" type="button">← All playlists</button>
@@ -537,6 +611,20 @@ body:not(.native-shell) .brand h1{cursor:default}
       <div class="list-wrap pywebview-drag-region" id="listWrap">
         <div class="song-list pywebview-drag-region" id="songList"></div>
         <div class="empty hidden" id="emptyState">No songs found. Rescan or choose a different folder.</div>
+      </div>
+      <div class="settings-panel hidden" id="settingsPanel" aria-label="Playback and general settings">
+        <div class="settings-heading">Playback</div>
+        <div class="settings-card">
+          <label class="settings-row"><span class="settings-copy"><strong>Fade in</strong><small>Gradually raise volume at the beginning of each song.</small></span><input type="checkbox" class="settings-toggle" id="settingFadeIn" data-setting="fadeIn"></label>
+          <label class="settings-row"><span class="settings-copy"><strong>Fade out</strong><small>Gradually lower volume near the end of each song.</small></span><input type="checkbox" class="settings-toggle" id="settingFadeOut" data-setting="fadeOut"></label>
+          <div class="settings-duration"><div class="settings-duration-top"><strong>Fade duration</strong><output id="fadeDurationLabel">2.0 s</output></div><input id="fadeDuration" type="range" min="500" max="5000" step="500" value="2000" aria-label="Fade duration"></div>
+          <label class="settings-row"><span class="settings-copy"><strong>Gapless playback</strong><small>No added pause when the audio format and player allow it.</small></span><input type="checkbox" class="settings-toggle" id="settingGapless" data-setting="gapless" checked></label>
+        </div>
+        <div class="settings-heading">Library</div>
+        <div class="settings-card"><button type="button" id="settingsRescan" class="settings-button">Rescan music library <span>↻</span></button></div>
+        <div class="settings-heading">About</div>
+        <div class="settings-card"><div class="settings-about"><strong>999 · WRLD</strong><small id="desktopVersion">Windows v1.8.4</small><p>Offline music player powered by Windows WebView2. Your music files stay on your computer, and liked songs, playlists, history and preferences are saved locally.</p></div><button type="button" class="settings-button" id="settingsUpdates">GitHub Releases <span>↗</span></button></div>
+      </div>
       </div>
     </div>
 
@@ -567,13 +655,13 @@ body:not(.native-shell) .brand h1{cursor:default}
   </section>
 
   <footer class="player glass pywebview-drag-region" id="playerDock">
-    <div class="player-left pywebview-drag-region">
+    <button type="button" class="player-left now-queue-trigger" id="openQueueButton" aria-label="Expand or collapse Up Next queue" aria-controls="queueDrawer" aria-expanded="false">
       <div class="mini-art" id="miniArt"><span class="letter">W</span><img alt="Album art"></div>
-      <div class="player-text pywebview-drag-region">
+      <div class="player-text">
         <b id="playerTitle">Choose a track</b>
         <span id="playerSubtitle">WRLD</span>
       </div>
-    </div>
+    </button>
 
     <div class="center pywebview-drag-region">
       <div class="timeline pywebview-drag-region" aria-label="Playback position">
@@ -585,6 +673,17 @@ body:not(.native-shell) .brand h1{cursor:default}
         </div>
         <span class="time" id="duration">0:00</span>
       </div>
+      <button type="button" class="queue-grip" id="queueGrip" aria-label="Expand or collapse Up Next queue" aria-controls="queueDrawer" aria-expanded="false"><span aria-hidden="true"></span></button>
+      <section class="queue-drawer" id="queueDrawer" aria-label="Up Next" aria-hidden="true">
+        <div class="queue-drawer-inner">
+          <div class="queue-drawer-body">
+            <div class="queue-drawer-head"><h3>Up Next</h3><button type="button" id="queueClose" aria-label="Collapse queue">×</button></div>
+            <p class="queue-meta" id="queueMeta">Songs waiting to play</p>
+            <div class="queue-list" id="queueList"></div>
+            <p class="queue-note">Choose a song to play it, or × to remove it from this queue. Files and playlists are not deleted.</p>
+          </div>
+        </div>
+      </section>
       <div class="controls pywebview-drag-region" role="group" aria-label="Music playback controls">
         <button class="circle now-like" id="nowLikeBtn" type="button" aria-label="Like current song" title="Like current song" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 5.2a5.7 5.7 0 0 0-8.1 0l-.7.7-.7-.7a5.7 5.7 0 0 0-8.1 8.1L12 22l8.8-8.7a5.7 5.7 0 0 0 0-8.1Z"/></svg>
