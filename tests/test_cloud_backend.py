@@ -3,7 +3,9 @@ import json
 import unittest
 from io import BytesIO
 from unittest.mock import patch
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
+import ssl
+import socket
 import cloud_backend
 
 class Response:
@@ -39,6 +41,19 @@ class CloudBackendTests(unittest.TestCase):
                  cloud_backend.WORKER_ORIGIN+"/api/tracks",302,"Found",{},None)):
             with self.assertRaisesRegex(cloud_backend.CloudError,"302"):
                 cloud_backend.list_tracks()
+    def test_safe_connection_diagnostics(self):
+        cases = [
+            (URLError(ssl.SSLCertVerificationError("certificate problem")), "certificate verification"),
+            (URLError(socket.timeout("timeout")), "timed out"),
+            (URLError(socket.gaierror(-2, "DNS failure")), "DNS lookup"),
+            (URLError(ConnectionResetError(10054, "reset")), "reset"),
+        ]
+        for error, expected in cases:
+            with self.subTest(expected=expected):
+                message = str(cloud_backend._connection_error(error))
+                self.assertIn(expected, message)
+                self.assertNotIn("Bearer", message)
+
     def test_status_has_no_token(self):
         self.assertEqual(cloud_backend.WORKER_ORIGIN,
                          "https://wrld-cloud.zaavangonzaless.workers.dev")
