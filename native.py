@@ -164,10 +164,23 @@ def run_desktop() -> None:
         # In pywebview 6.1+, enable dragging from blank elements while
         # excluding nested interactive controls.
         webview.settings['DRAG_REGION_DIRECT_TARGET_ONLY'] = True
+        # Use a standard Windows frame so every edge/corner can resize the window.
+        # Size the initial window to the available desktop work area (excluding taskbar).
+        import ctypes
+        from ctypes import wintypes
+        work_area = wintypes.RECT()
+        if ctypes.windll.user32.SystemParametersInfoW(0x0030, 0, ctypes.byref(work_area), 0):
+            available_width = work_area.right - work_area.left
+            available_height = work_area.bottom - work_area.top
+        else:
+            available_width = ctypes.windll.user32.GetSystemMetrics(0)
+            available_height = ctypes.windll.user32.GetSystemMetrics(1)
+        window_width = min(1480, max(640, available_width - 60))
+        window_height = min(910, max(480, available_height - 60))
         webview.create_window(
-            'WRLD', address, js_api=NativeAPI(), width=1480, height=910, min_size=(920, 650),
-            resizable=True, frameless=True, easy_drag=False, shadow=False, background_color='#050505',
-            text_select=False, zoomable=False,
+            'WRLD', address, js_api=NativeAPI(), width=window_width, height=window_height,
+            min_size=(640, 480), resizable=True, frameless=False, shadow=True,
+            background_color='#050505', text_select=False, zoomable=False,
         )
         # Use the built-in Windows WebView2 renderer — no browser process window.
         # Keep UI preferences such as repeat mode and volume between launches.
