@@ -18,3 +18,15 @@ Assistant-side GitHub access can prepare and commit changed source directly, whe
 - Avoid adding songs, music folders, build outputs, or personal files to this public repository.
 - Existing local playlists and preferences are stored in `%APPDATA%\WRLDPlayer`; the updater must not delete them.
 - Users remain in control of applying updates from the WRLD UI.
+
+## Recovery and validation (1.8.3+)
+
+Before shutting down the existing player, the updater now runs the downloaded
+EXE with `--startup-probe`. GitHub runs the same smoke test before publishing.
+After replacing the EXE, the helper repeats the probe and restores
+`WRLD.previous.exe` automatically if the new EXE fails.
+
+If an earlier update is already broken, rename its `WRLD.exe` to
+`WRLD.broken.exe`, then rename `WRLD.previous.exe` to `WRLD.exe`.
+No music or playlist data is lost; settings are kept in `%APPDATA%\\WRLDPlayer`.
+Do not disable security protection to get the app running; inspect Protection History.

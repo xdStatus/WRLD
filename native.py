@@ -174,6 +174,11 @@ def run_desktop() -> None:
 
 
 def main() -> int:
+    if '--startup-probe' in sys.argv:
+        # Fast packaging smoke test, without opening the music library or UI.
+        # Run by both GitHub Actions and the update installer.
+        import webview
+        return 0
     if '--self-test' in sys.argv:
         self_test()
         return 0
