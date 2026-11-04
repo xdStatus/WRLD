@@ -108,4 +108,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.6: direct Cloudflare R2 streaming through a protected Worker; Windows DPAPI encrypts the private access token. No Tailscale or running PC needed for cloud listening; local playback remains."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.7: responsive player layout, scrollable Settings, and a freely resizable native Windows window. WRLD Cloud remains available."
