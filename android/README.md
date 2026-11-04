@@ -1,4 +1,4 @@
-# WRLD Android — first playable beta (v0.1.6)
+# WRLD Android — first playable beta (v0.1.7)
 
 Native Android music playback with a monochrome WebView interface. The Windows
 Python/WebView2 player and its releases remain unchanged.
@@ -8,14 +8,14 @@ Python/WebView2 player and its releases remain unchanged.
 - Discovers audio indexed by Android MediaStore, including songs in your Music folder
 - Plays local music using Media3 ExoPlayer and a MediaSessionService
 - Plays in the background with Android lock-screen, notification and Bluetooth controls
-- All songs, Liked Songs, History (up to 50), local playlists, Shuffle All, search, sorting, repeat Off/All/One
+- All songs, Liked Songs, History (up to 50), local playlists, Shuffle All, Settings, search, sorting, repeat Off/All/One
 - Editable playback position, app volume (defaults to 10%), animated 999 logo and a lower-power twinkling starfield (no shooting comet)
 - No music uploads, no ads and no account requirement
 
 ## How to try it
 
 1. Open GitHub Actions in xdStatus/WRLD and verify **Build WRLD Android APK** succeeded.
-2. Open the **android-v0.1.6** release and download **WRLD-Android-v0.1.6.apk** to your Android device.
+2. Open the **android-v0.1.7** release and download **WRLD-Android-v0.1.7.apk** to your Android device.
 3. Allow APK installation from your browser or file manager when Android prompts.
 4. Open WRLD and grant **Music and audio** access.
 5. Put music files in your phone's Music folder if the library is empty, then reopen/Rescan.
@@ -137,3 +137,30 @@ Only Android files have changed. This beta uses temporary debug APK signing,
 so you may need to uninstall the old beta before installing the new APK.
 Music files on the phone will not be deleted, but uninstalling the beta
 clears its locally stored playlists, favorites and history.
+
+## Android beta v0.1.7 — Settings and About
+
+Android WRLD now has a fifth tab, **Settings**. It provides:
+
+- **Fade in** (default off): native Media3 service increases volume smoothly at
+  the beginning of a song rather than abruptly starting at full volume.
+- **Fade out** (default off): lowers the volume during the last seconds of a
+  song where its duration is known. Fades use an envelope; this is not
+  simultaneous two-song crossfading.
+- **Fade duration:** 0.5 to 5 seconds, with 2 seconds as the default.
+- **Gapless playback** (default on): continuous playlist transitions when
+  supported by the source format/device. With the setting off, WRLD uses a
+  short 400ms automatic pause at song boundaries.
+- **Library rescan** to refresh the on-device song list, and an **About**
+  section with the app version, offline privacy description and GitHub Releases.
+
+The options and existing app-volume preference are stored locally on the phone.
+Effects are applied in the MediaSessionService, including background and
+Bluetooth playback, and do not require WRLD to stay open on screen. The
+volume slider displays the user's configured app volume, not the temporary
+volume reduction created by fades.
+
+The APK is compiled, JavaScript-validated and launched in the Android emulator
+before publication. The beta uses temporary per-build signing, so installation
+may require uninstalling an older version first (clearing app-specific settings,
+liked songs and playlists, but **never** the phone's music files).

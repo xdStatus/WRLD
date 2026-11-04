@@ -47,6 +47,33 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .shuffle-all:active:not(:disabled){transform:scale(.96);background:rgba(255,255,255,.18)}
 .shuffle-all:disabled{opacity:.35;cursor:default}
 .shuffle-hint{font-size:11px;color:#999;line-height:1.4;min-width:0}
+/* Mobile WRLD settings, visually consistent with playlists and controls. */
+.settings-page{display:flex;flex-direction:column;gap:10px;padding:12px 0 23px}
+.settings-heading{color:#979797;text-transform:uppercase;letter-spacing:.22em;font-size:10px;margin:17px 1px 6px;font-weight:650}
+.settings-panel{border:1px solid rgba(255,255,255,.15);border-radius:17px;background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.019));overflow:hidden}
+.settings-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;min-height:77px;position:relative}
+.settings-item+.settings-item{border-top:1px solid rgba(255,255,255,.09)}
+.settings-copy{min-width:0;display:flex;flex-direction:column;gap:5px}
+.settings-copy strong{font-size:13px;font-weight:590;color:#eee}
+.settings-copy small{font-size:11px;color:#a7a7a7;line-height:1.5}
+.settings-item input[type=checkbox]{position:absolute;right:13px;top:50%;transform:translateY(-50%);width:50px;height:44px;margin:0;opacity:0;cursor:pointer;z-index:1}
+.settings-toggle{display:block;position:relative;flex:0 0 43px;width:43px;height:25px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:#292929;transition:background .2s,border-color .2s}
+.settings-toggle:after{content:"";position:absolute;left:3px;top:3px;height:17px;width:17px;border-radius:50%;background:#d8d8d8;transition:transform .2s,background .2s}
+.settings-item input[type=checkbox]:checked+.settings-toggle{background:#eee;border-color:#eee}
+.settings-item input[type=checkbox]:checked+.settings-toggle:after{transform:translateX(17px);background:#111}
+.settings-item input[type=checkbox]:focus-visible+.settings-toggle{outline:2px solid white;outline-offset:4px}
+.settings-duration{padding:16px;display:flex;flex-direction:column;gap:12px;border-top:1px solid rgba(255,255,255,.09)}
+.settings-duration-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.settings-duration-head strong{font-size:13px;font-weight:590}
+.settings-duration-head output{font-size:12px;color:#ddd;font-variant-numeric:tabular-nums}
+.settings-duration input{width:100%;margin:0;accent-color:#e8e8e8}
+.settings-action{width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px;font-size:13px}
+.settings-action:active{background:rgba(255,255,255,.08)}
+.settings-action small{display:block;color:#aaa;font-size:11px;margin-top:5px}
+.settings-about{padding:19px 16px}
+.settings-about-title{font-size:17px;font-weight:670;letter-spacing:.12em}
+.settings-about-version{font-size:11px;color:#bbb;margin-top:6px}
+.settings-about-desc{color:#999;font-size:11px;line-height:1.7;margin-top:12px}
 .toolbar{min-height:66px;padding:18px 0 12px;display:flex;align-items:center;justify-content:space-between;gap:11px}
 .toolbar-left{display:flex;flex-direction:column;gap:4px;min-width:0}
 .toolbar-title{font-size:15px;font-weight:620;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
@@ -165,6 +192,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
   <button class="tab" data-view="liked">Liked <span id="likedCount"></span></button>
   <button class="tab" data-view="history">History</button>
   <button class="tab" data-view="playlists">Playlists</button>
+  <button class="tab" data-view="settings">Settings</button>
  </nav>
  <div class="toolbar">
   <div class="toolbar-left"><span class="toolbar-title" id="sectionTitle">All songs</span><span class="toolbar-sub" id="sectionSubtitle">Loading library…</span></div>
@@ -215,7 +243,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 "use strict";
 const el=function(id){return document.getElementById(id)};
 const call=function(method){try{if(!window.WRLDNative)return;var args=Array.prototype.slice.call(arguments,1);return window.WRLDNative[method].apply(window.WRLDNative,args)}catch(error){notice("Android connection unavailable");}};
-const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],view:"all",playlistId:"",query:"",sort:"title",visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false};
+const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000},view:"all",playlistId:"",query:"",sort:"title",visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false};
 const heart='<svg viewBox="0 0 24 24"><path d="M20.7 5.1a5.6 5.6 0 0 0-7.9 0L12 6l-.8-.9a5.6 5.6 0 0 0-7.9 7.9L12 22l8.7-9a5.6 5.6 0 0 0 0-7.9Z"/></svg>';
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function fmt(ms){var seconds=Math.floor(Math.max(0,Number(ms)||0)/1000);return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")}
@@ -243,8 +271,13 @@ function compare(a,b){
  }
  return result||a.title.localeCompare(b.title);
 }
-function setView(name,id){app.view=name;app.playlistId=id||"";app.displayed=0;document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.view===name||(name==="playlist"&&t.dataset.view==="playlists"))});render();if(name==="history")call("requestHistory")}
+function setView(name,id){app.view=name;app.playlistId=id||"";app.displayed=0;document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.view===name||(name==="playlist"&&t.dataset.view==="playlists"))});render();if(name==="history")call("requestHistory");if(name==="settings")call("requestAudioSettings")}
 function render(){
+ var isSettings=app.view==="settings";
+ document.querySelector(".search-wrap").style.display=isSettings?"none":"flex";
+ document.querySelector(".shuffle-all-row").style.display=isSettings?"none":"flex";
+ document.querySelector(".toolbar").style.display=isSettings?"none":"flex";
+ if(isSettings){renderSettings();return}
  el("likedCount").textContent=app.liked.size?" "+app.liked.size:"";
  var title="All songs",sub="",isLists=app.view==="playlists";
  if(app.view==="liked")title="Liked songs";
@@ -281,6 +314,34 @@ function appendTracks(){
  el("list").appendChild(fragment); app.displayed=end;
 }
 window.addEventListener("scroll",function(){if(window.innerHeight+window.scrollY>document.body.scrollHeight-850)appendTracks()},{passive:true});
+function renderSettings(){
+ var s=app.settings;
+ function toggle(key,title,description){
+  return '<label class="settings-item"><span class="settings-copy"><strong>'+title+'</strong><small>'+description+'</small></span>'+
+    '<input type="checkbox" data-audio-setting="'+key+'" aria-label="'+title+'"'+(s[key]?' checked':'')+'>'+
+    '<span class="settings-toggle" aria-hidden="true"></span></label>';
+ }
+ var time=(s.fadeDurationMs/1000).toFixed(1);
+ var out='<div class="settings-page">'+
+  '<div class="settings-heading">Playback</div>'+
+  '<div class="settings-panel">'+
+   toggle('fadeIn','Fade in','Gradually raise volume at the start of each song.')+
+   toggle('fadeOut','Fade out','Gradually lower volume near the end of each song.')+
+   '<div class="settings-duration"><div class="settings-duration-head"><strong>Fade duration</strong><output id="fadeDurationLabel">'+time+' s</output></div>'+
+    '<input id="fadeDurationSlider" type="range" min="500" max="5000" step="500" value="'+s.fadeDurationMs+'" aria-label="Fade duration in milliseconds">'+
+    '<span class="settings-copy"><small>Applies to both fades, when enabled.</small></span></div>'+
+   toggle('gapless','Gapless playback','Play tracks without an added pause when the format supports it. Off adds a brief gap.')+
+  '</div>'+
+  '<div class="settings-heading">Library</div>'+
+  '<div class="settings-panel"><button class="settings-action" data-rescan-library="1"><span>Rescan music library<small>Refresh songs indexed on your phone</small></span><span aria-hidden="true">↻</span></button></div>'+
+  '<div class="settings-heading">About</div>'+
+  '<div class="settings-panel"><div class="settings-about"><div class="settings-about-title">999 · WRLD</div>'+
+   '<div class="settings-about-version">Android v0.1.7 (beta)</div>'+
+   '<div class="settings-about-desc">Offline music player powered by Android Media3. Your music, favorites, playlists, history, and audio preferences stay on this device. No account required.</div></div>'+
+   '<button class="settings-action" data-open-updates="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>GitHub Releases<small>View the latest Android updates</small></span><span aria-hidden="true">↗</span></button></div>'+
+  '</div>';
+ el("list").innerHTML=out;
+}
 function renderPlaylists(){
  var out='<div class="playlist-grid"><button class="playlist-card playlist-create" data-create="1"><span class="playlist-cover">＋</span><span><strong class="playlist-name">New playlist</strong><small class="playlist-count">Make a new collection</small></span></button>';
  app.playlists.forEach(function(p){out+='<button class="playlist-card" data-open="'+esc(p.id)+'"><span class="playlist-cover">✦</span><span><strong class="playlist-name">'+esc(p.name)+'</strong><small class="playlist-count">'+(p.ids||[]).filter(function(id){return app.map.has(String(id))}).length+' songs</small></span></button>'});
@@ -362,8 +423,10 @@ function openTrackMenu(id){
 }
 function createDialog(){showSheet("New playlist",'<p>Name your collection.</p><input id="newPlaylistName" maxlength="70" placeholder="Playlist name" autocomplete="off"><button class="sheet-primary" id="confirmPlaylist">Create playlist</button>');setTimeout(function(){el("newPlaylistName")&&el("newPlaylistName").focus()},100)}
 el("list").addEventListener("click",function(event){
- var b=event.target.closest("[data-like],[data-menu],[data-create],[data-open],[data-delete],[data-back],[data-song]");
+ var b=event.target.closest("[data-like],[data-menu],[data-create],[data-open],[data-delete],[data-back],[data-song],[data-rescan-library],[data-open-updates]");
  if(!b)return;
+ if(b.dataset.rescanLibrary){call("requestLibrary");notice("Scanning library…");return}
+ if(b.dataset.openUpdates){call("openUpdates");return}
  if(b.dataset.like){call("setLike",b.dataset.like,!app.liked.has(b.dataset.like));return}
  if(b.dataset.menu){openTrackMenu(b.dataset.menu);return}
  if(b.dataset.create){createDialog();return}
@@ -380,6 +443,22 @@ el("sheetBody").addEventListener("click",function(e){
  if(b.dataset.create){createDialog();return}
  if(b.dataset.confirmDelete){call("deletePlaylist",b.dataset.confirmDelete);hideSheet();setView("playlists");return}
  if(b.id==="confirmPlaylist"){var name=(el("newPlaylistName").value||"").trim();if(name){call("createPlaylist",name);hideSheet();notice("Playlist created")}else notice("Enter a playlist name")}
+});
+el("list").addEventListener("input",function(e){
+ if(e.target.id==="fadeDurationSlider"){
+  var label=el("fadeDurationLabel");
+  if(label)label.textContent=(Number(e.target.value)/1000).toFixed(1)+" s";
+ }
+});
+el("list").addEventListener("change",function(e){
+ var target=e.target;
+ if(target.dataset.audioSetting){
+  call("setAudioSetting",target.dataset.audioSetting,String(target.checked));
+  return;
+ }
+ if(target.id==="fadeDurationSlider"){
+  call("setAudioSetting","fadeDurationMs",String(target.value));
+ }
 });
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){setView(t.dataset.view)})});
 el("search").addEventListener("input",function(e){app.query=e.target.value;render()});
@@ -445,6 +524,16 @@ window.WRLD={
  receiveHistory:function(data){
   app.history=Array.isArray(data)?data.slice(0,50).map(String):[];
   if(app.view==="history")render();
+ },
+ receiveAudioSettings:function(data){
+  if(!data||typeof data!=="object")return;
+  app.settings={
+   fadeIn:data.fadeIn===true,
+   fadeOut:data.fadeOut===true,
+   gapless:data.gapless!==false,
+   fadeDurationMs:Math.max(500,Math.min(5000,Number(data.fadeDurationMs)||2000))
+  };
+  if(app.view==="settings")renderSettings();
  },
  receivePlayer:function(data){var previous=app.player.id;app.player={id:String(data.id||""),playing:!!data.playing,position:Number(data.position)||0,duration:Number(data.duration)||0,volume:Number(data.volume==null?.1:data.volume),repeat:data.repeat||"off"};renderNow();if(previous!==app.player.id){
   document.querySelectorAll(".track").forEach(function(row){row.classList.toggle("is-current",row.dataset.song===app.player.id)});
