@@ -18,7 +18,7 @@ import socket
 import threading
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
-from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.request import Request, build_opener, HTTPRedirectHandler, HTTPSHandler
 
 from player import CONFIG_DIR
 
@@ -106,7 +106,18 @@ class _BlockRedirects(HTTPRedirectHandler):
         return None
 
 
-_https_opener = build_opener(_BlockRedirects)
+def _make_https_opener():
+    # Windows verifies Cloudflare's chain against the Windows certificate
+    # store, including trusted intermediates, rather than a frozen bundle.
+    # Keep hostname verification and redirect blocking enabled.
+    if os.name == "nt":
+        import truststore
+        tls_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        return build_opener(_BlockRedirects, HTTPSHandler(context=tls_context))
+    return build_opener(_BlockRedirects)
+
+
+_https_opener = _make_https_opener()
 
 
 def _authorized_request(path: str, *, range_header: str = "", method: str = "GET"):
