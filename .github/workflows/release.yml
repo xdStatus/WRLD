@@ -108,4 +108,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.12: liked-song counts reflect the selected local or cloud library, and cloud audio duration metadata is detected and cached instead of showing 0:00."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.13: two-second animated 999 WRLD opening, first-run local library default with remembered cloud selection, and green cloud connection indicator."
