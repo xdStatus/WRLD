@@ -52,6 +52,10 @@ jobs:
         if: steps.release.outputs.publish == 'true'
         run: python -m pip install "pyinstaller>=6.11,<7" "pywebview>=6.1,<7"
 
+      - name: Test private WRLD Cloud API
+        if: steps.release.outputs.publish == 'true'
+        run: python -m unittest discover -s tests -p test_cloud.py -v
+
       - name: Validate desktop WebView JavaScript
         if: steps.release.outputs.publish == 'true'
         shell: pwsh
