@@ -1,4 +1,4 @@
-# WRLD Android — first playable beta (v0.1.10)
+# WRLD Android — first playable beta (v0.1.11)
 
 Native Android music playback with a monochrome WebView interface. The Windows
 Python/WebView2 player and its releases remain unchanged.
@@ -15,7 +15,7 @@ Python/WebView2 player and its releases remain unchanged.
 ## How to try it
 
 1. Open GitHub Actions in xdStatus/WRLD and verify **Build WRLD Android APK** succeeded.
-2. Open the **android-v0.1.10** release and download **WRLD-Android-v0.1.10.apk** to your Android device.
+2. Open the **android-v0.1.11** release and download **WRLD-Android-v0.1.11.apk** to your Android device.
 3. Allow APK installation from your browser or file manager when Android prompts.
 4. Open WRLD and grant **Music and audio** access.
 5. Put music files in your phone's Music folder if the library is empty, then reopen/Rescan.
@@ -210,3 +210,18 @@ There is no separate bottom-sheet popup, overlay or backdrop fade. The
 underlying app tabs and audio logic are unchanged. Android reduced-motion
 preferences turn off the height animation. Upcoming tracks remain removable
 without deleting audio files, and the existing long-queue pagination stays.
+
+## Android beta v0.1.11 — brighter natural twinkling
+
+The existing sky is a little brighter overall: most stars retain an independent,
+soft luminosity pulse but fewer disappear into the dark background. A small
+subset of the stars sometimes shine near-white for under a second, with a
+brief, restrained cross sparkle at the peak. Each bright moment is separated
+by randomized several-second gaps; there are no synchronized flashes.
+
+The star count, capped canvas resolution and approximately 25 FPS animation
+remain unchanged. No meteors or shooting stars were restored. Playback,
+settings, interface controls, the integrated queue, and Windows builds remain
+untouched. The app still uses temporary debug APK signing keys, so installing
+this build over an older beta may require uninstalling it first; music files
+are not deleted, but saved app preferences/playlists/likes may be cleared.
