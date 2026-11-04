@@ -1,4 +1,4 @@
-# WRLD Android — first playable beta (v0.1.8)
+# WRLD Android — first playable beta (v0.1.9)
 
 Native Android music playback with a monochrome WebView interface. The Windows
 Python/WebView2 player and its releases remain unchanged.
@@ -15,7 +15,7 @@ Python/WebView2 player and its releases remain unchanged.
 ## How to try it
 
 1. Open GitHub Actions in xdStatus/WRLD and verify **Build WRLD Android APK** succeeded.
-2. Open the **android-v0.1.8** release and download **WRLD-Android-v0.1.8.apk** to your Android device.
+2. Open the **android-v0.1.9** release and download **WRLD-Android-v0.1.9.apk** to your Android device.
 3. Allow APK installation from your browser or file manager when Android prompts.
 4. Open WRLD and grant **Music and audio** access.
 5. Put music files in your phone's Music folder if the library is empty, then reopen/Rescan.
@@ -182,3 +182,17 @@ Long queues load incrementally inside the sheet to keep scrolling responsive.
 
 APK signing is still temporary in this preview. Android may require removing
 the previous app before installing; this clears local WRLD data but not songs.
+
+## Android beta v0.1.9 — fluid ColorOS-like navigation
+
+The Up Next queue now slides up with a spring-like easing curve while its
+backdrop fades in. Closing it reverses the animation. Because the overlay
+remains mounted, fast taps don't flash a fully rendered sheet.
+
+All Songs, Liked, History, Playlists and Settings now use a shared sliding
+indicator and a short fade/vertical motion transition. Quick consecutive tab
+taps cancel stale transitions, so the selected tab remains authoritative.
+The scroll handler pauses while a view is changing. When motion reduction is
+enabled in Android accessibility settings, these animations are disabled.
+The existing 999 logo, 25FPS lightweight starfield, queue controls and music
+playback behavior remain unchanged.

@@ -36,11 +36,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .search-wrap svg{width:17px;height:17px;flex:none}
 .search-wrap input{flex:1;min-width:0;color:white;border:0;background:transparent;outline:0;font-size:14px}
 .search-wrap input::placeholder{color:#7f7f7f}
-.tabs{display:flex;gap:21px;border-bottom:1px solid var(--line);align-items:center;white-space:nowrap;overflow-x:auto;scrollbar-width:none}
+.tabs{position:relative;display:flex;gap:21px;border-bottom:1px solid var(--line);align-items:center;white-space:nowrap;overflow-x:auto;scrollbar-width:none;scroll-behavior:smooth}
 .tabs::-webkit-scrollbar{display:none}
-.tab{color:#9d9d9d;padding:14px 0 13px;font-size:13px;position:relative;font-weight:530;flex:none}
+.tab{color:#9d9d9d;padding:14px 0 13px;font-size:13px;position:relative;font-weight:530;flex:none;transition:color .25s ease,transform .2s cubic-bezier(.2,.8,.2,1)}
 .tab.active{color:#fff}
-.tab.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:3px;background:#f4f4f4;box-shadow:0 0 12px rgba(255,255,255,.25)}
+.tab:active{transform:scale(.95)}
+.tab-indicator{position:absolute;left:0;bottom:0;height:2px;width:0;transform:translate3d(0,0,0);border-radius:3px;background:#f4f4f4;box-shadow:0 0 12px rgba(255,255,255,.25);pointer-events:none;transition:transform .4s cubic-bezier(.2,.88,.22,1),width .4s cubic-bezier(.2,.88,.22,1)}
+/* Only composite the view for the short tab transition, not while idle. */
+.content-stage{transition:opacity .33s cubic-bezier(.22,1,.36,1),transform .38s cubic-bezier(.22,1,.36,1)}
+.content-stage.view-changing{opacity:0;transform:translate3d(0,9px,0) scale(.994);pointer-events:none}
+.content-stage.view-changing *{pointer-events:none}
 .shuffle-all-row{display:flex;align-items:center;gap:12px;margin:0 0 17px}
 .shuffle-all{display:flex;align-items:center;justify-content:center;gap:10px;flex:none;min-height:42px;padding:0 16px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.095);color:#f6f6f6;border-radius:12px;font-size:12px;font-weight:620;letter-spacing:.025em;transition:transform .18s,background .18s,border-color .18s}
 .shuffle-all svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
@@ -112,7 +117,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .now-queue-trigger:focus-visible{outline:1px solid white;outline-offset:3px}
 .queue-open-hint{display:flex;align-items:center;gap:5px;color:#aaa;font-size:10px;white-space:nowrap;flex:none}
 .queue-open-hint svg{height:17px;width:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+/* ColorOS-like spring slide-up for Up Next. Visibility prevents hidden
+   dialogs intercepting touches; transforms avoid layout reflows. */
+#queueOverlay{display:flex;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .3s ease,visibility .3s}
+#queueOverlay.open{visibility:visible;opacity:1;pointer-events:auto}
+#queueOverlay .queue-sheet{transform:translate3d(0,105%,0) scale(.985);opacity:.86;transition:transform .46s cubic-bezier(.18,.88,.24,1),opacity .3s ease}
+#queueOverlay.open .queue-sheet{transform:translate3d(0,0,0) scale(1);opacity:1}
 .queue-sheet{max-height:80vh;display:flex;flex-direction:column}
+.now-queue-trigger{transition:transform .2s cubic-bezier(.22,1,.36,1),background .2s;border-radius:10px}
+.now-queue-trigger:active{transform:scale(.985);background:rgba(255,255,255,.07)}
+.queue-row{transition:background .2s ease}
+.queue-row:active{background:rgba(255,255,255,.09)}
 .queue-meta{font-size:11px;color:#aaa;line-height:1.4;margin:0 0 11px}
 .queue-list{min-height:60px;max-height:min(59vh,580px);overflow-y:auto;overscroll-behavior:contain}
 .queue-row{display:grid;grid-template-columns:minmax(0,1fr) 36px;align-items:center;min-height:59px;border-bottom:1px solid rgba(255,255,255,.09);gap:4px}
@@ -181,7 +196,11 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 .toast{position:fixed;z-index:9;top:20%;left:50%;transform:translateX(-50%) translateY(-8px);padding:11px 17px;background:#2a2a2a;color:#f6f6f6;border:1px solid rgba(255,255,255,.16);border-radius:12px;font-size:12px;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;max-width:86vw;overflow:hidden;text-overflow:ellipsis}
 .toast.visible{opacity:1;transform:translateX(-50%) translateY(0)}
 @media(max-width:365px){.shell{padding-left:13px;padding-right:13px}.tabs{gap:21px}.track{gap:7px;grid-template-columns:38px minmax(0,1fr) auto 27px 27px}.track-art{height:38px;width:38px}.track-length{font-size:10px}.brand-logo{width:79px}.sort-control select{max-width:106px}}
-@media(prefers-reduced-motion:reduce){.digit{animation:none}*{scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){
+ .digit{animation:none}
+ *{scroll-behavior:auto!important}
+ .content-stage,.tab-indicator,#queueOverlay,#queueOverlay .queue-sheet,.tab,.now-queue-trigger,.queue-row{transition:none!important;animation:none!important}
+}
 </style>
 </head>
 <body>
@@ -212,7 +231,9 @@ input[type=range]{accent-color:#eee;cursor:pointer}
   <button class="tab" data-view="history">History</button>
   <button class="tab" data-view="playlists">Playlists</button>
   <button class="tab" data-view="settings">Settings</button>
+  <span id="tabIndicator" class="tab-indicator" aria-hidden="true"></span>
  </nav>
+ <div class="content-stage" id="viewStage">
  <div class="toolbar">
   <div class="toolbar-left"><span class="toolbar-title" id="sectionTitle">All songs</span><span class="toolbar-sub" id="sectionSubtitle">Loading library…</span></div>
   <label class="sort-control" id="sortGroup"><span>Sort</span>
@@ -225,6 +246,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
   </label>
  </div>
  <div id="list" class="list"></div>
+ </div>
 </main>
 <footer class="dock"><div class="dock-inner">
  <button type="button" class="current-info now-queue-trigger" id="openQueueButton" aria-label="Open Up Next playback queue"><div class="current-art">9</div><div class="current-titles"><strong id="currentTitle">Select a song</strong><span id="currentArtist">Your music stays on your phone</span></div><span class="queue-open-hint">Queue <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h12M3 11h12M3 16h8m4-1 3 3 3-3m-3 3V9"/></svg></span></button>
@@ -298,7 +320,59 @@ function compare(a,b){
  }
  return result||a.title.localeCompare(b.title);
 }
-function setView(name,id){app.view=name;app.playlistId=id||"";app.displayed=0;document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.view===name||(name==="playlist"&&t.dataset.view==="playlists"))});render();if(name==="history")call("requestHistory");if(name==="settings")call("requestAudioSettings")}
+const reduceMotion=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+var viewChangeTimer=null;
+var viewChangeSeq=0;
+function moveTabIndicator(first){
+ var nav=document.querySelector(".tabs");
+ var selected=nav.querySelector(".tab.active");
+ var indicator=el("tabIndicator");
+ if(!selected||!indicator)return;
+ if(first)indicator.style.transition="none";
+ indicator.style.width=selected.offsetWidth+"px";
+ indicator.style.transform="translate3d("+selected.offsetLeft+"px,0,0)";
+ if(first)requestAnimationFrame(function(){indicator.style.transition=""});
+ // On narrow screens, keep the active tab comfortably within view.
+ var desired=selected.offsetLeft+selected.offsetWidth/2-nav.clientWidth/2;
+ nav.scrollTo({left:Math.max(0,desired),behavior:reduceMotion?"auto":"smooth"});
+}
+function refreshTabData(name){
+ if(name==="history")call("requestHistory");
+ if(name==="settings")call("requestAudioSettings");
+}
+function setView(name,id){
+ var targetId=id||"";
+ var changed=app.view!==name||(name==="playlist"&&app.playlistId!==targetId);
+ if(!changed){render();moveTabIndicator(false);return}
+ app.view=name;
+ app.playlistId=targetId;
+ app.displayed=0;
+ document.querySelectorAll(".tab").forEach(function(t){
+  t.classList.toggle("active",t.dataset.view===name||(name==="playlist"&&t.dataset.view==="playlists"));
+ });
+ moveTabIndicator(false);
+ // Cancel pending swaps so fast repeated taps never show the wrong tab.
+ viewChangeSeq++;
+ var sequence=viewChangeSeq;
+ if(viewChangeTimer!==null){clearTimeout(viewChangeTimer);viewChangeTimer=null}
+ var stage=el("viewStage");
+ if(reduceMotion){
+  stage.classList.remove("view-changing");
+  render();refreshTabData(name);
+  return;
+ }
+ stage.classList.add("view-changing");
+ viewChangeTimer=setTimeout(function(){
+  if(sequence!==viewChangeSeq)return;
+  viewChangeTimer=null;
+  render();
+  refreshTabData(name);
+  // Separate the new DOM paint from the entry transition.
+  requestAnimationFrame(function(){
+   if(sequence===viewChangeSeq)stage.classList.remove("view-changing");
+  });
+ },115);
+}
 function render(){
  var isSettings=app.view==="settings";
  document.querySelector(".search-wrap").style.display=isSettings?"none":"flex";
@@ -344,6 +418,7 @@ function appendTracks(){
  el("list").appendChild(fragment); app.displayed=end;
 }
 window.addEventListener("scroll",function(){
+ if(viewChangeTimer!==null)return;
  if(["all","liked","history","playlist"].includes(app.view) &&
     window.innerHeight+window.scrollY>document.body.scrollHeight-850) appendTracks();
 },{passive:true});
@@ -565,6 +640,8 @@ el("list").addEventListener("change",function(e){
  }
 });
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){setView(t.dataset.view)})});
+window.addEventListener("resize",function(){moveTabIndicator(false)},{passive:true});
+requestAnimationFrame(function(){moveTabIndicator(true)});
 el("search").addEventListener("input",function(e){app.query=e.target.value;render()});
 el("sort").addEventListener("change",function(e){app.sort=e.target.value;render()});
 el("shuffleAllBtn").addEventListener("click",shuffleAll);
