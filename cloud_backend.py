@@ -168,8 +168,10 @@ def list_tracks() -> dict:
         title = str(track.get("title") or Path(key).stem)[:300]
         artist = str(track.get("artist") or "Juice WRLD")[:200]
         ext = Path(key).suffix.lower()
+        raw_duration = track.get("duration")
+        duration = raw_duration if isinstance(raw_duration, (int, float)) and not isinstance(raw_duration, bool) and 0 < raw_duration < 86400 else 0
         song = {"id": identifier, "title": title, "artist": artist,
-                "album": "WRLD Cloud", "duration": 0, "bytes": int(track.get("size") or 0),
+                "album": "WRLD Cloud", "duration": duration, "bytes": int(track.get("size") or 0),
                 "format": ext.lstrip(".").upper(), "relative": key,
                 "modified": 0}
         songs.append(song)
