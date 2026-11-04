@@ -1,0 +1,54 @@
+WRLD V18 (v1.8.0) — borderless desktop window and in-app release updates
+=======================================================================
+
+GETTING WRLD.EXE (first time)
+1. Extract the ZIP to a normal folder on Windows.
+2. Double-click BUILD_WRLD_EXE.cmd. It installs build packages in a private venv.
+3. Open dist\WRLD.exe. Keep the EXE in a folder that you can write to,
+   such as Documents\Apps\WRLD. The app checks this before installing updates.
+4. The native window is borderless: its minimize/maximize/fullscreen/close
+   buttons are inside the app. Drag by the word WRLD at the top left.
+   Press F11 or click fullscreen to toggle full-screen mode.
+
+UPDATE SETUP (one-time)
+* Create a PUBLIC GitHub repository for the WRLD app source code. PUBLIC
+  GitHub Releases make it possible for the app to check for updates without
+  storing a secret login token on users' computers.
+* Copy the source folder into that repo, including .github/workflows/release.yml.
+  Do not commit the .wrld-build-venv, build/, dist/, or your music files.
+* Commit/push. In GitHub repository Settings > Actions, ensure Actions can
+  create releases (workflow has contents: write; repository workflow permissions
+  may need Read and write). Check your repo's settings if release fails.
+* Set app_version.py to the desired version (1.8.0 initially) and commit it.
+* Push a matching tag: v1.8.0. The included workflow builds WRLD.exe and
+  publishes it and WRLD.exe.sha256 in a GitHub release automatically.
+* In the WRLD app, click Updates, enter owner/repository, and Save.
+  Future runs check the latest release automatically; Update & Restart
+  downloads, verifies SHA-256, installs, and relaunches the EXE.
+
+FUTURE RELEASES
+* Make changes to the source; bump app_version.py (e.g. 1.8.1).
+* Push changes and tag v1.8.1. GitHub Actions builds and publishes the EXE.
+* WRLD detects the release and offers Update & Restart. No ZIP unpacking
+  or local Python build needed for the user after the first install.
+
+IMPORTANT LIMITATIONS
+* The update feature is INSTALLED but cannot check anything until you have
+  published a GitHub release and configured the repository in the app.
+* GitHub release asset downloads use HTTPS, and WRLD validates the SHA-256
+  checksum published alongside the executable. Only install from a repository
+  you control and trust. Do not share write access to the repository.
+* WRLD.previous.exe is kept next to WRLD.exe as a simple rollback copy.
+* Windows may prompt with SmartScreen for unsigned executables.
+* If you move WRLD.exe into a protected folder (e.g., Program Files), an
+  in-place update may fail without administrative privileges.
+* The WINDOW chrome is hidden; full desktop transparency is not supported by
+  pywebview on Windows. The player UI remains opaque dark with starfield.
+* The first-launch volume is 10%. Later adjustments are saved in WRLD's
+  WebView profile. Older WRLD installs may already have a saved volume; those
+  users keep their chosen value.
+* Data stays in %%APPDATA%%\WRLDPlayer, never inside the EXE. Your music
+  and playlists are NOT uploaded.
+
+If the EXE build fails, share the Command Prompt errors, especially the
+lines directly above BUILD FAILED.
