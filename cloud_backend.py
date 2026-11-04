@@ -127,7 +127,8 @@ def _authorized_request(path: str, *, range_header: str = "", method: str = "GET
     token = _read_token()
     if not token:
         raise CloudError("Enter your WRLD Cloud access key in Settings.")
-    headers = {"Authorization": "Bearer " + token, "Accept": "application/json"}
+    headers = {"Authorization": "Bearer " + token, "Accept": "application/json",
+               "User-Agent": "WRLD-Player/1.8.11"}
     if range_header:
         headers["Range"] = range_header
     request = Request(WORKER_ORIGIN + path, headers=headers, method=method)
