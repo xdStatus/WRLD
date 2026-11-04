@@ -34,15 +34,29 @@ jobs:
           gradle-version: '8.11.1'
       - name: Build debug-signed Android APK
         run: gradle -p android :app:assembleDebug --stacktrace --no-daemon
+      - name: Enable KVM for emulator startup check
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Smoke-test Android app launch
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash android/scripts/smoke-test.sh
       - name: Prepare APK and checksum
         run: |
           mkdir -p android/dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk android/dist/WRLD-Android-v0.1.3.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk android/dist/WRLD-Android-v0.1.4.apk
           cd android/dist
-          sha256sum WRLD-Android-v0.1.3.apk > WRLD-Android-v0.1.3.apk.sha256
+          sha256sum WRLD-Android-v0.1.4.apk > WRLD-Android-v0.1.4.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: WRLD-Android-v0.1.3
+          name: WRLD-Android-v0.1.4
           path: android/dist/*
           if-no-files-found: error
       - name: Publish Android beta (only once per version)
@@ -50,9 +64,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="android-v0.1.3"
+          TAG="android-v0.1.4"
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Android beta $TAG already exists; keeping existing published APK."
           else
-            gh release create "$TAG" android/dist/WRLD-Android-v0.1.3.apk android/dist/WRLD-Android-v0.1.3.apk.sha256 --target "$GITHUB_SHA" --title "WRLD Android v0.1.3 (beta)" --notes "WRLD Android: Shuffle All starts every local song in a fresh random order. Immersive fullscreen remains enabled. Android 8+. Note: This initial APK uses a temporary CI debug signing key and is for testing; future APKs may require uninstalling this beta until a persistent private signing key is configured."
+            gh release create "$TAG" android/dist/WRLD-Android-v0.1.4.apk android/dist/WRLD-Android-v0.1.4.apk.sha256 --target "$GITHUB_SHA" --title "WRLD Android v0.1.4 (beta)" --notes "WRLD Android recovery beta: safer deferred fullscreen initialization and Shuffle All. Emulator startup smoke-tested before release. Android 8+. Note: This initial APK uses a temporary CI debug signing key and is for testing; future APKs may require uninstalling this beta until a persistent private signing key is configured."
           fi
