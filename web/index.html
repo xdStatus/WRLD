@@ -638,7 +638,7 @@ body.native-shell .window-chrome{display:none!important}
 
 /* Compact alphabet navigation and glowing hover */
 .library-list-layout{display:flex;flex:1;min-width:0;min-height:0;overflow:hidden}
-.library-list-layout .list-wrap{flex:1;min-width:0;min-height:0;overflow-anchor:none;scroll-behavior:auto}
+.library-list-layout .list-wrap{flex:1;min-width:0;min-height:0;overflow-anchor:none;scroll-behavior:auto;overscroll-behavior:contain}
 .library-list-layout .song-list{position:relative}
 .library-list-layout .song-list.is-warping{animation:wrldListWarp .52s cubic-bezier(.18,.7,.25,1) both}
 .library-list-layout .song-list.is-warping .song{transition:none}
@@ -1168,36 +1168,48 @@ function cancelAlphabetJump(){
  $('songList').classList.remove('is-warping');
 }
 function jumpToLetter(letter){
- if(!state.filtered.some(t=>String(t.title||'').trim().toUpperCase().startsWith(letter)))return;
+ const startsWithLetter=t=>String(t.title||'').trim().toUpperCase().startsWith(letter);
+ if(!state.filtered.some(startsWithLetter))return;
  cancelAlphabetJump();
  if(state.sort!=='title'||state.sortReversed){
   state.sort='title';state.sortReversed=false;
   $('sortSelect').value='title';saveSortDirection();applyFilter();
  }
- const index=state.filtered.findIndex(t=>String(t.title||'').trim().toUpperCase().startsWith(letter));
+ const index=state.filtered.findIndex(startsWithLetter);
  const scroller=$('listWrap'),list=$('songList'),row=list.children[index];
  if(!row)return;
- // Compute the destination against *only* the actual scrolling container.
- // No scrollIntoView: that can shift outer ancestors and overshoot the letter.
- const rowTop=row.getBoundingClientRect().top-scroller.getBoundingClientRect().top+scroller.scrollTop;
- const target=Math.max(0,Math.min(rowTop,scroller.scrollHeight-scroller.clientHeight));
- const from=scroller.scrollTop,distance=target-from;
+ // offsetTop is relative to the song-list container, unlike viewport rects,
+ // so animation and changing scroll positions cannot affect the destination.
+ // An end spacer lets even Z align with the top of the viewport.
+ const destination=()=>Math.max(0,Math.min(row.offsetTop,scroller.scrollHeight-scroller.clientHeight));
+ const from=scroller.scrollTop,target=destination(),distance=target-from;
  for(const b of alphabetRail.children)b.classList.toggle('is-current',b.dataset.letter===letter);
- if(reducedMotion||Math.abs(distance)<1){scroller.scrollTop=target;return}
- const duration=Math.min(1100,Math.max(420,420+Math.abs(distance)*.11));
+ if(reducedMotion||Math.abs(distance)<1){
+  scroller.scrollTop=target;
+  return;
+ }
+ const duration=Math.min(1050,Math.max(400,370+Math.log2(1+Math.abs(distance))*58));
  const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
  const token=alphabetScrollToken,start=performance.now();
  list.classList.remove('is-warping');void list.offsetWidth;list.classList.add('is-warping');
- alphabetWarpTimeout=setTimeout(()=>{if(token===alphabetScrollToken)list.classList.remove('is-warping')},540);
+ alphabetWarpTimeout=setTimeout(()=>{if(token===alphabetScrollToken)list.classList.remove('is-warping')},Math.min(600,duration));
  function step(now){
   if(token!==alphabetScrollToken)return;
-  const progress=Math.min(1,(now-start)/duration);
-  scroller.scrollTop=from+distance*ease(progress);
-  if(progress<1)alphabetScrollFrame=requestAnimationFrame(step);
-  else{scroller.scrollTop=target;alphabetScrollFrame=0}
+  const p=Math.min(1,(now-start)/duration);
+  scroller.scrollTop=from+distance*ease(p);
+  if(p<1)alphabetScrollFrame=requestAnimationFrame(step);
+  else {
+   // Re-evaluate the row after layout settling, then align exactly.
+   scroller.scrollTop=destination();
+   alphabetScrollFrame=0;
+   list.classList.remove('is-warping');
+  }
  }
  alphabetScrollFrame=requestAnimationFrame(step);
 }
+// User wheel/trackpad input takes priority over an in-progress jump.
+$('listWrap').addEventListener('wheel',cancelAlphabetJump,{passive:true});
+$('listWrap').addEventListener('touchstart',cancelAlphabetJump,{passive:true});
 
 function applyFilter(){
   const q=state.query.trim().toLowerCase();
@@ -1239,7 +1251,7 @@ function applyFilter(){
     list.replaceChildren(frag);
   }
   // Leave enough scrollable room to align even the final letter at the top.
-  list.style.paddingBottom=state.filtered.length?Math.max(0,$('listWrap').clientHeight-(list.firstElementChild?.offsetHeight||64))+'px':'0px';
+  list.style.paddingBottom=state.filtered.length?Math.max(0,$('listWrap').clientHeight)+'px':'0px';
   state.highlightedId=state.currentId;
   updateAlphabetRail();
   updateCollectionNav();
