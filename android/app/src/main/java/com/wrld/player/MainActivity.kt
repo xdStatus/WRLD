@@ -136,6 +136,8 @@ class MainActivity : Activity() {
                                 )
                             }
                         }, 9_850)
+                        handler.postDelayed({ logIntroFrameProbe("replay-early") }, 10_600)
+                        handler.postDelayed({ logIntroFrameProbe("replay-middle") }, 11_200)
                         handler.postDelayed({ logIntroFrameProbe("replay") }, 12_200)
                     }
                     if (musicSource == "cloud") loadCloudLibrary()
