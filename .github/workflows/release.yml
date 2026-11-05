@@ -128,4 +128,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.32: four Magicule launch animations now use 250 iridescent particles sampled along WRLD outlines, fresh random choreography on every launch and replay, and subtle living letter motion; efficient canvas rendering and click-through safeguards retained."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.33: one black-and-white Magicule Singularity launch and single Settings preview button; 250 particles spawn outside every window edge, flow inward to progressively charge the real WRLD font, stay subtly alive, and reconstruct the header. Extended cinematic timing and click-through failsafes."
