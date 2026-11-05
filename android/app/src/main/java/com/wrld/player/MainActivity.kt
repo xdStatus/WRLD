@@ -128,17 +128,27 @@ class MainActivity : Activity() {
                                 )
                             }
                         }, 9_500)
+                        // Settings can render slowly on an emulator. Poll for the
+                        // actual replay button rather than clicking a null node.
                         handler.postDelayed({
                             if (webReady && !isFinishing) {
-                                web.evaluateJavascript(
-                                    "document.querySelector('[data-replay-intro=\"1\"]').click();",
-                                    null
-                                )
+                                val replayWhenReady = """
+                                    (function() {
+                                        var attempts = 0;
+                                        function clickWhenReady() {
+                                            var button = document.querySelector('[data-replay-intro="1"]');
+                                            if (button) { button.click(); return; }
+                                            if (++attempts < 45) setTimeout(clickWhenReady, 150);
+                                        }
+                                        clickWhenReady();
+                                    })();
+                                """.trimIndent()
+                                web.evaluateJavascript(replayWhenReady, null)
                             }
-                        }, 9_850)
-                        handler.postDelayed({ logIntroFrameProbe("replay-early") }, 10_600)
-                        handler.postDelayed({ logIntroFrameProbe("replay-middle") }, 11_200)
-                        handler.postDelayed({ logIntroFrameProbe("replay") }, 12_200)
+                        }, 10_300)
+                        handler.postDelayed({ logIntroFrameProbe("replay-early") }, 12_300)
+                        handler.postDelayed({ logIntroFrameProbe("replay-middle") }, 13_300)
+                        handler.postDelayed({ logIntroFrameProbe("replay") }, 14_500)
                     }
                     if (musicSource == "cloud") loadCloudLibrary()
                     else if (hasAudioPermission()) loadLibrary() else requestAudioPermission()
