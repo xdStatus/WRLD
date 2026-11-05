@@ -44,6 +44,8 @@ jobs:
           Path("/tmp/wrld-android-ui.js").write_text(matches[0], encoding="utf-8")
           PY
           node --check /tmp/wrld-android-ui.js
+      - name: Test Android reverse sorting
+        run: node android/scripts/test-sort.js
       - name: Build debug-signed Android APK
         run: gradle -p android :app:assembleDebug --stacktrace --no-daemon
       - name: Enable KVM for emulator startup check
@@ -63,12 +65,12 @@ jobs:
       - name: Prepare APK and checksum
         run: |
           mkdir -p android/dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk android/dist/WRLD-Android-v0.1.13.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk android/dist/WRLD-Android-v0.1.14.apk
           cd android/dist
-          sha256sum WRLD-Android-v0.1.13.apk > WRLD-Android-v0.1.13.apk.sha256
+          sha256sum WRLD-Android-v0.1.14.apk > WRLD-Android-v0.1.14.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: WRLD-Android-v0.1.13
+          name: WRLD-Android-v0.1.14
           path: android/dist/*
           if-no-files-found: error
       - name: Publish Android beta (only once per version)
@@ -76,9 +78,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="android-v0.1.13"
+          TAG="android-v0.1.14"
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Android beta $TAG already exists; keeping existing published APK."
           else
-            gh release create "$TAG" android/dist/WRLD-Android-v0.1.13.apk android/dist/WRLD-Android-v0.1.13.apk.sha256 --target "$GITHUB_SHA" --title "WRLD Android v0.1.13 (beta)" --notes "WRLD Android 0.1.13: direct Cloudflare R2 private cloud streaming and Android Keystore-protected access key, with Media3 background audio playback. No Tailscale or powered-on Windows PC needed. Existing local playback retained. Beta debug signatures may vary."
+            gh release create "$TAG" android/dist/WRLD-Android-v0.1.14.apk android/dist/WRLD-Android-v0.1.14.apk.sha256 --target "$GITHUB_SHA" --title "WRLD Android v0.1.14 (beta)" --notes "WRLD Android 0.1.14: compact mobile reverse-sort arrow with saved direction for Title, Length, Date added and Artist; natural number-aware title ordering, cloud tracks with unknown durations last, no A-Z rail. Cloudflare R2, playback and UI preserved. Debug APK signatures may vary."
           fi
