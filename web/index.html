@@ -609,20 +609,37 @@ html,body{width:100%;height:100%;min-width:0}
 
 
 
-/* WRLD 1.8.28 — fluid-gravity logo reveal and shared-element header handoff. */
-.wrld-intro{position:fixed;inset:0;z-index:1000;isolation:isolate;overflow:hidden;color:#f7faff;pointer-events:all}
-.intro-veil{position:absolute;inset:0;background:#050609;opacity:1;pointer-events:none;will-change:opacity}
-.intro-veil:after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 37% 43% at 50% 50%,rgba(158,180,227,.075),transparent 82%)}
-.intro-particles{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
-.intro-core{position:absolute;width:12px;height:12px;left:50%;top:50%;border-radius:50%;opacity:0;pointer-events:none;background:#fff;box-shadow:0 0 12px rgba(255,255,255,.8),0 0 28px rgba(190,217,255,.4),0 0 52px rgba(151,194,255,.16);transform:translate(-50%,-50%) scale(.25);will-change:opacity,transform}
-.intro-core:before{content:'';position:absolute;inset:-15px;border-radius:50%;background:radial-gradient(circle,rgba(229,240,255,.26),rgba(160,204,255,.08) 42%,transparent 72%);filter:blur(6px)}
-.intro-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:9px;pointer-events:none}
-.intro-mark{width:clamp(125px,21vw,178px);aspect-ratio:112/64;color:#f5f8ff;opacity:0;transform-origin:center center;will-change:transform,opacity}
-.intro-mark svg{display:block;width:100%;height:100%;overflow:visible;fill:none;stroke:currentColor;stroke-width:4.6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(234,244,255,.2))}
-.intro-mark svg .logo-wave-digit{animation:none!important;transform:none!important;opacity:1!important}
-.intro-wordmark{color:#f5f7fd;font-size:13px;font-weight:550;letter-spacing:.54em;padding-left:.54em;line-height:1.4;opacity:0;transform-origin:center center;will-change:transform,opacity}
-body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visibility:hidden!important}
-@media(prefers-reduced-motion:reduce){.intro-core,.intro-particles{display:none!important}}
+/* WRLD 1.8.30 Magicule Studio: rainbow particle typography with four independent launch modes. */
+.wrld-intro{position:fixed;inset:0;z-index:1000;isolation:isolate;overflow:hidden;pointer-events:all;color:white}
+.intro-veil{position:absolute;inset:0;opacity:1;will-change:opacity;background:#050609}
+.intro-veil:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 42% 36% at 50% 50%,rgba(124,155,215,.072),transparent 85%)}
+.intro-particles{position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none}
+.intro-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;white-space:nowrap}
+.intro-lettering{display:flex;gap:.18em;font:550 clamp(64px,10vw,104px)/1.18 'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;letter-spacing:0;color:#f6f8ff;opacity:0;transform-origin:center;will-change:opacity,filter,transform}
+.intro-letter{display:inline-block;transform-origin:center center;will-change:transform}
+body.wrld-intro-running .brand h1{visibility:hidden!important}
+/* WRLD is the wordmark; the comet Easter egg gets a single, understated magicule. */
+.brand{gap:8px}
+.brand-badge,.brand-badge:hover,.brand-badge:focus-visible{width:24px!important;min-width:24px!important;height:38px!important;padding:0!important;display:grid!important;place-items:center!important}
+.brand-magicule{position:relative;display:block;width:7px;height:7px;border-radius:50%;background:#f7faff;box-shadow:0 0 6px #b2a6ff,0 0 13px #88dbff;transition:transform .45s cubic-bezier(.2,1,.3,1),box-shadow .45s ease}
+.brand-magicule:after{content:"";position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(circle,rgba(151,212,255,.22),transparent 72%)}
+.brand-badge:hover .brand-magicule{transform:scale(1.18);box-shadow:0 0 8px #c7b1ff,0 0 17px #86eaff}
+.brand h1{display:flex;gap:.23em;letter-spacing:0;font-weight:600}
+.brand h1 .header-letter{display:inline-block}
+.intro-studio{padding:18px 17px 16px}
+.intro-studio-title{font-size:12px;color:#f4f6fc;font-weight:600;letter-spacing:.02em}
+.intro-studio-help{font-size:11px;color:#989ba7;line-height:1.55;margin:6px 0 16px;max-width:560px}
+.intro-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.intro-choice{height:auto;min-height:90px;display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:5px;padding:12px 13px;border:1px solid rgba(255,255,255,.12);border-radius:11px;background:#ffffff05;transition:background .25s ease,border-color .25s ease,box-shadow .3s ease,transform .3s cubic-bezier(.22,1,.36,1)}
+.intro-choice:hover{background:#ffffff12;border-color:rgba(255,255,255,.3);transform:translateY(-1px)}
+.intro-choice.is-selected{border-color:rgba(205,221,255,.52);background:linear-gradient(110deg,#b9aaff18,#8aceff0a);box-shadow:0 0 15px #c0b0ff0b}
+.intro-choice-name{display:flex;gap:6px;align-items:center;justify-content:space-between;font-size:12px;font-weight:650;color:#f7f8fd}
+.intro-choice-description{font-size:10px;line-height:1.55;color:#a5a6b4;font-weight:400}
+.intro-choice-action{margin-top:auto;font-size:10px;letter-spacing:.04em;color:#d4d7e1}
+.intro-choice.is-selected .intro-choice-action{color:#c5f0ff}
+#introChoiceStatus{display:block;font-size:10px;color:#969ca8;margin-top:11px;min-height:16px}
+@media(max-width:620px){.intro-choices{grid-template-columns:1fr}.intro-choice{min-height:72px}}
+@media(prefers-reduced-motion:reduce){.intro-choice{transition:none!important;transform:none!important}}
 #cloudConnectionStatus{display:block;font-weight:600;letter-spacing:.025em;color:#a2a2a2}
 #cloudConnectionStatus.is-connected{color:#65d68c;text-shadow:0 0 10px rgba(89,218,129,.24)}
 #cloudConnectionStatus.is-error{color:#f29898}
@@ -656,13 +673,11 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
 </style>
 </head>
 <body>
-<div id="wrldIntro" class="wrld-intro" aria-label="WRLD starting" role="status">
+<div id="wrldIntro" class="wrld-intro" role="status" aria-label="WRLD Magicule launch">
   <div id="introVeil" class="intro-veil" aria-hidden="true"></div>
   <canvas id="introParticleCanvas" class="intro-particles" aria-hidden="true"></canvas>
-  <div id="introCore" class="intro-core" aria-hidden="true"></div>
   <div id="introLogo" class="intro-logo" aria-hidden="true">
-    <div id="introMark" class="intro-mark"></div>
-    <div id="introWordmark" class="intro-wordmark">WRLD</div>
+    <div id="introLettering" class="intro-lettering"><span class="intro-letter">W</span><span class="intro-letter">R</span><span class="intro-letter">L</span><span class="intro-letter">D</span></div>
   </div>
 </div>
 <canvas id="starfield" aria-hidden="true"></canvas>
@@ -670,12 +685,9 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
 <div class="app">
   <header class="topbar glass pywebview-drag-region">
     <div class="brand">
-      <button class="brand-badge" id="logoCometBtn" type="button" title="A little surprise" aria-label="Summon a comet"><svg viewBox="0 0 112 64" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"><g class="logo-wave-digit logo-wave-1"><path d="M30 18C30 10.5 24 5 17 5S4 10.5 4 19s5 12.5 12.5 12.5C24 31.5 29 26 29 19v15c0 11-7 18.5-18 19.5"/></g>
-<g class="logo-wave-digit logo-wave-2"><path d="M67 17C67 9.5 61 4 54 4S41 9.5 41 18s5 12.5 12.5 12.5C61 30.5 66 25 66 18v15c0 11-7 18.5-18 19.5"/></g>
-<g class="logo-wave-digit logo-wave-3"><path d="M104 18C104 10.5 98 5 91 5S78 10.5 78 19s5 12.5 12.5 12.5C98 31.5 103 26 103 19v15c0 11-7 18.5-18 19.5"/></g>
-</svg></button>
+      <button class="brand-badge" id="logoCometBtn" type="button" title="Summon a comet" aria-label="Summon a comet"><span class="brand-magicule" aria-hidden="true"></span></button>
       <div>
-        <h1 class="pywebview-drag-region" title="Drag window">WRLD</h1>
+        <h1 class="pywebview-drag-region" title="Drag window"><span class="header-letter">W</span><span class="header-letter">R</span><span class="header-letter">L</span><span class="header-letter">D</span></h1>
       </div>
     </div>
     <label class="search" aria-label="Search songs">
@@ -749,8 +761,20 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
           <button type="button" id="settingsRescan" class="settings-button">Rescan music library <span>↻</span></button>
           <button type="button" id="changeFolderBtn" class="settings-button">Change music folder <span>↗</span></button>
         </div>
+        <div class="settings-heading">Launch animation</div>
+        <div class="settings-card intro-studio">
+          <div class="intro-studio-title">Magicule Studio <span aria-hidden="true">✦</span></div>
+          <p class="intro-studio-help">Choose your startup animation. Tap any concept to save it as the default and preview it immediately. Every version uses 60 rainbow magicules and a WRLD-only logo.</p>
+          <div class="intro-choices" role="group" aria-label="Choose a WRLD launch animation">
+            <button class="intro-choice" type="button" data-intro-mode="singularity"><span class="intro-choice-name">Magicule Singularity <span aria-hidden="true">◉</span></span><span class="intro-choice-description">Magnetic suction and spiraling convergence</span><span class="intro-choice-action">Preview animation</span></button>
+            <button class="intro-choice" type="button" data-intro-mode="flow"><span class="intro-choice-name">Prismatic Flow <span aria-hidden="true">〰</span></span><span class="intro-choice-description">Silky streams that weave into each letter</span><span class="intro-choice-action">Preview animation</span></button>
+            <button class="intro-choice" type="button" data-intro-mode="awakening"><span class="intro-choice-name">Magicule Awakening <span aria-hidden="true">✧</span></span><span class="intro-choice-description">W → R → L → D with a cascading shimmer</span><span class="intro-choice-action">Preview animation</span></button>
+            <button class="intro-choice" type="button" data-intro-mode="ascension"><span class="intro-choice-name">Magicule Ascension <span aria-hidden="true">✦</span></span><span class="intro-choice-description">Gravity, flowing light and a gentle flutter</span><span class="intro-choice-action">Preview animation</span></button>
+          </div>
+          <small id="introChoiceStatus" role="status" aria-live="polite"></small>
+        </div>
         <div class="settings-heading">About</div>
-        <div class="settings-card"><div class="settings-about"><strong>999 · WRLD</strong><small id="desktopVersion">WRLD Windows</small><p>Local and Cloudflare R2 music player powered by Windows WebView2. Cloud songs stream securely from your private Worker; likes, playlists and preferences stay on this computer.</p></div><button type="button" class="settings-button" id="replayIntro" title="Replay the full orb-to-logo startup animation">Replay the Launch <span aria-hidden="true">✦</span></button><button type="button" class="settings-button" id="settingsUpdates" title="Check for WRLD updates">Check for updates <span id="updateDot" hidden>●</span></button></div>
+        <div class="settings-card"><div class="settings-about"><strong>WRLD</strong><small id="desktopVersion">WRLD Windows</small><p>Local and Cloudflare R2 music player powered by Windows WebView2. Cloud songs stream securely from your private Worker; likes, playlists and preferences stay on this computer.</p></div><button type="button" class="settings-button" id="replayIntro" title="Replay your selected Magicule intro">Replay the Launch <span aria-hidden="true">✦</span></button><button type="button" class="settings-button" id="settingsUpdates" title="Check for WRLD updates">Check for updates <span id="updateDot" hidden>●</span></button></div>
       </div>
       </div>
     </div>
