@@ -33,7 +33,13 @@ assert.match(js,/const headerLetters=Array\.from\(document\.querySelectorAll\('\
 assert.match(js,/const glyph=create\(\)/,"Font used only to sample particle positions");
 assert.match(js,/const image=g\.getImageData/,"Samples actual WRLD shapes");
 assert.match(js,/const breathe=smooth/,"Silhouette must breathe");
-assert.match(js,/drift\.x\*rest\*breathe/,"Only individual magicules drift; center must remain fixed");
+assert.match(js,/const breath=\.031\*Math\.sin/,"Logo breathes after gathering");
+assert.match(js,/const ripple=Math\.sin/,"WRLD has a visible travelling wave");
+assert.match(js,/const aliveX=dx\*breath/,"Breathing is centered on the screen");
+assert.match(js,/const aliveY=dy\*breath/,"Breathing is centered vertically");
+assert.match(js,/drift\.x\*rest\*breathe\*2\.2/,"Independent drifting must remain lively");
+assert.match(js,/const from=flight\(p,SINGULARITY\.transfer\)/,"Transfer should not snap from moving hover");
+assert.match(js,/const pulse=\(\.81\+\.19\*Math\.sin/,"Magicules visibly shimmer while hovering");
 assert.match(js,/function transfer\(p,time\)/);
 assert.doesNotMatch(js,/startHeaderMagicules\(/,"Final dock should reveal actual letters, not draw another particle-only logo");
 assert.doesNotMatch(js,/paintSurface\(|ctx\.drawImage\(surface\.glyph/,"Never draw filled font");
