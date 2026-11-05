@@ -76,6 +76,10 @@ jobs:
         if: steps.release.outputs.publish == 'true'
         run: python -m unittest discover -s tests -p test_intro_animation.py -v
 
+      - name: Validate frameless window dragging and intro replay
+        if: steps.release.outputs.publish == 'true'
+        run: python -m unittest discover -s tests -p test_native_chrome.py -v
+
       - name: Validate desktop WebView JavaScript
         if: steps.release.outputs.publish == 'true'
         shell: pwsh
@@ -124,4 +128,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.28: 30 tiny gravity-pulled light orbs merge into the actual SVG 999 logo; it transforms and docks into the real top-left WRLD badge while the player fades in. Includes reduced-motion and recovery safeguards."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.29: restores the seamless frameless window with header-only drag targets to prevent jumpy window movement; adds minimize/maximize/close controls and a Replay the Launch button under Settings > About."
