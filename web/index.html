@@ -610,7 +610,10 @@ html,body{width:100%;height:100%;min-width:0}
 
 
 /* WRLD 1.8.30 Magicule Studio: rainbow particle typography with four independent launch modes. */
-.wrld-intro{position:fixed;inset:0;z-index:1000;isolation:isolate;overflow:hidden;pointer-events:all;color:white}
+.wrld-intro{position:fixed;inset:0;z-index:1000;isolation:isolate;overflow:hidden;pointer-events:none!important;color:white;animation:magiculeOverlaySafetyHide 5.2s steps(1,end) forwards}
+/* Visual-only launch layer. It must never swallow clicks, even when cleanup fails. */
+.wrld-intro,.wrld-intro *{pointer-events:none!important}
+@keyframes magiculeOverlaySafetyHide{0%,99%{visibility:visible}100%{visibility:hidden}}
 .intro-veil{position:absolute;inset:0;opacity:1;will-change:opacity;background:#050609}
 .intro-veil:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 42% 36% at 50% 50%,rgba(124,155,215,.072),transparent 85%)}
 .intro-particles{position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none}
@@ -910,6 +913,17 @@ const $ = id => document.getElementById(id);
 const audio = $('audio');
 /* Magicule Studio — four distinct particle choreography modes, one WRLD identity. */
 const wrldIntroMarkup=$('wrldIntro')?.outerHTML||'';
+function recoverWrldIntro(overlay){
+ if(!overlay)return;
+ overlay.style.pointerEvents='none';
+ if(overlay.isConnected)overlay.remove();
+ document.body.classList.remove('wrld-intro-running');
+}
+window.__wrldIntroStatus=()=>({
+ active:!!$('wrldIntro'),
+ blocking:!!$('wrldIntro')&&getComputedStyle($('wrldIntro')).pointerEvents!=='none',
+ mode:introMode
+});
 const MAGICULE_MODES={
  singularity:{name:'Magicule Singularity',travel:1020,reveal:1350,transfer:2320,end:3530},
  flow:{name:'Prismatic Flow',travel:1270,reveal:1550,transfer:2360,end:3630},
@@ -959,6 +973,8 @@ function startWrldIntro(mode=introMode){
  }));
  let width=0,height=0,dpr=1,targets=[],destinations=[],origins=[];
  let stopped=false,frame=0,fallback=0;
+ // Independent watchdog: a failed animation frame cannot leave a blocking splash.
+ const watchdog=setTimeout(()=>recoverWrldIntro(intro),5100);
  const start=performance.now();
  // Sample the glyph pixels themselves: 15 magicules form each of W, R, L, D.
  // Both center and header are sampled, so transfer particles land on real letter strokes.
@@ -1135,10 +1151,10 @@ function startWrldIntro(mode=introMode){
  }
  function finish(){
   if(stopped)return;
-  stopped=true;cancelAnimationFrame(frame);clearTimeout(fallback);
-  removeEventListener('resize',resize);
-  document.body.classList.remove('wrld-intro-running');
-  intro.remove();
+  stopped=true;cancelAnimationFrame(frame);clearTimeout(fallback);clearTimeout(watchdog);
+  // onResize is the handler registered below; an old typo here prevented intro cleanup.
+  removeEventListener('resize',onResize);
+  recoverWrldIntro(intro);
  }
  if(reduced){
   lettering.style.opacity='1';
@@ -1149,7 +1165,7 @@ function startWrldIntro(mode=introMode){
   return;
  }
  try{refreshGeometry()}
- catch(error){console.warn('WRLD magicule geometry unavailable',error);intro.remove();return}
+ catch(error){console.warn('WRLD magicule geometry unavailable',error);clearTimeout(watchdog);recoverWrldIntro(intro);return}
  document.body.classList.add('wrld-intro-running');
  function onResize(){
   if(stopped)return;
@@ -1177,11 +1193,12 @@ function startWrldIntro(mode=introMode){
 function replayWrldIntro(mode=introMode){
  if($('wrldIntro')||!wrldIntroMarkup)return;
  document.body.insertAdjacentHTML('afterbegin',wrldIntroMarkup);
+ const overlay=$('wrldIntro');
+ if(overlay)overlay.style.pointerEvents='none';
  try{startWrldIntro(mode)}
  catch(error){
   console.warn('WRLD intro replay recovered safely',error);
-  document.body.classList.remove('wrld-intro-running');
-  $('wrldIntro')?.remove();
+  recoverWrldIntro($('wrldIntro'));
  }
 }
 renderIntroChoices();
@@ -1200,8 +1217,7 @@ $('replayIntro').addEventListener('click',()=>replayWrldIntro(introMode));
 try{startWrldIntro(introMode)}
 catch(error){
  console.warn('WRLD intro initialization recovered safely',error);
- document.body.classList.remove('wrld-intro-running');
- $('wrldIntro')?.remove();
+ recoverWrldIntro($('wrldIntro'));
 }
 let cloudConnected=false;
 let cloudKeyEditing=false;
