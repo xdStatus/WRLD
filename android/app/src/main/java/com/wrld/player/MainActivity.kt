@@ -47,6 +47,25 @@ class MainActivity : Activity() {
     private var libraryLoading = false
     private var cloudRequestVersion = 0
     private var queueOpened = false
+
+    // Preview-only emulator verification: check real WebView animation frames,
+    // not just that the process remains alive. Inactive for normal app launches.
+    private fun logIntroFrameProbe(stage: String) {
+        if (!webReady || isFinishing) return
+        val script = """
+            (function() {
+                var status = window.__wrldIntroStatus && window.__wrldIntroStatus();
+                var canvas = document.getElementById('introParticleCanvas');
+                return status && status.active && status.frames >= 3 &&
+                    !status.blocking && !status.error && canvas &&
+                    canvas.width > 0 && canvas.height > 0
+                    ? 'running' : 'failed:' + JSON.stringify(status);
+            })();
+        """.trimIndent()
+        web.evaluateJavascript(script) { value ->
+            android.util.Log.i("WRLDIntroCheck", "$stage: $value")
+        }
+    }
     @Volatile private var verifiedUpdateUrl: String? = null
 
     private fun appVersion(): String =
@@ -98,6 +117,27 @@ class MainActivity : Activity() {
                         JSONObject.quote(appVersion()) + ");")
                     sendCloudConfig()
                     sendPlayerState()
+                    if (packageName == "com.wrld.player.preview" &&
+                        intent.getBooleanExtra("wrld_smoke_intro", false)) {
+                        handler.postDelayed({ logIntroFrameProbe("launch") }, 2_100)
+                        handler.postDelayed({
+                            if (webReady && !isFinishing) {
+                                web.evaluateJavascript(
+                                    "document.querySelector('[data-view=\"settings\"]').click();",
+                                    null
+                                )
+                            }
+                        }, 9_500)
+                        handler.postDelayed({
+                            if (webReady && !isFinishing) {
+                                web.evaluateJavascript(
+                                    "document.querySelector('[data-replay-intro=\"1\"]').click();",
+                                    null
+                                )
+                            }
+                        }, 9_850)
+                        handler.postDelayed({ logIntroFrameProbe("replay") }, 12_200)
+                    }
                     if (musicSource == "cloud") loadCloudLibrary()
                     else if (hasAudioPermission()) loadLibrary() else requestAudioPermission()
                 }
