@@ -947,13 +947,18 @@ function startWrldIntro(){
   const fromMark=mark.getBoundingClientRect(),fromWord=word.getBoundingClientRect();
   mark.style.transform=a;word.style.transform=b;
   const toMark=headerMark.getBoundingClientRect(),toWord=headerWord.getBoundingClientRect();
-  const offset=(from,to)=>({
-   dx:to.left+to.width/2-from.left-from.width/2,
-   dy:to.top+to.height/2-from.top-from.height/2,
-   sx:to.width/Math.max(1,from.width),
-   sy:to.height/Math.max(1,from.height)
-  });
-  return {mark:offset(fromMark,toMark),word:offset(fromWord,toWord)};
+  const offset=(from,to,keepAspect=false)=>{
+   // The header SVG letterboxes the 112:64 drawing inside its 54x39 slot.
+   // Uniform scale keeps the 999 strokes identical throughout the handoff.
+   const sx=to.width/Math.max(1,from.width);
+   return {
+    dx:to.left+to.width/2-from.left-from.width/2,
+    dy:to.top+to.height/2-from.top-from.height/2,
+    sx,
+    sy:keepAspect?sx:to.height/Math.max(1,from.height)
+   };
+  };
+  return {mark:offset(fromMark,toMark,true),word:offset(fromWord,toWord)};
  }
  function resize(){
   if(stopped)return;
@@ -1063,7 +1068,13 @@ function startWrldIntro(){
  fallback=setTimeout(finish,4000);
  frame=requestAnimationFrame(tick);
 }
-startWrldIntro();
+try{
+ startWrldIntro();
+}catch(error){
+ console.warn('WRLD intro initialization recovered safely',error);
+ document.body.classList.remove('wrld-intro-running');
+ intro?.remove();
+}
 let cloudConnected=false;
 let cloudKeyEditing=false;
 function renderCloudKeyControls(){
