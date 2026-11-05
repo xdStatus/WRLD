@@ -58,6 +58,19 @@ class IntroAnimationContractTests(unittest.TestCase):
         self.assertIn("<strong>WRLD</strong>", MARKUP)
         self.assertIn('id="logoCometBtn"', header)
 
+    def test_overlay_does_not_block_app_inputs(self):
+        # This broke all WRLD buttons in v1.8.30: the invisible overlay
+        # captured clicks, and finish() threw when removing resize instead
+        # of onResize before removing the overlay.
+        self.assertIn("pointer-events:none!important;color:white", HTML)
+        self.assertIn(".wrld-intro,.wrld-intro *{pointer-events:none!important}", HTML)
+        self.assertIn("removeEventListener('resize',onResize)", HTML)
+        self.assertNotIn("removeEventListener('resize',resize)", HTML)
+        self.assertIn("setTimeout(()=>recoverWrldIntro(intro),5100)", HTML)
+        self.assertIn("magiculeOverlaySafetyHide", HTML)
+        self.assertIn("recoverWrldIntro(intro)", HTML)
+        self.assertNotIn("pointer-events:all;color:white", HTML)
+
     def test_replay_and_failure_cleanup(self):
         self.assertIn('id="introParticleCanvas"', MARKUP)
         self.assertIn('id="replayIntro"', MARKUP)
