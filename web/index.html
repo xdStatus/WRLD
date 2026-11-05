@@ -575,10 +575,6 @@ body.native-shell .window-chrome{display:none!important}
 .settings-about p{font-size:11px;line-height:1.7;color:#a0a0a0;margin:10px 0 0}
 .settings-button{display:flex;justify-content:space-between;align-items:center;text-align:left;width:100%;height:auto;padding:14px 19px;border:0;background:transparent;border-top:1px solid #ffffff19;font-size:12px}
 .settings-button:hover{border:0;background:#ffffff11}
-.missing-cloud-songs{margin:8px 15px 14px;padding:12px 13px;border:1px solid #ffffff24;border-radius:10px;background:#ffffff08;font-size:12px;line-height:1.6;color:#ddd;overflow-wrap:anywhere;white-space:pre-wrap}
-.missing-cloud-songs strong{color:#fff}
-.missing-cloud-songs .missing-file{display:block;color:#a8f0ba;font-weight:550;padding-top:5px}
-.missing-cloud-songs button{display:block;margin-top:11px;padding:8px 11px;border:1px solid #ffffff4a;background:#ffffff15;color:white;border-radius:8px;cursor:pointer}
 .player-left.now-queue-trigger{height:auto;min-height:44px;cursor:pointer;border:0;padding:0;background:transparent;text-align:left;color:inherit;transition:transform .2s}
 .player-left.now-queue-trigger:hover{background:#ffffff08;border:0}
 .player-left.now-queue-trigger:active{transform:scale(.985)}
@@ -612,28 +608,23 @@ body.native-shell .window-chrome{display:none!important}
 
 
 
-/* WRLD startup inspired by the user's ColorOS reference: dots, convergence,
-   soft rounded luminance, then a clean logo reveal. */
-.wrld-intro{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;isolation:isolate;background:#050509;color:#fff;opacity:1;visibility:visible;transition:opacity .48s cubic-bezier(.22,1,.36,1),visibility .48s;pointer-events:all}
+/* WRLD v1.8.20: clean, fluid ColorOS-inspired light convergence. */
+.wrld-intro{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;isolation:isolate;background:#050608;color:#f8faff;opacity:1;visibility:visible;transition:opacity .65s cubic-bezier(.22,1,.36,1),visibility .65s;pointer-events:all}
 .wrld-intro.is-finished{opacity:0;visibility:hidden;pointer-events:none}
-.intro-stage{position:relative;width:260px;height:230px;display:grid;place-items:center}
-.intro-dot{position:absolute;left:calc(50% - 5px);top:calc(50% - 5px);width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,.32);opacity:0;will-change:transform,opacity;animation-duration:2.4s;animation-timing-function:cubic-bezier(.22,.9,.19,1);animation-fill-mode:both}
-.intro-dot:nth-child(1){animation-name:wrldDotOne}
-.intro-dot:nth-child(2){animation-name:wrldDotTwo}
-.intro-dot:nth-child(3){animation-name:wrldDotThree}
-.intro-dot:nth-child(4){animation-name:wrldDotFour}
-.intro-bloom{position:absolute;left:50%;top:50%;width:37px;height:37px;margin:-18.5px 0 0 -18.5px;border-radius:12px;background:linear-gradient(135deg,#fff,#e2ebff 85%);box-shadow:0 0 12px 3px rgba(255,255,255,.34),0 0 39px 10px rgba(145,174,255,.17);opacity:0;transform:scale(.22);animation:wrldBloom 2.4s cubic-bezier(.22,1,.36,1) both}
-.intro-bloom:after{content:'';position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.64),rgba(179,205,255,.17) 35%,transparent 68%);filter:blur(15px);animation:wrldBloomAura 2.4s ease-out both}
-.wrld-intro-center{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;text-align:center;opacity:0;filter:blur(12px);transform:translateY(10px) scale(.93);animation:wrldLogoRise 2.4s cubic-bezier(.16,1,.3,1) both}
-.wrld-intro-number{font:200 clamp(66px,11vw,104px)/1 'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;letter-spacing:-.075em;padding-right:.075em;text-shadow:0 0 26px rgba(255,255,255,.25)}
+.wrld-intro:before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 35% 42% at 50% 49%,rgba(157,183,227,.07),transparent 85%);animation:introAmbient 2.15s ease-in-out both;pointer-events:none}
+.intro-stage{position:relative;width:min(66vw,320px);height:230px;display:grid;place-items:center}
+.intro-dot{position:absolute;left:calc(50% - 3px);top:calc(50% - 3px);width:6px;height:6px;border-radius:50%;background:#f8fbff;box-shadow:0 0 9px rgba(231,239,255,.45);opacity:0;will-change:transform,opacity;animation:dotConverge 1.24s cubic-bezier(.4,0,.12,1) both;--dx:-58px;--dy:-31px}
+.intro-dot:nth-child(2){--dx:55px;--dy:-22px;animation-delay:.055s}
+.intro-dot:nth-child(3){--dx:-49px;--dy:35px;animation-delay:.1s}
+.intro-dot:nth-child(4){--dx:51px;--dy:31px;animation-delay:.145s}
+.intro-bloom{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:8px;background:linear-gradient(140deg,#fff,#e7efff);box-shadow:0 0 12px rgba(255,255,255,.58),0 0 35px rgba(180,206,255,.26);opacity:0;transform:scale(.2);animation:introSoftPulse 1.2s .83s cubic-bezier(.22,1,.36,1) both;pointer-events:none}
+.wrld-intro-center{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;text-align:center;opacity:0;transform:translateY(7px) scale(.975);filter:blur(6px);animation:introLogoResolve .85s 1.28s cubic-bezier(.22,1,.36,1) forwards;pointer-events:none}
+.wrld-intro-number{font:200 clamp(67px,11vw,106px)/1 'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;letter-spacing:-.075em;padding-right:.075em;text-shadow:0 0 20px rgba(255,255,255,.18)}
 .wrld-intro-wordmark{font-size:13px;font-weight:550;letter-spacing:.60em;padding-left:.60em}
-@keyframes wrldDotOne{0%{opacity:0;transform:translate(-46px,-28px) scale(.6)}10%,39%{opacity:1}49%{transform:translate(-11px,-11px) scale(1);opacity:1}60%{transform:translate(-4px,-4px) scale(1.25);opacity:.7}68%,100%{opacity:0;transform:translate(0,0) scale(.3)}}
-@keyframes wrldDotTwo{0%{opacity:0;transform:translate(45px,-20px) scale(.55)}10%,39%{opacity:1}49%{transform:translate(11px,-11px) scale(1);opacity:1}60%{transform:translate(4px,-4px) scale(1.25);opacity:.7}68%,100%{opacity:0;transform:translate(0,0) scale(.3)}}
-@keyframes wrldDotThree{0%{opacity:0;transform:translate(-37px,35px) scale(.55)}10%,39%{opacity:1}49%{transform:translate(-11px,11px) scale(1);opacity:1}60%{transform:translate(-4px,4px) scale(1.25);opacity:.7}68%,100%{opacity:0;transform:translate(0,0) scale(.3)}}
-@keyframes wrldDotFour{0%{opacity:0;transform:translate(38px,30px) scale(.55)}10%,39%{opacity:1}49%{transform:translate(11px,11px) scale(1);opacity:1}60%{transform:translate(4px,4px) scale(1.25);opacity:.7}68%,100%{opacity:0;transform:translate(0,0) scale(.3)}}
-@keyframes wrldBloom{0%,43%{opacity:0;transform:scale(.2);filter:blur(3px)}57%{opacity:.4;transform:scale(.42)}70%{opacity:1;transform:scale(1.15);filter:blur(0)}79%{opacity:.86;transform:scale(1.6);filter:blur(8px)}90%,100%{opacity:0;transform:scale(5.2);filter:blur(22px)}}
-@keyframes wrldBloomAura{0%,58%{opacity:0}70%{opacity:1}90%,100%{opacity:0}}
-@keyframes wrldLogoRise{0%,67%{opacity:0;filter:blur(12px);transform:translateY(9px) scale(.94)}83%{opacity:1;filter:blur(0);transform:translateY(0) scale(1.018)}100%{opacity:1;filter:blur(0);transform:none}}
+@keyframes dotConverge{0%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.7)}18%{opacity:1}72%{opacity:1;transform:translate(0,0) scale(1)}91%,100%{opacity:0;transform:translate(0,0) scale(.5)}}
+@keyframes introSoftPulse{0%,15%{opacity:0;transform:scale(.25);filter:blur(2px)}34%{opacity:.8;transform:scale(.85);filter:blur(0)}66%{opacity:.42;transform:scale(2.2);filter:blur(7px)}100%{opacity:0;transform:scale(3);filter:blur(13px)}}
+@keyframes introLogoResolve{0%{opacity:0;transform:translateY(7px) scale(.975);filter:blur(6px)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes introAmbient{0%{opacity:.2}75%{opacity:1}100%{opacity:.75}}
 @media(prefers-reduced-motion:reduce){.wrld-intro .intro-dot,.wrld-intro .intro-bloom{display:none}.wrld-intro-center{animation:none;opacity:1;filter:none;transform:none}.wrld-intro{transition:none}}
 #cloudConnectionStatus{display:block;font-weight:600;letter-spacing:.025em;color:#a2a2a2}
 #cloudConnectionStatus.is-connected{color:#65d68c;text-shadow:0 0 10px rgba(89,218,129,.24)}
@@ -647,7 +638,12 @@ body.native-shell .window-chrome{display:none!important}
 
 /* Compact alphabet navigation and glowing hover */
 .library-list-layout{display:flex;flex:1;min-width:0;min-height:0;overflow:hidden}
-.library-list-layout .list-wrap{flex:1;min-width:0;min-height:0}
+.library-list-layout .list-wrap{flex:1;min-width:0;min-height:0;overflow-anchor:none;scroll-behavior:auto}
+.library-list-layout .song-list{position:relative}
+.library-list-layout .song-list.is-warping{animation:wrldListWarp .52s cubic-bezier(.18,.7,.25,1) both}
+.library-list-layout .song-list.is-warping .song{transition:none}
+@keyframes wrldListWarp{0%{filter:blur(0) brightness(1);opacity:1}30%{filter:blur(1.3px) brightness(1.18);opacity:.86}74%{filter:blur(.5px) brightness(1.07);opacity:.95}100%{filter:blur(0) brightness(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.library-list-layout .song-list.is-warping{animation:none}}
 .alphabet-rail{display:flex;flex:0 0 25px;flex-direction:column;justify-content:space-evenly;align-items:center;min-height:0;margin-right:8px;padding:3px 0;border-right:1px solid #ffffff16}
 .alphabet-letter{display:grid;place-items:center;flex:1 1 auto;width:21px;min-height:0;max-height:24px;border:0;border-radius:6px;padding:0;background:transparent;font-size:clamp(7px,1.13vh,10px);font-weight:620;color:#888;transition:background .2s,color .2s,text-shadow .2s,box-shadow .2s,transform .2s}
 .alphabet-letter:disabled{color:#363636;opacity:.7;cursor:default}
@@ -752,8 +748,6 @@ body.native-shell .window-chrome{display:none!important}
         <div class="settings-heading">Library</div>
         <div class="settings-card">
           <button type="button" id="settingsRescan" class="settings-button">Rescan music library <span>↻</span></button>
-          <button type="button" id="compareCloudSongs" class="settings-button">Find missing cloud songs <span>⌕</span></button>
-          <div id="missingCloudSongs" class="missing-cloud-songs hidden" aria-live="polite"></div>
           <button type="button" id="changeFolderBtn" class="settings-button">Change music folder <span>↗</span></button>
         </div>
         <div class="settings-heading">About</div>
@@ -893,8 +887,8 @@ const $ = id => document.getElementById(id);
 const audio = $('audio');
 const intro=$('wrldIntro');
 // The brief introduction is intentionally theatrical; it does not delay library loading.
-setTimeout(()=>intro.classList.add('is-finished'),2420);
-setTimeout(()=>intro.remove(),2950);
+setTimeout(()=>intro.classList.add('is-finished'),2210);
+setTimeout(()=>intro.remove(),2920);
 let cloudConnected=false;
 let cloudKeyEditing=false;
 function renderCloudKeyControls(){
@@ -1165,12 +1159,44 @@ function updateAlphabetRail(){
  const letters=new Set(state.filtered.map(t=>String(t.title||'').trim().charAt(0).toUpperCase()));
  for(const b of alphabetRail.children)b.disabled=!letters.has(b.dataset.letter);
 }
+let alphabetScrollFrame=0,alphabetWarpTimeout=0,alphabetScrollToken=0;
+function cancelAlphabetJump(){
+ alphabetScrollToken++;
+ if(alphabetScrollFrame)cancelAnimationFrame(alphabetScrollFrame);
+ alphabetScrollFrame=0;
+ clearTimeout(alphabetWarpTimeout);
+ $('songList').classList.remove('is-warping');
+}
 function jumpToLetter(letter){
  if(!state.filtered.some(t=>String(t.title||'').trim().toUpperCase().startsWith(letter)))return;
- if(state.sort!=='title'||state.sortReversed){state.sort='title';state.sortReversed=false;$('sortSelect').value='title';saveSortDirection();applyFilter()}
+ cancelAlphabetJump();
+ if(state.sort!=='title'||state.sortReversed){
+  state.sort='title';state.sortReversed=false;
+  $('sortSelect').value='title';saveSortDirection();applyFilter();
+ }
  const index=state.filtered.findIndex(t=>String(t.title||'').trim().toUpperCase().startsWith(letter));
- const row=$('songList').children[index];
- if(row){row.scrollIntoView({block:'start',behavior:reducedMotion?'auto':'smooth'});for(const b of alphabetRail.children)b.classList.toggle('is-current',b.dataset.letter===letter)}
+ const scroller=$('listWrap'),list=$('songList'),row=list.children[index];
+ if(!row)return;
+ // Compute the destination against *only* the actual scrolling container.
+ // No scrollIntoView: that can shift outer ancestors and overshoot the letter.
+ const rowTop=row.getBoundingClientRect().top-scroller.getBoundingClientRect().top+scroller.scrollTop;
+ const target=Math.max(0,Math.min(rowTop,scroller.scrollHeight-scroller.clientHeight));
+ const from=scroller.scrollTop,distance=target-from;
+ for(const b of alphabetRail.children)b.classList.toggle('is-current',b.dataset.letter===letter);
+ if(reducedMotion||Math.abs(distance)<1){scroller.scrollTop=target;return}
+ const duration=Math.min(1100,Math.max(420,420+Math.abs(distance)*.11));
+ const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+ const token=alphabetScrollToken,start=performance.now();
+ list.classList.remove('is-warping');void list.offsetWidth;list.classList.add('is-warping');
+ alphabetWarpTimeout=setTimeout(()=>{if(token===alphabetScrollToken)list.classList.remove('is-warping')},540);
+ function step(now){
+  if(token!==alphabetScrollToken)return;
+  const progress=Math.min(1,(now-start)/duration);
+  scroller.scrollTop=from+distance*ease(progress);
+  if(progress<1)alphabetScrollFrame=requestAnimationFrame(step);
+  else{scroller.scrollTop=target;alphabetScrollFrame=0}
+ }
+ alphabetScrollFrame=requestAnimationFrame(step);
 }
 
 function applyFilter(){
@@ -1212,6 +1238,8 @@ function applyFilter(){
     });
     list.replaceChildren(frag);
   }
+  // Leave enough scrollable room to align even the final letter at the top.
+  list.style.paddingBottom=state.filtered.length?Math.max(0,$('listWrap').clientHeight-(list.firstElementChild?.offsetHeight||64))+'px':'0px';
   state.highlightedId=state.currentId;
   updateAlphabetRail();
   updateCollectionNav();
@@ -1387,61 +1415,6 @@ $('settingsPanel').addEventListener('change',e=>{
 $('fadeDuration').addEventListener('input',e=>{
  $('fadeDurationLabel').textContent=(Number(e.target.value)/1000).toFixed(1)+' s';
 });
-// Compare the complete folder index against authenticated R2 objects.
-// Filenames are compared case-insensitively, with occurrence counts, so
-// identical names in separate local folders remain distinguishable.
-$('compareCloudSongs').addEventListener('click',async()=>{
- const button=$('compareCloudSongs'),panel=$('missingCloudSongs');
- button.disabled=true;panel.classList.remove('hidden');
- panel.textContent='Comparing your computer against WRLD Cloud…';
- try{
-  const [localResponse,cloudResponse]=await Promise.all([
-   fetch('/api/tracks',{cache:'no-store'}),
-   fetch('/api/cloud/tracks',{cache:'no-store'})
-  ]);
-  const errors=[];
-  if(!localResponse.ok)errors.push('Could not read your local music folder.');
-  if(!cloudResponse.ok)errors.push('Could not read WRLD Cloud. Check your access key and connection.');
-  if(errors.length)throw new Error(errors.join(' '));
-  const [local,cloud]=await Promise.all([localResponse.json(),cloudResponse.json()]);
-  const localTracks=Array.isArray(local.tracks)?local.tracks:[];
-  const cloudTracks=Array.isArray(cloud.tracks)?cloud.tracks:[];
-  if(!local.folder_exists)throw new Error('Choose your local music folder first.');
-  const basename=t=>String(t.relative||t.title||'').replace(/\\/g,'/').split('/').pop().normalize('NFC').trim().toLocaleLowerCase();
-  const counts=new Map();
-  for(const track of cloudTracks){
-   const name=basename(track);
-   counts.set(name,(counts.get(name)||0)+1);
-  }
-  const missing=[];
-  for(const track of localTracks){
-   const name=basename(track),remaining=counts.get(name)||0;
-   if(remaining)counts.set(name,remaining-1);
-   else missing.push(String(track.relative||track.title||'Unknown filename'));
-  }
-  panel.replaceChildren();
-  const summary=document.createElement('strong');
-  summary.textContent=localTracks.length+' local songs · '+cloudTracks.length+' cloud songs · '+missing.length+' missing';
-  panel.appendChild(summary);
-  if(!missing.length){
-   panel.appendChild(document.createTextNode('\nAll local filenames are present in WRLD Cloud.'));
-  }else{
-   missing.forEach(name=>{
-    const entry=document.createElement('span');
-    entry.className='missing-file';entry.textContent=name;
-    panel.appendChild(entry);
-   });
-   const copy=document.createElement('button');
-   copy.type='button';copy.textContent='Copy missing filenames';
-   copy.addEventListener('click',async()=>{
-    try{await navigator.clipboard.writeText(missing.join('\n'));toast('Missing filenames copied')}
-    catch{toast('Could not copy filenames')}
-   });
-   panel.appendChild(copy);
-  }
- }catch(error){panel.textContent=error.message||'Could not compare libraries'}
- finally{button.disabled=false}
-});
 $('settingsRescan').addEventListener('click',async()=>{
  try{
    if(state.cloudSource==='cloud')await loadTracks();
@@ -1492,8 +1465,8 @@ $('songList').addEventListener('click',e=>{
 });
 let searchDelay=0;
 $('search').addEventListener('input',e=>{state.query=e.target.value;clearTimeout(searchDelay);searchDelay=setTimeout(applyFilter,55)});
-$('sortSelect').addEventListener('change',e=>{state.sort=e.target.value;state.sortReversed=false;saveSortDirection();applyFilter()});
-$('sortReverse').addEventListener('click',()=>{state.sortReversed=!state.sortReversed;saveSortDirection();applyFilter()});
+$('sortSelect').addEventListener('change',e=>{cancelAlphabetJump();state.sort=e.target.value;state.sortReversed=false;saveSortDirection();applyFilter()});
+$('sortReverse').addEventListener('click',()=>{cancelAlphabetJump();state.sortReversed=!state.sortReversed;saveSortDirection();applyFilter()});
 window.addEventListener('resize',()=>moveCollectionIndicator(),{passive:true});
 requestAnimationFrame(()=>moveCollectionIndicator(true));
 $('playBtn').addEventListener('click',()=>{const btn=$('playBtn');btn.classList.remove('tap-bloom');void btn.offsetWidth;btn.classList.add('tap-bloom');togglePlay()});
