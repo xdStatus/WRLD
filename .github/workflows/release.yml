@@ -108,4 +108,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.21: precise A-Z top alignment with smoother warp navigation; updater reliability improvements and Windows Python 3.12 runtime packaging."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.22: sorting direction toggle rotates smoothly and moves the library immediately to the top for normal order or bottom for reverse order, without retaining the prior scroll position."
