@@ -95,13 +95,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p android/dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk android/dist/WRLD-Android-Intro-Preview-v0.1.15-r8.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk android/dist/WRLD-Android-Intro-Preview-v0.1.15-r9.apk
           cd android/dist
-          sha256sum WRLD-Android-Intro-Preview-v0.1.15-r8.apk > WRLD-Android-Intro-Preview-v0.1.15-r8.apk.sha256
+          sha256sum WRLD-Android-Intro-Preview-v0.1.15-r9.apk > WRLD-Android-Intro-Preview-v0.1.15-r9.apk.sha256
 
       - uses: actions/upload-artifact@v4
         with:
-          name: WRLD-Android-Intro-Preview-v0.1.15-r8
+          name: WRLD-Android-Intro-Preview-v0.1.15-r9
           path: android/dist/*
           if-no-files-found: error
 
@@ -111,15 +111,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="android-intro-preview-v0.1.15-r8"
+          TAG="android-intro-preview-v0.1.15-r9"
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "::error::Preview $TAG already exists; refusing to replace a published APK."
             exit 1
           fi
           gh release create "$TAG" \
-            android/dist/WRLD-Android-Intro-Preview-v0.1.15-r8.apk \
-            android/dist/WRLD-Android-Intro-Preview-v0.1.15-r8.apk.sha256 \
+            android/dist/WRLD-Android-Intro-Preview-v0.1.15-r9.apk \
+            android/dist/WRLD-Android-Intro-Preview-v0.1.15-r9.apk.sha256 \
             --target "$GITHUB_SHA" \
             --prerelease \
-            --title "WRLD Android Magicule Intro Preview v0.1.15 (living hover r8)" \
-            --notes "Refined Android intro with robust Settings replay even if the startup intro is still active: 350 white magicules gather into a centered WRLD silhouette with more expressive breathing, flowing ripples, independent drifting and shimmering, without revealing text, then glide toward the top-left header. Only after arriving do the real WRLD letters appear with a gentle white magical glow. Mobile viewport resize changes no longer shove the particles around. This build retains the verified replay and accessibility behavior. Previous build notes: launch + Settings replay now query the real Android header (rather than a nonexistent Windows h1), and emulator tests confirm actual rendered particle frames at both launch and replay. The explicit Settings preview plays even with Android's reduced-motion preference; automatic playback respects accessibility settings. Includes the Windows-style 350-particle Magicule Singularity intro. Install beside the existing WRLD: it uses a separate package com.wrld.player.preview and does not overwrite WRLD v0.1.14 or its local likes, playlists, cloud credentials and history. Cloud tokens are not shared between apps; reconnect in Preview if desired. This is a debug-signed temporary demonstration build, NOT the permanently signed v0.1.15 update. The permanent signed main app still requires GitHub Actions secrets. Each separate temporary preview build may have a different debug signature. If the old WRLD Preview refuses to update, uninstall only WRLD Preview, never the original WRLD app."
+            --title "WRLD Android Magicule Intro Preview v0.1.15 (living hover r9)" \
+            --notes "Refined Android intro with more expressive breathing and waves and a more reliable emulator Settings replay check: 350 white magicules gather into a centered WRLD silhouette with more expressive breathing, flowing ripples, independent drifting and shimmering, without revealing text, then glide toward the top-left header. Only after arriving do the real WRLD letters appear with a gentle white magical glow. Mobile viewport resize changes no longer shove the particles around. This build retains the verified replay and accessibility behavior. Previous build notes: launch + Settings replay now query the real Android header (rather than a nonexistent Windows h1), and emulator tests confirm actual rendered particle frames at both launch and replay. The explicit Settings preview plays even with Android's reduced-motion preference; automatic playback respects accessibility settings. Includes the Windows-style 350-particle Magicule Singularity intro. Install beside the existing WRLD: it uses a separate package com.wrld.player.preview and does not overwrite WRLD v0.1.14 or its local likes, playlists, cloud credentials and history. Cloud tokens are not shared between apps; reconnect in Preview if desired. This is a debug-signed temporary demonstration build, NOT the permanently signed v0.1.15 update. The permanent signed main app still requires GitHub Actions secrets. Each separate temporary preview build may have a different debug signature. If the old WRLD Preview refuses to update, uninstall only WRLD Preview, never the original WRLD app."
