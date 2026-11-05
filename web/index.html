@@ -908,211 +908,301 @@ body.wrld-intro-running .brand h1{visibility:hidden!important}
 'use strict';
 const $ = id => document.getElementById(id);
 const audio = $('audio');
+/* Magicule Studio — four distinct particle choreography modes, one WRLD identity. */
 const wrldIntroMarkup=$('wrldIntro')?.outerHTML||'';
-function startWrldIntro(){
- const intro=$('wrldIntro');
- const veil=$('introVeil'),canvas=$('introParticleCanvas'),core=$('introCore');
- const mark=$('introMark'),word=$('introWordmark');
- const headerMark=document.querySelector('#logoCometBtn svg');
- const headerWord=document.querySelector('.brand h1');
- if(!intro||!veil||!canvas||!core||!mark||!word||!headerMark||!headerWord){
+const MAGICULE_MODES={
+ singularity:{name:'Magicule Singularity',travel:1020,reveal:1350,transfer:2320,end:3530},
+ flow:{name:'Prismatic Flow',travel:1270,reveal:1550,transfer:2360,end:3630},
+ awakening:{name:'Magicule Awakening',travel:850,reveal:1380,transfer:2380,end:3750},
+ ascension:{name:'Magicule Ascension',travel:1100,reveal:1470,transfer:2340,end:3600}
+};
+let introMode='ascension';
+try{
+ const saved=localStorage.getItem('wrld-magicule-mode-v1');
+ if(Object.prototype.hasOwnProperty.call(MAGICULE_MODES,saved))introMode=saved;
+}catch{}
+function renderIntroChoices(){
+ document.querySelectorAll('[data-intro-mode]').forEach(button=>{
+  const selected=button.dataset.introMode===introMode;
+  button.classList.toggle('is-selected',selected);
+  button.setAttribute('aria-pressed',String(selected));
+  const action=button.querySelector('.intro-choice-action');
+  if(action)action.textContent=selected?'Selected · Preview again':'Select & preview';
+ });
+ const status=$('introChoiceStatus');
+ if(status)status.textContent='Startup animation: '+MAGICULE_MODES[introMode].name+'.';
+}
+function startWrldIntro(mode=introMode){
+ const intro=$('wrldIntro'),veil=$('introVeil'),canvas=$('introParticleCanvas');
+ const lettering=$('introLettering'),letters=Array.from(document.querySelectorAll('#introLettering .intro-letter'));
+ const headerLetters=Array.from(document.querySelectorAll('.brand h1 .header-letter'));
+ if(!intro||!veil||!canvas||!lettering||letters.length!==4||headerLetters.length!==4){
   intro?.remove();return;
  }
- let stopped=false,frame=0,fallback=0;
+ const config=MAGICULE_MODES[mode]||MAGICULE_MODES.ascension;
  const reduced=!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
- const clone=headerMark.cloneNode(true);
- clone.setAttribute('aria-hidden','true');
- clone.removeAttribute('id');
- mark.appendChild(clone);
- const paths=Array.from(clone.querySelectorAll('path'));
- const lengths=paths.map(path=>path.getTotalLength());
- const viewBox=clone.viewBox.baseVal;
  const ctx=canvas.getContext('2d',{alpha:true});
- if(!ctx||!paths.length||!lengths.every(Number.isFinite)){intro.remove();return}
- // The header remains hidden until the moving SVG has arrived at its exact position.
- document.body.classList.add('wrld-intro-running');
- const originalMarkVisibility=headerMark.style.visibility;
- const originalWordVisibility=headerWord.style.visibility;
- let vw=1,vh=1,dpr=1,centerX=0,centerY=0,points=[],dock=null;
- let lastSizeW=0,lastSizeH=0;
- const started=performance.now(),clamp=v=>Math.max(0,Math.min(1,v));
- const smooth=v=>{const t=clamp(v);return t*t*(3-2*t)};
- const cubic=v=>1-Math.pow(1-clamp(v),3);
- let seed=0x99912828;
- const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
- const particles=Array.from({length:30},(_,i)=>{
-  const angle=i*2.3999632297+(random()-.5)*.52;
-  const radius=.48+random()*.52;
-  return {i,angle,radius,spin:(random()-.5)*.48,
-    delay:random()*112,phase:random()*Math.PI*2,
-    size:i%5===0?1.65+random()*.35:.85+random()*.48,
-    brightness:.52+random()*.47};
- });
- function layout(){
-  vw=Math.max(1,innerWidth);vh=Math.max(1,innerHeight);
-  dpr=Math.min(devicePixelRatio||1,1.5);
-  canvas.width=Math.round(vw*dpr);canvas.height=Math.round(vh*dpr);
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  const rect=mark.getBoundingClientRect();
-  centerX=rect.left+rect.width/2;centerY=rect.top+rect.height/2;
-  core.style.left=centerX+'px';core.style.top=centerY+'px';
-  points=particles.map(p=>{
-   const pathIndex=p.i%paths.length;
-   const position=Math.floor(p.i/paths.length);
-   const count=Math.ceil((particles.length-pathIndex)/paths.length);
-   const location=paths[pathIndex].getPointAtLength(lengths[pathIndex]*(position+.5)/count);
-   return {
-    x:rect.left+(location.x-viewBox.x)*rect.width/viewBox.width,
-    y:rect.top+(location.y-viewBox.y)*rect.height/viewBox.height
-   };
+ if(!ctx){intro.remove();return}
+ const clamp=(v)=>Math.max(0,Math.min(1,v));
+ const smooth=(v)=>{const t=clamp(v);return t*t*(3-2*t)};
+ const eased=(v)=>1-Math.pow(1-clamp(v),3);
+ const lerp=(a,b,t)=>a+(b-a)*t;
+ const palette=['#91E8FF','#B8A2FF','#F6A6DB','#A2F1CF','#FFE0A6','#C7E7FF','#D8B7FF','#8FE5EE'];
+ let seed=0x57304D47;
+ const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ const magicules=Array.from({length:60},(_,i)=>({
+  i,letter:Math.floor(i/15),size:i%10===0?1.7+rand()*.4:.78+rand()*.62,
+  brightness:.58+rand()*.38,angle:i*2.3999632297+(rand()-.5)*.65,
+  radius:Math.sqrt((i+.65)/60),phase:rand()*6.28319,
+  delay:rand()*125,spin:(rand()-.5)*1.35,
+  color:palette[Math.floor(rand()*palette.length)]
+ }));
+ let width=0,height=0,dpr=1,targets=[],destinations=[],origins=[];
+ let stopped=false,frame=0,fallback=0;
+ const start=performance.now();
+ // Sample the glyph pixels themselves: 15 magicules form each of W, R, L, D.
+ // Both center and header are sampled, so transfer particles land on real letter strokes.
+ function glyphPoints(el,count){
+  const rect=el.getBoundingClientRect();
+  if(rect.width<1||rect.height<1)return Array.from({length:count},()=>({x:rect.left+rect.width/2,y:rect.top+rect.height/2}));
+  const font=getComputedStyle(el);
+  const scratch=document.createElement('canvas');
+  scratch.width=Math.max(2,Math.min(500,Math.ceil(rect.width*2)));
+  scratch.height=Math.max(2,Math.min(340,Math.ceil(rect.height*2)));
+  const c=scratch.getContext('2d',{willReadFrequently:true});
+  if(!c)return Array.from({length:count},()=>({x:rect.left+rect.width/2,y:rect.top+rect.height/2}));
+  c.setTransform(scratch.width/rect.width,0,0,scratch.height/rect.height,0,0);
+  c.font=font.fontWeight+' '+font.fontSize+' '+font.fontFamily;
+  c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';
+  c.fillText(el.textContent.trim(),rect.width/2,rect.height*.53);
+  const data=c.getImageData(0,0,scratch.width,scratch.height).data;
+  const pixels=[];
+  for(let y=0;y<scratch.height;y+=2){
+   for(let x=0;x<scratch.width;x+=2){
+    if(data[(y*scratch.width+x)*4+3]>105)pixels.push({x,y});
+   }
+  }
+  if(!pixels.length)return Array.from({length:count},()=>({x:rect.left+rect.width/2,y:rect.top+rect.height/2}));
+  // Stratify along the glyph, rather than clustering random samples at its center.
+  pixels.sort((a,b)=>a.x-b.x || a.y-b.y);
+  return Array.from({length:count},(_,j)=>{
+   const position=Math.min(pixels.length-1,Math.floor(((j+.35+(j*7%13)/45)/count)*pixels.length));
+   const p=pixels[position];
+   return {x:rect.left+(p.x+.5)*rect.width/scratch.width,
+           y:rect.top+(p.y+.5)*rect.height/scratch.height};
   });
  }
- function measureDock(){
-  // Resting bounds are measured without an existing flight transform.
-  const a=mark.style.transform,b=word.style.transform;
-  mark.style.transform='none';word.style.transform='none';
-  const fromMark=mark.getBoundingClientRect(),fromWord=word.getBoundingClientRect();
-  mark.style.transform=a;word.style.transform=b;
-  const toMark=headerMark.getBoundingClientRect(),toWord=headerWord.getBoundingClientRect();
-  const offset=(from,to,keepAspect=false)=>{
-   // The header SVG letterboxes the 112:64 drawing inside its 54x39 slot.
-   // Uniform scale keeps the 999 strokes identical throughout the handoff.
-   const sx=to.width/Math.max(1,from.width);
-   return {
-    dx:to.left+to.width/2-from.left-from.width/2,
-    dy:to.top+to.height/2-from.top-from.height/2,
-    sx,
-    sy:keepAspect?sx:to.height/Math.max(1,from.height)
-   };
-  };
-  return {mark:offset(fromMark,toMark,true),word:offset(fromWord,toWord)};
+ function refreshGeometry(){
+  width=Math.max(1,innerWidth);height=Math.max(1,innerHeight);
+  dpr=Math.min(1.5,Math.max(1,devicePixelRatio||1));
+  canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  // Remove flutter transforms while reading natural letter geometry.
+  const transforms=letters.map(el=>el.style.transform);
+  letters.forEach(el=>el.style.transform='none');
+  const from=letters.flatMap(el=>glyphPoints(el,15));
+  letters.forEach((el,i)=>el.style.transform=transforms[i]);
+  targets=from;
+  destinations=headerLetters.flatMap(el=>glyphPoints(el,15));
+  const rect=lettering.getBoundingClientRect();
+  const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+  const spanX=Math.min(width*.38,310),spanY=Math.min(height*.29,185);
+  origins=magicules.map(p=>{
+   const a=p.angle,r=.48+p.radius*.82;
+   if(mode==='flow'){
+    const side=p.i%2===0?-1:1;
+    return {x:cx+side*(75+spanX*(.57+p.radius*.43)),
+            y:cy+Math.sin(p.i*.79)*spanY*.78};
+   }
+   if(mode==='awakening'){
+    const base=targets[p.i];
+    return {x:base.x+Math.cos(a)*(62+spanX*.34*r),
+            y:base.y+Math.sin(a)*(35+spanY*.50*r)};
+   }
+   return {x:cx+Math.cos(a)*spanX*r,
+           y:cy+Math.sin(a)*spanY*r*.95};
+  });
  }
- function resize(){
-  if(stopped)return;
-  const current=mark.style.transform,prev=word.style.transform;
-  mark.style.transform='none';word.style.transform='none';
-  layout();
-  mark.style.transform=current;word.style.transform=prev;
-  if(dock)dock=measureDock();
+ function flight(p,time){
+  const delay=(mode==='awakening'?p.letter*165:mode==='flow'?p.letter*44:mode==='ascension'?p.letter*55:0)+p.delay;
+  const u=clamp((time-230-delay)/config.travel);
+  const progress=mode==='singularity'?Math.pow(u,3.3):
+                 mode==='ascension'?Math.pow(u,2.45):smooth(u);
+  const from=origins[p.i],to=targets[p.i];
+  let x=lerp(from.x,to.x,progress),y=lerp(from.y,to.y,progress);
+  const curvature=Math.sin(Math.PI*progress)*(1-progress);
+  if(mode==='singularity'){
+   const a=p.angle+p.spin*progress*2.4;
+   x+=Math.cos(a)*46*curvature;
+   y+=Math.sin(a)*38*curvature;
+  }else if(mode==='flow'){
+   x+=Math.sin(progress*Math.PI*2+p.phase)*27*curvature;
+   y+=Math.cos(progress*Math.PI*2+p.phase)*44*curvature;
+  }else if(mode==='awakening'){
+   y-=26*curvature;
+   x+=Math.sin(progress*Math.PI+p.phase)*17*curvature;
+  }else{
+   x+=Math.sin(progress*Math.PI*2+p.phase)*24*curvature;
+   y-=43*curvature;
+  }
+  const float=(1-u)*Math.sin(time*.003+p.phase)*1.5;
+  return {x:x+float,y:y+float*.5,progress:u};
+ }
+ function transfer(p,time){
+  const from=targets[p.i],to=destinations[p.i];
+  const stagger=mode==='awakening'?(3-p.letter)*85:
+                mode==='flow'?p.letter*55:mode==='ascension'?p.letter*32:0;
+  const progress=clamp((time-config.transfer-p.delay*.35-stagger)/(mode==='awakening'?1000:940));
+  const t=mode==='singularity'?Math.pow(progress,1.6):smooth(progress);
+  // Curved Bézier routing prevents the wordmark from moving like a single PNG.
+  const bend=Math.sin(Math.PI*t);
+  let x=lerp(from.x,to.x,t),y=lerp(from.y,to.y,t);
+  if(mode==='singularity'){
+   x+=Math.sin(p.phase)*42*bend;
+   y-=56*bend;
+  }else if(mode==='flow'){
+   x+=Math.sin(t*Math.PI*2+p.phase)*38*bend;
+   y-=83*bend;
+  }else if(mode==='awakening'){
+   x+=Math.sin(p.phase)*21*bend;
+   y-=48*bend;
+  }else{
+   x+=Math.sin(t*Math.PI+p.phase)*30*bend;
+   y-=67*bend;
+  }
+  return {x,y,progress};
+ }
+ function dot(p,x,y,alpha,tail){
+  if(alpha<=.007)return;
+  const radius=p.size;
+  if(tail&&tail.x!==x){
+   const grad=ctx.createLinearGradient(x,y,tail.x,tail.y);
+   grad.addColorStop(0,p.color);
+   grad.addColorStop(1,'rgba(100,140,220,0)');
+   ctx.lineWidth=Math.max(.7,radius*.7);ctx.lineCap='round';
+   ctx.globalAlpha=alpha*.53;ctx.strokeStyle=grad;
+   ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tail.x,tail.y);ctx.stroke();
+  }
+  ctx.globalAlpha=alpha*.16;ctx.fillStyle=p.color;
+  ctx.beginPath();ctx.arc(x,y,radius*3.25,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=alpha;ctx.fillStyle=p.color;
+  ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
+  if(p.i%10===0){
+   ctx.globalAlpha=alpha*.78;ctx.fillStyle='#fff';
+   ctx.beginPath();ctx.arc(x,y,Math.max(.42,radius*.3),0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+ }
+ function renderParticles(time){
+  ctx.clearRect(0,0,width,height);
+  const inTransfer=time>=config.transfer;
+  if(time>config.end+100)return;
+  for(const p of magicules){
+   let loc,prev,alpha;
+   if(inTransfer){
+    loc=transfer(p,time);
+    prev=transfer(p,time-35);
+    alpha=p.brightness*Math.min(1,smooth((time-config.transfer)/130)+.1);
+    alpha*=1-smooth((time-(config.end-280))/230);
+   }else{
+    loc=flight(p,time);
+    prev=flight(p,time-23);
+    alpha=p.brightness*smooth(time/275)*(1-smooth((time-1810)/330));
+   }
+   const vx=loc.x-prev.x,vy=loc.y-prev.y;
+   const distance=Math.hypot(vx,vy);
+   const factor=Math.min(1.5,Math.max(.4,11/Math.max(1,distance)));
+   const tail=distance>1.5?{x:loc.x-vx*factor,y:loc.y-vy*factor}:null;
+   dot(p,loc.x,loc.y,alpha,tail);
+  }
+ }
+ function renderLettering(time){
+  const introFade=smooth((time-config.reveal)/440);
+  const transferFade=1-smooth((time-config.transfer-50)/310);
+  lettering.style.opacity=String(introFade*transferFade);
+  const flutter=smooth((time-1870)/160)*(1-smooth((time-2320)/230));
+  const glow=8+flutter*14;
+  lettering.style.filter='drop-shadow(0 0 '+glow+'px rgba(183,194,255,'+(.18+flutter*.24)+'))';
+  letters.forEach((letter,i)=>{
+   let opacity=introFade;
+   if(mode==='awakening')opacity=smooth((time-config.reveal-i*90)/330);
+   else if(mode==='flow')opacity=smooth((time-config.reveal-i*70)/375);
+   letter.style.opacity=String(opacity);
+   const bounce=flutter*Math.sin((time-1850)/145-i*.95);
+   letter.style.transform='translate3d(0,'+(-bounce*2.5)+'px,0) scale('+(1+Math.abs(bounce)*.013)+')';
+   letter.style.textShadow=flutter>.01?'0 0 '+(glow*.6)+'px '+palette[(i*2)%palette.length]:'none';
+  });
  }
  function finish(){
   if(stopped)return;
   stopped=true;cancelAnimationFrame(frame);clearTimeout(fallback);
   removeEventListener('resize',resize);
-  headerMark.style.visibility=originalMarkVisibility;
-  headerWord.style.visibility=originalWordVisibility;
   document.body.classList.remove('wrld-intro-running');
   intro.remove();
  }
  if(reduced){
-  for(const path of paths){path.style.strokeDasharray='none';path.style.strokeDashoffset='0'}
-  mark.style.opacity='1';word.style.opacity='1';
-  veil.style.transition='opacity .22s ease';veil.style.opacity='0';
-  fallback=setTimeout(finish,350);
+  lettering.style.opacity='1';
+  veil.style.transition='opacity .22s ease';
+  document.body.classList.add('wrld-intro-running');
+  requestAnimationFrame(()=>veil.style.opacity='0');
+  fallback=setTimeout(finish,330);
   return;
  }
- layout();
- for(let i=0;i<paths.length;i++){
-  paths[i].style.strokeDasharray=String(lengths[i]);
-  paths[i].style.strokeDashoffset=String(lengths[i]);
- }
- const suction=(p,time)=>{
-  const pull=clamp((time-210-p.delay)/(900-p.delay));
-  const radius=1-Math.pow(pull,3.2);
-  const angle=p.angle+p.spin*pull*pull;
-  const span=Math.min(vw*.35,250);
-  const r=(68+span*p.radius)*radius;
-  const float=(1-pull)*Math.sin(time*.003+p.phase)*2.1;
-  return {x:centerX+Math.cos(angle)*r+float,
-          y:centerY+Math.sin(angle)*r*.72+float*.48,pull};
- };
- function particleAt(p,time){
-  if(time<1120)return suction(p,time);
-  const q=cubic((time-1100-p.delay*.25)/510),target=points[p.i];
-  const from=suction(p,1120);
-  return {x:from.x+(target.x-from.x)*q,y:from.y+(target.y-from.y)*q,pull:1,forming:q};
- }
- function paintParticles(time){
-  ctx.clearRect(0,0,vw,vh);
-  if(time>1710)return;
-  for(const p of particles){
-   const loc=particleAt(p,time);
-   const alpha=p.brightness*clamp(time/240)*(time<1400?1:1-smooth((time-1400)/290));
-   if(alpha<=.006)continue;
-   const radius=p.size;
-   if(time>450&&time<1120){
-    const speed=Math.pow(loc.pull,2.3);
-    const trail=Math.min(18,16*speed);
-    const outward=Math.atan2(loc.y-centerY,loc.x-centerX);
-    const tx=loc.x+Math.cos(outward)*trail,ty=loc.y+Math.sin(outward)*trail;
-    const gradient=ctx.createLinearGradient(loc.x,loc.y,tx,ty);
-    gradient.addColorStop(0,'rgba(239,247,255,'+(alpha*.72)+')');
-    gradient.addColorStop(1,'rgba(170,210,255,0)');
-    ctx.lineWidth=Math.max(.65,radius*.65);ctx.lineCap='round';ctx.strokeStyle=gradient;
-    ctx.beginPath();ctx.moveTo(loc.x,loc.y);ctx.lineTo(tx,ty);ctx.stroke();
-   }
-   ctx.globalAlpha=alpha*.19;
-   ctx.fillStyle='#B8D5FF';ctx.beginPath();ctx.arc(loc.x,loc.y,radius*3.1,0,Math.PI*2);ctx.fill();
-   ctx.globalAlpha=alpha;
-   ctx.fillStyle=p.i%5===0?'#FFFFFF':'#E7F1FF';
-   ctx.beginPath();ctx.arc(loc.x,loc.y,radius,0,Math.PI*2);ctx.fill();
-  }
-  ctx.globalAlpha=1;
- }
- function fly(element,geometry,progress,arc){
-  const e=smooth(progress),bend=-arc*Math.sin(Math.PI*e);
-  const sx=1+(geometry.sx-1)*e,sy=1+(geometry.sy-1)*e;
-  element.style.transform='translate3d('+(geometry.dx*e)+'px,'+(geometry.dy*e+bend)+'px,0) scale('+sx+','+sy+')';
+ try{refreshGeometry()}
+ catch(error){console.warn('WRLD magicule geometry unavailable',error);intro.remove();return}
+ document.body.classList.add('wrld-intro-running');
+ function onResize(){
+  if(stopped)return;
+  try{refreshGeometry()}catch(error){console.warn('WRLD magicule resize recovered',error);finish()}
  }
  function tick(now){
   if(stopped)return;
   try{
-   const time=now-started;
-   if(time<1750)paintParticles(time);
-   else if(canvas.width)ctx.clearRect(0,0,vw,vh);
-   const light=time<950?0:time<1210?smooth((time-950)/260):1-smooth((time-1210)/350);
-   core.style.opacity=String(Math.max(0,light*.85));
-   core.style.transform='translate(-50%,-50%) scale('+(0.35+light*1.45)+')';
-   const reveal=cubic((time-1190)/470);
-   mark.style.opacity=String(clamp((time-1200)/225));
-   paths.forEach((path,i)=>{path.style.strokeDashoffset=String(lengths[i]*(1-reveal))});
-   word.style.opacity=String(smooth((time-1420)/330));
-   if(time>=1780){
-    if(!dock)dock=measureDock();
-    const phase=clamp((time-1780)/930);
-    fly(mark,dock.mark,phase,17);
-    fly(word,dock.word,phase,12);
-    veil.style.opacity=String(1-smooth((time-1870)/840));
+   const time=now-start;
+   renderParticles(time);
+   renderLettering(time);
+   if(time>=config.transfer+140){
+    veil.style.opacity=String(1-smooth((time-(config.transfer+140))/870));
    }
-   if(time>=2780){finish();return}
+   if(time>=config.end){finish();return}
    frame=requestAnimationFrame(tick);
   }catch(error){
-   console.warn('WRLD intro recovered after animation error',error);
-   finish();
+   console.warn('WRLD magicule animation recovered',error);finish();
   }
  }
- addEventListener('resize',resize,{passive:true});
- fallback=setTimeout(finish,4000);
+ addEventListener('resize',onResize,{passive:true});
+ fallback=setTimeout(finish,4800);
  frame=requestAnimationFrame(tick);
 }
-function replayWrldIntro(){
+function replayWrldIntro(mode=introMode){
  if($('wrldIntro')||!wrldIntroMarkup)return;
  document.body.insertAdjacentHTML('afterbegin',wrldIntroMarkup);
- try{startWrldIntro()}
+ try{startWrldIntro(mode)}
  catch(error){
   console.warn('WRLD intro replay recovered safely',error);
   document.body.classList.remove('wrld-intro-running');
   $('wrldIntro')?.remove();
  }
 }
-try{
- startWrldIntro();
-}catch(error){
+renderIntroChoices();
+document.querySelectorAll('[data-intro-mode]').forEach(button=>{
+ button.addEventListener('click',()=>{
+  if($('wrldIntro'))return;
+  const mode=button.dataset.introMode;
+  if(!Object.prototype.hasOwnProperty.call(MAGICULE_MODES,mode))return;
+  introMode=mode;
+  try{localStorage.setItem('wrld-magicule-mode-v1',mode)}catch{}
+  renderIntroChoices();
+  replayWrldIntro(mode);
+ });
+});
+$('replayIntro').addEventListener('click',()=>replayWrldIntro(introMode));
+try{startWrldIntro(introMode)}
+catch(error){
  console.warn('WRLD intro initialization recovered safely',error);
  document.body.classList.remove('wrld-intro-running');
  $('wrldIntro')?.remove();
 }
-$('replayIntro').addEventListener('click',replayWrldIntro);
 let cloudConnected=false;
 let cloudKeyEditing=false;
 function renderCloudKeyControls(){
