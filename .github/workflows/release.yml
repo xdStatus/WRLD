@@ -120,4 +120,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.26: fixes PyInstaller onefile updater restart by resetting the extracted runtime environment before startup probes and relaunch, while keeping SHA-256 verification and rollback safety."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.27: smoother ColorOS-inspired startup with four light orbs gliding into the center, a gentle glow, and a polished 999 WRLD reveal. Includes secure PyInstaller restart fixes."
