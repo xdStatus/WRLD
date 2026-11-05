@@ -9,11 +9,12 @@ import hashlib
 import json
 import os
 import re
+import ssl
 import subprocess
 import sys
 import threading
 from pathlib import Path
-from urllib.request import Request, urlopen
+from urllib.request import Request, build_opener, HTTPSHandler
 
 from app_version import APP_VERSION
 from player import CONFIG_DIR
@@ -24,6 +25,27 @@ VERSION_RE = re.compile(r'^v?(\d+)\.(\d+)\.(\d+)$')
 MAX_EXE = 350 * 1024 * 1024
 _user_agent = {'User-Agent': f'WRLD/{APP_VERSION}', 'Accept': 'application/vnd.github+json'}
 _lock = threading.RLock()
+
+def _build_https_opener():
+    # Use Windows' native certificate store, preserving full TLS verification.
+    # This also supports trusted enterprise/campus intermediate certificates.
+    if os.name == 'nt':
+        import truststore
+        return build_opener(HTTPSHandler(context=truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)))
+    return build_opener()
+
+_https_opener = _build_https_opener()
+
+def _open_https(request, timeout):
+    try:
+        return _https_opener.open(request, timeout=timeout)
+    except ssl.SSLCertVerificationError as exc:
+        raise ValueError(
+            'Unable to verify GitHub HTTPS using trusted certificates. '
+            'Check Windows date/time and trusted network certificates. '
+            'Certificate verification was not disabled.'
+        ) from exc
+
 
 
 def current_repo():
@@ -45,7 +67,7 @@ def configure_repo(value):
 
 
 def _json(url):
-    with urlopen(Request(url, headers=_user_agent), timeout=12) as response:
+    with _open_https(Request(url, headers=_user_agent), timeout=12) as response:
         if response.status != 200: raise ValueError('Could not read release information.')
         return json.load(response)
 
@@ -93,7 +115,7 @@ def _download_verified(url, expected, destination):
     try:
         digest = hashlib.sha256()
         total = 0
-        with urlopen(Request(url, headers=_user_agent), timeout=40) as response, temp.open('wb') as handle:
+        with _open_https(Request(url, headers=_user_agent), timeout=40) as response, temp.open('wb') as handle:
             while True:
                 chunk = response.read(1024 * 512)
                 if not chunk: break
@@ -222,7 +244,7 @@ def download_and_stage_update():
         repo = status['repository']; tag = status['tag']
         url = _release_asset_url(repo, tag, 'WRLD.exe')
         checksum_url = _release_asset_url(repo, tag, 'WRLD.exe.sha256')
-        with urlopen(Request(checksum_url, headers=_user_agent), timeout=20) as response:
+        with _open_https(Request(checksum_url, headers=_user_agent), timeout=20) as response:
             contents = response.read(512)
         expected = _sha_file(contents)
         root = Path(os.environ.get('LOCALAPPDATA', str(CONFIG_DIR))) / 'WRLDPlayer' / 'updates' / status['latest']
