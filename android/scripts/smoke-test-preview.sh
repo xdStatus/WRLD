@@ -14,8 +14,20 @@ echo "Installing isolated preview APK"
 adb install -r "$APK"
 adb shell pm grant "$PACKAGE" android.permission.READ_MEDIA_AUDIO || true
 adb logcat -c
-adb shell am start -W -n "$ACTIVITY"
-sleep 11
+adb shell am start -W -n "$ACTIVITY" --ez wrld_smoke_intro true
+# The emulator-only test clicks Settings and replays the intro at 9.85s.
+sleep 14
+adb logcat -d -s WRLDIntroCheck:I > "$RUNNER_TEMP/intro-runtime-check.txt"
+cat "$RUNNER_TEMP/intro-runtime-check.txt"
+if ! grep -Fq 'launch: "running"' "$RUNNER_TEMP/intro-runtime-check.txt"; then
+  echo "ERROR: Intro did not render at launch (or the overlay was not visible)."
+  exit 1
+fi
+if ! grep -Fq 'replay: "running"' "$RUNNER_TEMP/intro-runtime-check.txt"; then
+  echo "ERROR: Settings replay did not render animation frames."
+  exit 1
+fi
+echo "Verified both launch and Settings replay render active particle animation."
 
 check_alive() {
   if ! adb shell pidof "$PACKAGE" | tr -d '\r' | grep -Eq '[0-9]'; then
