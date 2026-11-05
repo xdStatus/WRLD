@@ -1,6 +1,7 @@
 name: Build and publish WRLD for Windows
 
 # Push source and bump app_version.py: GitHub does the rest.
+# Singularity v1.8.33 retest after aligning the renamed Settings preview assertion.
 # No local Windows build, tag push, or manual Release creation required.
 on:
   push:
