@@ -1,4 +1,4 @@
-# WRLD Android — first playable beta (v0.1.13)
+# WRLD Android — first playable beta (v0.1.14)
 
 Native Android music playback with a monochrome WebView interface. The Windows
 Python/WebView2 player and its releases remain unchanged.
@@ -15,7 +15,7 @@ Python/WebView2 player and its releases remain unchanged.
 ## How to try it
 
 1. Open GitHub Actions in xdStatus/WRLD and verify **Build WRLD Android APK** succeeded.
-2. Open the **android-v0.1.13** release and download **WRLD-Android-v0.1.13.apk** to your Android device.
+2. Open the **android-v0.1.14** release and download **WRLD-Android-v0.1.14.apk** to your Android device.
 3. Allow APK installation from your browser or file manager when Android prompts.
 4. Open WRLD and grant **Music and audio** access.
 5. Put music files in your phone's Music folder if the library is empty, then reopen/Rescan.
@@ -259,3 +259,25 @@ background audio requests. No public R2 bucket, phone Tailscale app or
 running PC required. Local playback is still supported. See
 WRLD_CLOUD_SETUP.md for current steps. Older PC-server information above is
 retained for historical version notes only.
+
+
+## Android beta v0.1.14 — mobile reverse sorting
+
+The All songs and Liked songs views now share a compact sort dropdown and
+40-pixel touch-friendly reverse-direction arrow. Choose Title, Length,
+Date added or Artist, then tap the arrow to reverse the ordering without
+reopening a menu. The icon smoothly flips while honoring Android's reduced
+motion preference. Natural numeric title sorting puts "Song 2" before
+"Song 10"; missing cloud duration metadata stays at the bottom in either
+direction. The selected sort and direction are saved in WebView local storage.
+
+History remains newest-played-first, and manual playlist track order remains
+unchanged. No desktop-style A–Z sidebar/navigation is included on mobile.
+
+This release does not alter Cloudflare R2 streaming, Android music playback,
+the Android intro, or any Windows code. As with previous Android betas, the
+APK is debug-signed with a temporary key. If Android rejects an over-install
+because of a signature mismatch, uninstalling the prior beta can remove
+its stored likes, playlists, history, settings, and private cloud access key.
+Avoid uninstalling unless prepared to reconfigure them. Device music files
+and R2 data are not affected.
