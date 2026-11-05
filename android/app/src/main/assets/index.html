@@ -1004,9 +1004,10 @@ window.__wrldIntroStatus=()=>({
  active:!!el('wrldIntro'),
  blocking:!!el('wrldIntro')&&getComputedStyle(el('wrldIntro')).pointerEvents!=='none',
  mode:'singularity',particles:MAGICULE_COUNT,seed:window.__wrldIntroLastSeed,
- frames:window.__wrldIntroFrameCount||0,error:window.__wrldIntroError||''
+ frames:window.__wrldIntroFrameCount||0,error:window.__wrldIntroError||'',
+ reducedMotion:!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 });
-function startWrldIntro(){
+function startWrldIntro(explicitPreview){
  window.__wrldIntroFrameCount=0;
  window.__wrldIntroError='';
  const intro=el('wrldIntro'),veil=el('introVeil'),canvas=el('introParticleCanvas');
@@ -1018,7 +1019,9 @@ function startWrldIntro(){
   console.warn('WRLD Singularity targets unavailable',window.__wrldIntroError);
   recoverWrldIntro(intro);return;
  }
- const reduced=!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+ // Automatic splash respects accessibility; an explicit Settings preview
+ // should play because the user specifically requested the animation.
+ const reduced=!explicitPreview&&!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  const ctx=canvas.getContext('2d',{alpha:true});
  if(!ctx){window.__wrldIntroError='Canvas unavailable';recoverWrldIntro(intro);return}
  const clamp=v=>Math.max(0,Math.min(1,v));
@@ -1310,11 +1313,11 @@ function replayWrldIntro(){
  document.body.insertAdjacentHTML('afterbegin',wrldIntroMarkup);
  const overlay=el('wrldIntro');
  if(overlay)overlay.style.pointerEvents='none';
- try{startWrldIntro()}
+ try{startWrldIntro(true)}
  catch(error){window.__wrldIntroError=String(error);console.warn('WRLD singularity replay recovered',error);recoverWrldIntro(overlay)}
 }
 requestAnimationFrame(function(){
- try{startWrldIntro()}
+ try{startWrldIntro(false)}
  catch(error){window.__wrldIntroError=String(error);console.warn('WRLD singularity launch recovered',error);recoverWrldIntro(el('wrldIntro'))}
 });
 
