@@ -41,7 +41,7 @@ assert.match(ui, /receiveUpdateStatus:function\(data\)/);
 assert.match(ui, /call\("checkForUpdates"\)/);
 assert.match(ui, /call\("downloadUpdate"\)/);
 
-assert.match(workflow, /Test Android update feature integration/);
+assert.match(workflow, /Verify Android update feature integration/);
 assert.match(workflow, /secrets\.WRLD_ANDROID_KEYSTORE_BASE64/);
 assert.match(workflow, /secrets\.WRLD_ANDROID_STORE_PASSWORD/);
 assert.match(workflow, /secrets\.WRLD_ANDROID_KEY_ALIAS/);
