@@ -1,0 +1,124 @@
+name: Build WRLD Android Intro Preview APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/android-intro-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wrld-intro-preview
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      # The preview installs beside, never over, the real WRLD Android app.
+      WRLD_ANDROID_PREVIEW: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+      - name: Install Android SDK
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Validate bundled Android interface JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          source = Path("android/app/src/main/assets/index.html").read_text(encoding="utf-8")
+          matches = re.findall(r"<script(?:\s[^>]*)?>(.*?)</script>", source, re.DOTALL)
+          if len(matches) != 1:
+              raise SystemExit(f"Expected one inline script, found {len(matches)}")
+          Path("/tmp/wrld-android-ui.js").write_text(matches[0], encoding="utf-8")
+          PY
+          node --check /tmp/wrld-android-ui.js
+
+      - name: Test 350 Magicule intro
+        run: node android/scripts/test-intro.js
+      - name: Test reverse sorting
+        run: node android/scripts/test-sort.js
+      - name: Test update feature integration
+        run: node android/scripts/test-updates.js
+
+      - name: Build isolated WRLD Preview APK
+        run: gradle -p android :app:assembleDebug --stacktrace --no-daemon
+
+      - name: Check preview package identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" > "$RUNNER_TEMP/preview-badging.txt"
+          grep -Fq "package: name='com.wrld.player.preview'" "$RUNNER_TEMP/preview-badging.txt"
+          grep -Fq "application-label:'WRLD Preview'" "$RUNNER_TEMP/preview-badging.txt"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$APK"
+          echo "Verified standalone WRLD Preview APK is signed and uses its own application ID."
+
+      - name: Enable KVM for Android emulator
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Smoke-test preview installation, startup and return
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash android/scripts/smoke-test-preview.sh
+
+      - name: Prepare downloadable preview APK and checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p android/dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk android/dist/WRLD-Android-Intro-Preview-v0.1.15.apk
+          cd android/dist
+          sha256sum WRLD-Android-Intro-Preview-v0.1.15.apk > WRLD-Android-Intro-Preview-v0.1.15.apk.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WRLD-Android-Intro-Preview-v0.1.15
+          path: android/dist/*
+          if-no-files-found: error
+
+      - name: Publish separate intro preview release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="android-intro-preview-v0.1.15"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::Preview $TAG already exists; refusing to replace a published APK."
+            exit 1
+          fi
+          gh release create "$TAG" \
+            android/dist/WRLD-Android-Intro-Preview-v0.1.15.apk \
+            android/dist/WRLD-Android-Intro-Preview-v0.1.15.apk.sha256 \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "WRLD Android Magicule Intro Preview v0.1.15" \
+            --notes "Standalone WRLD Preview APK for testing the Windows-style 350-particle Magicule Singularity intro on Android. Install beside the existing WRLD: it uses a separate package com.wrld.player.preview and does not overwrite WRLD v0.1.14 or its local likes, playlists, cloud credentials and history. Cloud tokens are not shared between apps; reconnect in Preview if desired. This is a debug-signed temporary demonstration build, NOT the permanently signed v0.1.15 update. The permanent signed main app still requires GitHub Actions secrets. Each separate temporary preview build may have a different debug signature."
