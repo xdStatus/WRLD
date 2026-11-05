@@ -66,6 +66,12 @@ jobs:
         run: |
           python -c "from update_support import _PORTABLE_EXE_RE; assert all(_PORTABLE_EXE_RE.fullmatch(x) for x in ['WRLD.exe', 'WRLD (1).exe', 'WRLD (12).exe']); assert all(not _PORTABLE_EXE_RE.fullmatch(x) for x in ['python.exe', 'WRLD.previous.exe', 'Another.exe', 'WRLD.zip'])"
 
+      - name: Verify isolated PyInstaller restart safeguards
+        if: steps.release.outputs.publish == 'true'
+        shell: pwsh
+        run: |
+          python -c "from pathlib import Path; s=Path('update_support.py').read_text(encoding='utf-8'); assert s.count('PYINSTALLER_RESET_ENVIRONMENT') >= 3, 'Updater probes and helper need fresh PyInstaller runtime'; assert 'PYINSTALLER_RESET_ENVIRONMENT = \'1\'' in s, 'Update helper must reset PyInstaller environment'"
+
       - name: Validate desktop WebView JavaScript
         if: steps.release.outputs.publish == 'true'
         shell: pwsh
@@ -114,4 +120,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.25: safely supports Windows-renamed downloads such as WRLD (1).exe for automatic updates, while retaining frozen-app checks, checksum verification and rollback protection."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.26: fixes PyInstaller onefile updater restart by resetting the extracted runtime environment before startup probes and relaunch, while keeping SHA-256 verification and rollback safety."
