@@ -93,7 +93,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .toolbar-title{font-size:15px;font-weight:620;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
 .toolbar-sub{font-size:11px;color:#939393}
 .sort-control{display:flex;align-items:center;gap:4px;color:#a8a8a8;font-size:11px;flex:none}
-.sort-control select{background:#171717;color:#eee;border:1px solid rgba(255,255,255,.17);border-radius:9px;padding:8px 7px;max-width:135px;font-size:11px}
+.sort-control select{background:#171717;color:#eee;border:1px solid rgba(255,255,255,.17);border-radius:9px;padding:9px 7px;max-width:115px;font-size:11px}
+.sort-tools{display:flex;gap:6px;align-items:center;flex:none}
+.sort-reverse{display:grid;place-items:center;flex:none;width:40px;height:40px;border:1px solid rgba(255,255,255,.22);border-radius:10px;background:rgba(255,255,255,.04);color:#eee;transition:background .2s,border-color .2s}
+.sort-reverse:active{background:rgba(255,255,255,.2)}
+.sort-reverse:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.sort-reverse-arrow{display:block;font-size:21px;line-height:1;transition:transform .42s cubic-bezier(.22,1.3,.36,1)}
+.sort-reverse.is-reversed .sort-reverse-arrow{transform:rotate(180deg)}
+@media(prefers-reduced-motion:reduce){.sort-reverse-arrow{transition:none}}
 .list{display:flex;flex-direction:column;min-height:80px}
 .track{position:relative;display:grid;grid-template-columns:42px minmax(0,1fr) auto 31px 28px;align-items:center;gap:11px;min-height:68px;padding:10px 2px;border-bottom:1px solid rgba(255,255,255,.07);border-radius:5px;transition:background .25s var(--ease)}
 .track:active,.track.is-current{background:linear-gradient(90deg,rgba(255,255,255,.105),rgba(255,255,255,.012))}
@@ -249,14 +256,17 @@ input[type=range]{accent-color:#eee;cursor:pointer}
  <div class="content-stage" id="viewStage">
  <div class="toolbar">
   <div class="toolbar-left"><span class="toolbar-title" id="sectionTitle">All songs</span><span class="toolbar-sub" id="sectionSubtitle">Loading library…</span></div>
-  <label class="sort-control" id="sortGroup"><span>Sort</span>
-   <select id="sort" aria-label="Sort songs">
-    <option value="title">Title A–Z</option><option value="title-reverse">Title Z–A</option>
-    <option value="length-long">Longest</option><option value="length-short">Shortest</option>
-    <option value="recent">Recently added</option><option value="oldest">Oldest first</option>
-    <option value="artist">Artist</option>
-   </select>
-  </label>
+  <div id="sortGroup" class="sort-tools">
+   <label class="sort-control"><span>Sort</span>
+    <select id="sort" aria-label="Sort songs by">
+     <option value="title">Title</option>
+     <option value="duration">Length</option>
+     <option value="added">Date added</option>
+     <option value="artist">Artist</option>
+    </select>
+   </label>
+   <button id="sortReverse" class="sort-reverse" type="button" aria-label="Reverse sorting direction" title="Reverse sorting direction" aria-pressed="false"><span class="sort-reverse-arrow" aria-hidden="true">↓</span></button>
+  </div>
  </div>
  <div id="list" class="list"></div>
  </div>
@@ -306,33 +316,80 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 "use strict";
 const el=function(id){return document.getElementById(id)};
 const call=function(method){try{if(!window.WRLDNative)return;var args=Array.prototype.slice.call(arguments,1);return window.WRLDNative[method].apply(window.WRLDNative,args)}catch(error){notice("Android connection unavailable");}};
-const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],cloud:{source:"device",url:"https://wrld-cloud.zaavangonzaless.workers.dev",configured:false,status:"Enter your access key to connect."},settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000},view:"all",playlistId:"",query:"",sort:"title",visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false};
+const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],cloud:{source:"device",url:"https://wrld-cloud.zaavangonzaless.workers.dev",configured:false,status:"Enter your access key to connect."},settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000},view:"all",playlistId:"",query:"",sort:"title",sortReversed:false,visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false};
 const heart='<svg viewBox="0 0 24 24"><path d="M20.7 5.1a5.6 5.6 0 0 0-7.9 0L12 6l-.8-.9a5.6 5.6 0 0 0-7.9 7.9L12 22l8.7-9a5.6 5.6 0 0 0 0-7.9Z"/></svg>';
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function fmt(ms){var seconds=Math.floor(Math.max(0,Number(ms)||0)/1000);return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")}
 var toastTimer;
 function notice(message){var t=el("toast");t.textContent=message; t.classList.add("visible");clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove("visible")},2700)}
 function playlist(){return app.playlists.find(function(p){return p.id===app.playlistId})}
+// Keep the sort choice and direction separate, like Windows WRLD.
+try{
+ var savedSort=localStorage.getItem("wrld-android-sort");
+ var migrated={"title-reverse":["title",true],"length-long":["duration",true],
+   "length-short":["duration",false],"recent":["added",false],"oldest":["added",true]};
+ if(migrated[savedSort]){
+  app.sort=migrated[savedSort][0];app.sortReversed=migrated[savedSort][1];
+ }else if(["title","duration","added","artist"].includes(savedSort)){
+  app.sort=savedSort;
+ }
+ var savedDirection=localStorage.getItem("wrld-android-sort-reversed");
+ if(savedDirection!==null)app.sortReversed=savedDirection==="true";
+}catch(error){}
+el("sort").value=app.sort;
+function refreshSortDirection(){
+ var options={
+  title:["A–Z","Z–A"],duration:["Shortest first","Longest first"],
+  added:["Newest first","Oldest first"],artist:["A–Z","Z–A"]
+ };
+ var label=options[app.sort][Number(app.sortReversed)];
+ var button=el("sortReverse");
+ button.classList.toggle("is-reversed",app.sortReversed);
+ button.setAttribute("aria-pressed",String(app.sortReversed));
+ button.setAttribute("aria-label","Sort: "+label+". Reverse direction");
+ button.title="Sort: "+label;
+}
+function saveSortDirection(){
+ try{
+  localStorage.setItem("wrld-android-sort",app.sort);
+  localStorage.setItem("wrld-android-sort-reversed",String(app.sortReversed));
+ }catch(error){}
+ refreshSortDirection();
+}
+refreshSortDirection();
 function songsForView(){
  var all=app.songs;
- if(app.view==="liked")all=all.filter(function(s){return app.liked.has(s.id)});
+ if(app.view==="liked")all=all.filter(function(song){return app.liked.has(song.id)});
+ // Preserve chronological history and hand-curated playlist order.
  if(app.view==="history")return app.history.slice(0,50).map(function(id){return app.map.get(id)}).filter(Boolean).filter(match);
- if(app.view==="playlist"){var p=playlist();if(!p)return [];return (p.ids||[]).map(function(id){return app.map.get(String(id))}).filter(Boolean).filter(match)}
+ if(app.view==="playlist"){
+  var p=playlist();
+  return p?(p.ids||[]).map(function(id){return app.map.get(String(id))}).filter(Boolean).filter(match):[];
+ }
  return all.filter(match).sort(compare);
 }
-function match(song){var q=app.query.trim().toLowerCase();return !q||song.title.toLowerCase().includes(q)||song.artist.toLowerCase().includes(q)||song.album.toLowerCase().includes(q)}
+function match(song){
+ var q=app.query.trim().toLowerCase();
+ return !q||song.title.toLowerCase().includes(q)||song.artist.toLowerCase().includes(q)||song.album.toLowerCase().includes(q);
+}
 function compare(a,b){
+ var alpha=function(x,y){return String(x||"").localeCompare(String(y||""),undefined,{numeric:true,sensitivity:"base"})};
+ var title=function(x,y){return alpha(x.title,y.title)};
+ var direction=app.sortReversed?-1:1;
  var result=0;
- switch(app.sort){
- case "length-long":result=(b.duration||0)-(a.duration||0);break;
- case "length-short":result=(a.duration||0)-(b.duration||0);break;
- case "recent":result=(b.modified||0)-(a.modified||0);break;
- case "oldest":result=(a.modified||0)-(b.modified||0);break;
- case "artist":result=a.artist.localeCompare(b.artist);break;
- case "title-reverse":result=b.title.localeCompare(a.title);break;
- default:result=a.title.localeCompare(b.title);
+ if(app.sort==="duration"){
+  // Cloud entries without duration remain at the bottom in either direction.
+  var x=Number(a.duration)||0,y=Number(b.duration)||0;
+  if(x<=0||y<=0)return x<=0?(y<=0?title(a,b):1):-1;
+  result=x-y;
+ }else if(app.sort==="added"){
+  result=(Number(b.modified)||0)-(Number(a.modified)||0);
+ }else if(app.sort==="artist"){
+  result=alpha(a.artist,b.artist);
+ }else{
+  result=title(a,b);
  }
- return result||a.title.localeCompare(b.title);
+ return result*direction||title(a,b);
 }
 const reduceMotion=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 var viewChangeTimer=null;
@@ -708,7 +765,16 @@ document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click"
 window.addEventListener("resize",function(){moveTabIndicator(false)},{passive:true});
 requestAnimationFrame(function(){moveTabIndicator(true)});
 el("search").addEventListener("input",function(e){app.query=e.target.value;render()});
-el("sort").addEventListener("change",function(e){app.sort=e.target.value;render()});
+el("sort").addEventListener("change",function(e){
+ app.sort=e.target.value;app.sortReversed=false;
+ saveSortDirection();render();
+ window.scrollTo(0,0);
+});
+el("sortReverse").addEventListener("click",function(){
+ app.sortReversed=!app.sortReversed;
+ saveSortDirection();render();
+ window.scrollTo(0,0);
+});
 el("shuffleAllBtn").addEventListener("click",shuffleAll);
 el("playButton").addEventListener("click",function(){if(!app.player.id&&app.visible.length)playIndex(0);else call("togglePlay")});
 el("previousButton").addEventListener("click",function(){call("previous")});
