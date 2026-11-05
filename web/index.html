@@ -608,24 +608,39 @@ body.native-shell .window-chrome{display:none!important}
 
 
 
-/* WRLD v1.8.20: clean, fluid ColorOS-inspired light convergence. */
-.wrld-intro{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;isolation:isolate;background:#050608;color:#f8faff;opacity:1;visibility:visible;transition:opacity .65s cubic-bezier(.22,1,.36,1),visibility .65s;pointer-events:all}
+/* WRLD 1.8.27: four soft light orbs flow into a single luminous center. */
+.wrld-intro{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;isolation:isolate;background:#050609;color:#f8faff;opacity:1;visibility:visible;pointer-events:all;transition:opacity .65s cubic-bezier(.22,1,.36,1),visibility .65s}
 .wrld-intro.is-finished{opacity:0;visibility:hidden;pointer-events:none}
-.wrld-intro:before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 35% 42% at 50% 49%,rgba(157,183,227,.07),transparent 85%);animation:introAmbient 2.15s ease-in-out both;pointer-events:none}
-.intro-stage{position:relative;width:min(66vw,320px);height:230px;display:grid;place-items:center}
-.intro-dot{position:absolute;left:calc(50% - 3px);top:calc(50% - 3px);width:6px;height:6px;border-radius:50%;background:#f8fbff;box-shadow:0 0 9px rgba(231,239,255,.45);opacity:0;will-change:transform,opacity;animation:dotConverge 1.24s cubic-bezier(.4,0,.12,1) both;--dx:-58px;--dy:-31px}
-.intro-dot:nth-child(2){--dx:55px;--dy:-22px;animation-delay:.055s}
-.intro-dot:nth-child(3){--dx:-49px;--dy:35px;animation-delay:.1s}
-.intro-dot:nth-child(4){--dx:51px;--dy:31px;animation-delay:.145s}
-.intro-bloom{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:8px;background:linear-gradient(140deg,#fff,#e7efff);box-shadow:0 0 12px rgba(255,255,255,.58),0 0 35px rgba(180,206,255,.26);opacity:0;transform:scale(.2);animation:introSoftPulse 1.2s .83s cubic-bezier(.22,1,.36,1) both;pointer-events:none}
-.wrld-intro-center{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;text-align:center;opacity:0;transform:translateY(7px) scale(.975);filter:blur(6px);animation:introLogoResolve .85s 1.28s cubic-bezier(.22,1,.36,1) forwards;pointer-events:none}
-.wrld-intro-number{font:200 clamp(67px,11vw,106px)/1 'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;letter-spacing:-.075em;padding-right:.075em;text-shadow:0 0 20px rgba(255,255,255,.18)}
-.wrld-intro-wordmark{font-size:13px;font-weight:550;letter-spacing:.60em;padding-left:.60em}
-@keyframes dotConverge{0%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.7)}18%{opacity:1}72%{opacity:1;transform:translate(0,0) scale(1)}91%,100%{opacity:0;transform:translate(0,0) scale(.5)}}
-@keyframes introSoftPulse{0%,15%{opacity:0;transform:scale(.25);filter:blur(2px)}34%{opacity:.8;transform:scale(.85);filter:blur(0)}66%{opacity:.42;transform:scale(2.2);filter:blur(7px)}100%{opacity:0;transform:scale(3);filter:blur(13px)}}
-@keyframes introLogoResolve{0%{opacity:0;transform:translateY(7px) scale(.975);filter:blur(6px)}100%{opacity:1;transform:none;filter:blur(0)}}
-@keyframes introAmbient{0%{opacity:.2}75%{opacity:1}100%{opacity:.75}}
-@media(prefers-reduced-motion:reduce){.wrld-intro .intro-dot,.wrld-intro .intro-bloom{display:none}.wrld-intro-center{animation:none;opacity:1;filter:none;transform:none}.wrld-intro{transition:none}}
+.wrld-intro:before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 36% 38% at 50% 50%,rgba(144,171,216,.065),transparent 78%);animation:introAmbientLight 2.45s ease-in-out both}
+.intro-stage{position:relative;width:min(70vw,340px);height:235px;display:grid;place-items:center;isolation:isolate}
+.intro-dot{position:absolute;left:calc(50% - 4px);top:calc(50% - 4px);width:8px;height:8px;border-radius:50%;opacity:0;background:radial-gradient(circle at 35% 33%,#fff 0%,#e5efff 65%,#afc7ef 100%);box-shadow:0 0 8px rgba(235,245,255,.65),0 0 21px rgba(163,199,255,.24);will-change:transform,opacity;--dx:-95px;--dy:-45px;animation:wrldOrbFlight 1.52s cubic-bezier(.64,0,.18,1) both}
+.intro-dot:before{content:'';position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(circle,rgba(208,226,255,.20),transparent 72%)}
+.intro-dot:nth-child(1){--dx:-106px;--dy:-52px;animation-delay:.00s}
+.intro-dot:nth-child(2){--dx:108px;--dy:-43px;animation-delay:.07s}
+.intro-dot:nth-child(3){--dx:-95px;--dy:61px;animation-delay:.12s}
+.intro-dot:nth-child(4){--dx:103px;--dy:57px;animation-delay:.17s}
+.intro-bloom{position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff;box-shadow:0 0 12px rgba(255,255,255,.78),0 0 30px rgba(181,209,255,.34),0 0 65px rgba(146,183,249,.12);opacity:0;pointer-events:none;animation:wrldMergeGlow 1.03s 1.03s cubic-bezier(.25,.7,.25,1) both}
+.intro-bloom:after{content:'';position:absolute;inset:-19px;border-radius:50%;background:radial-gradient(circle,rgba(237,246,255,.27),rgba(188,213,250,.10) 39%,transparent 70%);filter:blur(9px)}
+.wrld-intro-center{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;opacity:0;transform:translateY(8px) scale(.975);filter:blur(7px);animation:wrldIntroLogo 1.06s 1.48s cubic-bezier(.22,1,.36,1) both;pointer-events:none}
+.wrld-intro-number{font:200 clamp(66px,11vw,104px)/1 'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;letter-spacing:-.075em;padding-right:.075em;text-shadow:0 0 24px rgba(255,255,255,.15)}
+.wrld-intro-wordmark{font-size:13px;font-weight:550;letter-spacing:.59em;padding-left:.59em}
+@keyframes wrldOrbFlight{
+ 0%{opacity:0;transform:translate3d(var(--dx),var(--dy),0) scale(.55)}
+ 15%{opacity:.95;transform:translate3d(var(--dx),var(--dy),0) scale(.85)}
+ 58%{opacity:1}
+ 82%{opacity:.98;transform:translate3d(calc(var(--dx) * .12),calc(var(--dy) * .12),0) scale(1)}
+ 95%{opacity:.35;transform:translate3d(0,0,0) scale(.55)}
+ 100%{opacity:0;transform:translate3d(0,0,0) scale(.1)}
+}
+@keyframes wrldMergeGlow{
+ 0%,12%{opacity:0;transform:scale(.28);filter:blur(2px)}
+ 34%{opacity:.91;transform:scale(1);filter:blur(0)}
+ 62%{opacity:.55;transform:scale(2);filter:blur(3px)}
+ 100%{opacity:0;transform:scale(4.3);filter:blur(13px)}
+}
+@keyframes wrldIntroLogo{0%{opacity:0;transform:translateY(8px) scale(.975);filter:blur(7px)}70%{opacity:1;filter:blur(0)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes introAmbientLight{0%{opacity:.2}68%{opacity:.94}100%{opacity:.6}}
+@media(prefers-reduced-motion:reduce){.wrld-intro .intro-dot,.wrld-intro .intro-bloom{display:none}.wrld-intro-center{animation:none;opacity:1;transform:none;filter:none}.wrld-intro{transition:none}}
 #cloudConnectionStatus{display:block;font-weight:600;letter-spacing:.025em;color:#a2a2a2}
 #cloudConnectionStatus.is-connected{color:#65d68c;text-shadow:0 0 10px rgba(89,218,129,.24)}
 #cloudConnectionStatus.is-error{color:#f29898}
@@ -890,8 +905,8 @@ const $ = id => document.getElementById(id);
 const audio = $('audio');
 const intro=$('wrldIntro');
 // The brief introduction is intentionally theatrical; it does not delay library loading.
-setTimeout(()=>intro.classList.add('is-finished'),2210);
-setTimeout(()=>intro.remove(),2920);
+setTimeout(()=>intro.classList.add('is-finished'),2490);
+setTimeout(()=>intro.remove(),3180);
 let cloudConnected=false;
 let cloudKeyEditing=false;
 function renderCloudKeyControls(){
