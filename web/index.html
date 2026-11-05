@@ -1480,16 +1480,22 @@ $('songList').addEventListener('click',e=>{
 });
 let searchDelay=0;
 $('search').addEventListener('input',e=>{state.query=e.target.value;clearTimeout(searchDelay);searchDelay=setTimeout(applyFilter,55)});
-$('sortSelect').addEventListener('change',e=>{cancelAlphabetJump();state.sort=e.target.value;state.sortReversed=false;saveSortDirection();applyFilter()});
+$('sortSelect').addEventListener('change',e=>{
+ cancelAlphabetJump();
+ state.sort=e.target.value;
+ state.sortReversed=false;
+ saveSortDirection();
+ applyFilter();
+ $('listWrap').scrollTop=0;
+});
 $('sortReverse').addEventListener('click',()=>{
  cancelAlphabetJump();
  state.sortReversed=!state.sortReversed;
  saveSortDirection();
  applyFilter();
- // Reverse always lands at the opposite end, independent of the old scroll position.
- // The extra alphabetical jump spacer is removed in reversed mode so bottom is real.
- const scroller=$('listWrap');
- scroller.scrollTop=state.sortReversed?scroller.scrollHeight-scroller.clientHeight:0;
+ // After any direction flip, start with the first song in the new ordering.
+ // Keep the arrow's existing smooth rotation independently of list scrolling.
+ $('listWrap').scrollTop=0;
 });
 window.addEventListener('resize',()=>moveCollectionIndicator(),{passive:true});
 requestAnimationFrame(()=>moveCollectionIndicator(true));
