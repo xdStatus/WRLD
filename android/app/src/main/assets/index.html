@@ -988,6 +988,8 @@ function startSky(){
 startSky();
 /* WRLD Magicule Singularity: off-screen white energy physically charges each letter. */
 const wrldIntroMarkup=el('wrldIntro')?.outerHTML||'';
+window.__wrldIntroFrameCount=0;
+window.__wrldIntroError='';
 const MAGICULE_COUNT=350;
 const MAGICULE_PER_LETTER=[88,88,87,87];
 // The last incoming magicules finish settling before the 700ms particle-only hold.
@@ -1001,19 +1003,24 @@ function recoverWrldIntro(overlay){
 window.__wrldIntroStatus=()=>({
  active:!!el('wrldIntro'),
  blocking:!!el('wrldIntro')&&getComputedStyle(el('wrldIntro')).pointerEvents!=='none',
- mode:'singularity',particles:MAGICULE_COUNT,seed:window.__wrldIntroLastSeed
+ mode:'singularity',particles:MAGICULE_COUNT,seed:window.__wrldIntroLastSeed,
+ frames:window.__wrldIntroFrameCount||0,error:window.__wrldIntroError||''
 });
 function startWrldIntro(){
+ window.__wrldIntroFrameCount=0;
+ window.__wrldIntroError='';
  const intro=el('wrldIntro'),veil=el('introVeil'),canvas=el('introParticleCanvas');
  const lettering=el('introLettering');
  const letters=Array.from(document.querySelectorAll('#introLettering .intro-letter'));
- const headerLetters=Array.from(document.querySelectorAll('.brand h1 .header-letter'));
+ const headerLetters=Array.from(document.querySelectorAll('.brand-text strong .header-letter'));
  if(!intro||!veil||!canvas||!lettering||letters.length!==4||headerLetters.length!==4){
+  window.__wrldIntroError='Missing WRLD letter targets; center='+letters.length+' header='+headerLetters.length;
+  console.warn('WRLD Singularity targets unavailable',window.__wrldIntroError);
   recoverWrldIntro(intro);return;
  }
  const reduced=!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  const ctx=canvas.getContext('2d',{alpha:true});
- if(!ctx){recoverWrldIntro(intro);return}
+ if(!ctx){window.__wrldIntroError='Canvas unavailable';recoverWrldIntro(intro);return}
  const clamp=v=>Math.max(0,Math.min(1,v));
  const smooth=v=>{const t=clamp(v);return t*t*(3-2*t)};
  const lerp=(a,b,t)=>a+(b-a)*t;
@@ -1251,6 +1258,7 @@ function startWrldIntro(){
   if(time>6100){
    veil.style.opacity=String(1-smooth((time-6100)/1450));
   }
+  window.__wrldIntroFrameCount++;
   if(time>=SINGULARITY.end){finish();return}
  }
  function finish(){
@@ -1267,7 +1275,7 @@ function startWrldIntro(){
   clearTimeout(resizeTimer);
   resizeTimer=setTimeout(()=>{
    if(stopped)return;
-   try{geometry()}catch(error){console.warn('WRLD singularity resize recovered',error);finish()}
+   try{geometry()}catch(error){window.__wrldIntroError=String(error);console.warn('WRLD singularity resize recovered',error);finish()}
   },120);
  }
  if(reduced){
@@ -1278,7 +1286,7 @@ function startWrldIntro(){
   return;
  }
  try{geometry()}
- catch(error){console.warn('WRLD singularity geometry recovered',error);finish();return}
+ catch(error){window.__wrldIntroError=String(error);console.warn('WRLD singularity geometry recovered',error);finish();return}
  document.body.classList.add('wrld-intro-running');
  addEventListener('resize',onResize,{passive:true});
  document.addEventListener('visibilitychange',onVisibility);
@@ -1290,6 +1298,7 @@ function startWrldIntro(){
    if(now-lastPaint>=29||now-started>=SINGULARITY.end){lastPaint=now;render(now)}
    if(!stopped)frame=requestAnimationFrame(animationFrame);
   }catch(error){
+   window.__wrldIntroError=String(error);
    console.warn('WRLD singularity animation recovered',error);
    finish();
   }
@@ -1302,11 +1311,11 @@ function replayWrldIntro(){
  const overlay=el('wrldIntro');
  if(overlay)overlay.style.pointerEvents='none';
  try{startWrldIntro()}
- catch(error){console.warn('WRLD singularity replay recovered',error);recoverWrldIntro(overlay)}
+ catch(error){window.__wrldIntroError=String(error);console.warn('WRLD singularity replay recovered',error);recoverWrldIntro(overlay)}
 }
 requestAnimationFrame(function(){
  try{startWrldIntro()}
- catch(error){console.warn('WRLD singularity launch recovered',error);recoverWrldIntro(el('wrldIntro'))}
+ catch(error){window.__wrldIntroError=String(error);console.warn('WRLD singularity launch recovered',error);recoverWrldIntro(el('wrldIntro'))}
 });
 
 })();
