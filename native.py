@@ -102,7 +102,7 @@ class NativeAPI:
     """Native window, folder picker, and controlled release update bridge."""
 
     def __init__(self):
-        pass
+        self._window_maximized = False
 
     def choose_folder(self) -> str:
         import webview
@@ -142,9 +142,18 @@ class NativeAPI:
         import webview
         if not webview.windows: return False
         win = webview.windows[0]
-        if action == 'minimize': win.minimize()
-        elif action == 'fullscreen': win.toggle_fullscreen()
-        elif action == 'close': win.destroy()
+        if action == 'minimize':
+            win.minimize()
+        elif action == 'maximize':
+            if self._window_maximized:
+                win.restore()
+            else:
+                win.maximize()
+            self._window_maximized = not self._window_maximized
+        elif action == 'fullscreen':
+            win.toggle_fullscreen()
+        elif action == 'close':
+            win.destroy()
         else: return False
         return True
 
@@ -161,8 +170,8 @@ def run_desktop() -> None:
     address = f'http://{HOST}:{server.server_port}/'
     try:
         import webview
-        # In pywebview 6.1+, enable dragging from blank elements while
-        # excluding nested interactive controls.
+        # Restrict native drag initiation to the explicit top header regions.
+        # Content controls, track rows, sliders and canvas must not move the app.
         webview.settings['DRAG_REGION_DIRECT_TARGET_ONLY'] = True
         # Use a standard Windows frame so every edge/corner can resize the window.
         # Size the initial window to the available desktop work area (excluding taskbar).
@@ -179,7 +188,8 @@ def run_desktop() -> None:
         window_height = min(910, max(480, available_height - 60))
         webview.create_window(
             'WRLD', address, js_api=NativeAPI(), width=window_width, height=window_height,
-            min_size=(640, 480), resizable=True, frameless=False, shadow=True,
+            min_size=(640, 480), resizable=True, frameless=True,
+            easy_drag=False, shadow=True,
             background_color='#050505', text_select=False, zoomable=False,
         )
         # Use the built-in Windows WebView2 renderer — no browser process window.
