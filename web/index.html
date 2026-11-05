@@ -428,12 +428,13 @@ dialog{border-radius:10px}
 /* V18.1 — Only blank elements are native window drag targets.
    Controls, songs, search, seek bars and sliders stay interactive. */
 body.native-shell .pywebview-drag-region{user-select:none}
-body.native-shell .topbar.pywebview-drag-region{cursor:default}
+body.native-shell .topbar.pywebview-drag-region{cursor:grab}
+body.native-shell .topbar.pywebview-drag-region:active{cursor:grabbing}
 body.native-shell .brand h1.pywebview-drag-region{cursor:grab}
 body.native-shell .brand h1.pywebview-drag-region:active{cursor:grabbing}
 
 /* V18 — Frameless desktop controls, minimal and unobtrusive. */
-.window-chrome{display:flex;align-items:center;gap:3px;flex:none;margin-left:0}
+.window-chrome{display:flex;align-items:center;gap:3px;flex:none;margin-left:auto}
 .window-chrome[hidden]{display:none!important}
 .window-chrome button{width:29px;height:30px;border:0;background:transparent;color:#aaa;font:19px/1 Segoe UI,system-ui;padding:0;border-radius:5px;transition:background .18s,color .18s}
 .window-chrome button:hover{color:#fff;background:rgba(255,255,255,.13)}
@@ -489,7 +490,7 @@ html,body{width:100%;height:100%;min-width:0}
 .settings-panel .cloud-config input{min-width:0}
 .player{min-width:0;grid-template-columns:minmax(115px,1fr) minmax(200px,1.3fr) minmax(110px,.8fr);gap:clamp(8px,1.6vw,22px)}
 .player-left,.center,.player-right{min-width:0}
-body.native-shell .window-chrome{display:none!important}
+/* Frameless Windows owns its chrome controls; preserve minimize/maximize/close. */
 @media(max-width:1050px){
   .app{grid-template-rows:auto minmax(0,1fr) auto}
   .topbar{min-height:70px;height:auto;gap:12px;flex-wrap:wrap;padding-block:10px}
@@ -666,9 +667,9 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
 </div>
 <canvas id="starfield" aria-hidden="true"></canvas>
 <div class="space-haze" aria-hidden="true"></div>
-<div class="app pywebview-drag-region">
+<div class="app">
   <header class="topbar glass pywebview-drag-region">
-    <div class="brand pywebview-drag-region">
+    <div class="brand">
       <button class="brand-badge" id="logoCometBtn" type="button" title="A little surprise" aria-label="Summon a comet"><svg viewBox="0 0 112 64" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"><g class="logo-wave-digit logo-wave-1"><path d="M30 18C30 10.5 24 5 17 5S4 10.5 4 19s5 12.5 12.5 12.5C24 31.5 29 26 29 19v15c0 11-7 18.5-18 19.5"/></g>
 <g class="logo-wave-digit logo-wave-2"><path d="M67 17C67 9.5 61 4 54 4S41 9.5 41 18s5 12.5 12.5 12.5C61 30.5 66 25 66 18v15c0 11-7 18.5-18 19.5"/></g>
 <g class="logo-wave-digit logo-wave-3"><path d="M104 18C104 10.5 98 5 91 5S78 10.5 78 19s5 12.5 12.5 12.5C98 31.5 103 26 103 19v15c0 11-7 18.5-18 19.5"/></g>
@@ -683,13 +684,14 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
     </label>
     <nav id="windowChrome" class="window-chrome" aria-label="Window controls" hidden>
       <button id="winMin" type="button" aria-label="Minimize window" title="Minimize">−</button>
+      <button id="winMax" type="button" aria-label="Maximize or restore window" title="Maximize or restore">□</button>
       <button id="winClose" type="button" aria-label="Close WRLD" title="Close">×</button>
     </nav>
   </header>
 
-  <section class="main pywebview-drag-region">
-    <div class="library glass pywebview-drag-region">
-      <div class="library-nav pywebview-drag-region" role="tablist" aria-label="Music collections">
+  <section class="main">
+    <div class="library glass">
+      <div class="library-nav" role="tablist" aria-label="Music collections">
         <button class="collection-tab active" id="tabAll" role="tab" aria-selected="true" data-view="all">All songs</button>
         <button class="collection-tab" id="tabLiked" role="tab" aria-selected="false" data-view="liked">Liked <span class="tiny-counter" id="likedNavCount"></span></button>
         <button class="collection-tab" id="tabHistory" role="tab" aria-selected="false" data-view="history">History</button>
@@ -700,13 +702,13 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
         <span class="tab-indicator" id="tabIndicator" aria-hidden="true"></span>
       </div>
       <div class="library-stage" id="libraryStage">
-      <div class="library-head pywebview-drag-region">
+      <div class="library-head">
         <div>
           <button class="playlist-back hidden" id="backPlaylistsBtn" type="button">← All playlists</button>
-          <h2 class="pywebview-drag-region" id="libraryTitle">Library</h2>
+          <h2 class="" id="libraryTitle">Library</h2>
           <p id="folderText">Loading your local collection...</p>
         </div>
-        <div class="meta pywebview-drag-region">
+        <div class="meta">
           <button class="playlist-manage hidden" id="renamePlaylistBtn" title="Rename playlist" type="button">Rename</button>
           <button class="playlist-manage hidden" id="deletePlaylistBtn" title="Delete playlist" type="button">Delete</button>
           <div id="sortControl" class="sort-tools"><label class="sort-control"><span>Sort</span><select id="sortSelect" aria-label="Sort songs"><option value="title">Title</option><option value="duration">Length</option><option value="added">Date added</option><option value="artist">Artist</option><option value="format">File type</option></select></label><button id="sortReverse" type="button" class="sort-flip" title="Reverse sorting direction" aria-label="Reverse sorting direction"><span class="sort-flip-arrow" aria-hidden="true">↓</span></button></div>
@@ -714,9 +716,9 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
           <span id="formatText">Local audio only</span>
         </div>
       </div>
-      <div class="playlist-grid hidden pywebview-drag-region" id="playlistGrid" aria-label="Your playlists"></div>
-      <div class="library-list-layout" id="libraryListLayout"><nav id="alphabetRail" class="alphabet-rail" aria-label="Jump to letter"></nav><div class="list-wrap pywebview-drag-region" id="listWrap">
-        <div class="song-list pywebview-drag-region" id="songList"></div>
+      <div class="playlist-grid hidden" id="playlistGrid" aria-label="Your playlists"></div>
+      <div class="library-list-layout" id="libraryListLayout"><nav id="alphabetRail" class="alphabet-rail" aria-label="Jump to letter"></nav><div class="list-wrap" id="listWrap">
+        <div class="song-list" id="songList"></div>
         <div class="empty hidden" id="emptyState">No songs found. Rescan or choose a different folder.</div>
       </div></div>
       <div class="settings-panel hidden" id="settingsPanel" aria-label="Playback and general settings">
@@ -748,20 +750,20 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
           <button type="button" id="changeFolderBtn" class="settings-button">Change music folder <span>↗</span></button>
         </div>
         <div class="settings-heading">About</div>
-        <div class="settings-card"><div class="settings-about"><strong>999 · WRLD</strong><small id="desktopVersion">Windows v1.8.8</small><p>Local and Cloudflare R2 music player powered by Windows WebView2. Cloud songs stream securely from your private Worker; likes, playlists and preferences stay on this computer.</p></div><button type="button" class="settings-button" id="settingsUpdates" title="Check for WRLD updates">Check for updates <span id="updateDot" hidden>●</span></button></div>
+        <div class="settings-card"><div class="settings-about"><strong>999 · WRLD</strong><small id="desktopVersion">WRLD Windows</small><p>Local and Cloudflare R2 music player powered by Windows WebView2. Cloud songs stream securely from your private Worker; likes, playlists and preferences stay on this computer.</p></div><button type="button" class="settings-button" id="replayIntro" title="Replay the full orb-to-logo startup animation">Replay the Launch <span aria-hidden="true">✦</span></button><button type="button" class="settings-button" id="settingsUpdates" title="Check for WRLD updates">Check for updates <span id="updateDot" hidden>●</span></button></div>
       </div>
       </div>
     </div>
 
-    <aside class="side glass pywebview-drag-region">
-      <div class="now-badge pywebview-drag-region">Now Playing</div>
-      <div class="visualizer-wrap pywebview-drag-region" id="visualizerWrap">
-        <div class="visualizer-head pywebview-drag-region">
+    <aside class="side glass">
+      <div class="now-badge">Now Playing</div>
+      <div class="visualizer-wrap" id="visualizerWrap">
+        <div class="visualizer-head">
           <span class="visualizer-kicker">AUDIO REACTIVE</span>
           <span class="viz-status" id="vizStatus"><span class="viz-indicator"></span><span id="vizStatusText">READY</span></span>
         </div>
-        <canvas class="pywebview-drag-region" id="visualizer" role="img" aria-label="Live audio spectrum reacting to the current song"></canvas>
-        <div class="visualizer-footer pywebview-drag-region">
+        <canvas class="" id="visualizer" role="img" aria-label="Live audio spectrum reacting to the current song"></canvas>
+        <div class="visualizer-footer">
           <div class="viz-modes" role="group" aria-label="Visualizer style">
             <button type="button" class="viz-mode" id="vizBars" aria-pressed="true">Spectrum</button>
             <button type="button" class="viz-mode" id="vizWave" aria-pressed="false">Waveform</button>
@@ -774,12 +776,12 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
         <p class="now-sub" id="nowArtist">Pick a song from your library</p>
         <div class="now-playing-note"><span class="live-line"></span><span id="nowPlayingNote">Ready when you are</span></div>
       </div>
-      <div class="side-divider-faint pywebview-drag-region" aria-hidden="true"></div>
-      <div class="side-hint pywebview-drag-region"<kbd>Space</kbd> play / pause &nbsp; · &nbsp; <kbd>←</kbd> <kbd>→</kbd> seek</div>
+      <div class="side-divider-faint" aria-hidden="true"></div>
+      <div class="side-hint"<kbd>Space</kbd> play / pause &nbsp; · &nbsp; <kbd>←</kbd> <kbd>→</kbd> seek</div>
     </aside>
   </section>
 
-  <footer class="player glass pywebview-drag-region" id="playerDock">
+  <footer class="player glass" id="playerDock">
     <button type="button" class="player-left now-queue-trigger" id="openQueueButton" aria-label="Expand or collapse Up Next queue" aria-controls="queueDrawer" aria-expanded="false">
       <div class="mini-art" id="miniArt"><span class="letter">W</span><img alt="Album art"></div>
       <div class="player-text">
@@ -788,8 +790,8 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
       </div>
     </button>
 
-    <div class="center pywebview-drag-region">
-      <div class="timeline pywebview-drag-region" aria-label="Playback position">
+    <div class="center">
+      <div class="timeline" aria-label="Playback position">
         <span class="time" id="currentTime">0:00</span>
         <div class="seek-shell" id="seekShell">
           <div class="seek-track" aria-hidden="true"><div class="seek-fill" id="seekFill"><span class="seek-head"></span></div></div>
@@ -809,7 +811,7 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
           </div>
         </div>
       </section>
-      <div class="controls pywebview-drag-region" role="group" aria-label="Music playback controls">
+      <div class="controls" role="group" aria-label="Music playback controls">
         <button class="circle now-like" id="nowLikeBtn" type="button" aria-label="Like current song" title="Like current song" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 5.2a5.7 5.7 0 0 0-8.1 0l-.7.7-.7-.7a5.7 5.7 0 0 0-8.1 8.1L12 22l8.8-8.7a5.7 5.7 0 0 0 0-8.1Z"/></svg>
       </button>
@@ -829,7 +831,7 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
       </div>
     </div>
 
-    <div class="player-right pywebview-drag-region">
+    <div class="player-right">
       <span class="volume-label">Volume</span>
       <button type="button" id="muteBtn" class="mute-control" aria-label="Mute sound" aria-pressed="false" title="Mute">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="unmuted-path" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/><path class="muted-path" d="m17 9 5 6m0-6-5 6" style="display:none"/></svg>
@@ -882,8 +884,9 @@ body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visi
 'use strict';
 const $ = id => document.getElementById(id);
 const audio = $('audio');
-const intro=$('wrldIntro');
+const wrldIntroMarkup=$('wrldIntro')?.outerHTML||'';
 function startWrldIntro(){
+ const intro=$('wrldIntro');
  const veil=$('introVeil'),canvas=$('introParticleCanvas'),core=$('introCore');
  const mark=$('introMark'),word=$('introWordmark');
  const headerMark=document.querySelector('#logoCometBtn svg');
@@ -1068,13 +1071,24 @@ function startWrldIntro(){
  fallback=setTimeout(finish,4000);
  frame=requestAnimationFrame(tick);
 }
+function replayWrldIntro(){
+ if($('wrldIntro')||!wrldIntroMarkup)return;
+ document.body.insertAdjacentHTML('afterbegin',wrldIntroMarkup);
+ try{startWrldIntro()}
+ catch(error){
+  console.warn('WRLD intro replay recovered safely',error);
+  document.body.classList.remove('wrld-intro-running');
+  $('wrldIntro')?.remove();
+ }
+}
 try{
  startWrldIntro();
 }catch(error){
  console.warn('WRLD intro initialization recovered safely',error);
  document.body.classList.remove('wrld-intro-running');
- intro?.remove();
+ $('wrldIntro')?.remove();
 }
+$('replayIntro').addEventListener('click',replayWrldIntro);
 let cloudConnected=false;
 let cloudKeyEditing=false;
 function renderCloudKeyControls(){
@@ -2266,7 +2280,7 @@ function connectNativeChrome(){
   if(!api?.window_action)return;
   document.body.classList.add('native-shell');
   $('windowChrome').hidden=false;
-  for(const [btn,action] of [['winMin','minimize'],['winClose','close']]){
+  for(const [btn,action] of [['winMin','minimize'],['winMax','maximize'],['winClose','close']]){
     $(btn).addEventListener('click',()=>api.window_action(action));
   }
   document.addEventListener('keydown', e=>{
