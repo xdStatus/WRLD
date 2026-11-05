@@ -231,7 +231,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
    <div class="brand-logo" role="img" aria-label="Animated 999 WRLD emblem"><span class="digit">9</span><span class="digit">9</span><span class="digit">9</span></div>
    <span class="brand-text"><strong>WRLD</strong><small>Android Edition</small></span>
   </div>
-  <button class="outline" id="updatesButton">Updates ↗</button>
+  <button class="outline" id="updatesButton" type="button">Updates ↻</button>
  </header>
  <section class="hero"><div class="eyebrow">YOUR MUSIC, YOUR WRLD</div><h1>Listen differently.</h1><p id="folderStatus">Discovering music on this device…</p></section>
  <label class="search-wrap">
@@ -316,7 +316,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 "use strict";
 const el=function(id){return document.getElementById(id)};
 const call=function(method){try{if(!window.WRLDNative)return;var args=Array.prototype.slice.call(arguments,1);return window.WRLDNative[method].apply(window.WRLDNative,args)}catch(error){notice("Android connection unavailable");}};
-const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],cloud:{source:"device",url:"https://wrld-cloud.zaavangonzaless.workers.dev",configured:false,status:"Enter your access key to connect."},settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000},view:"all",playlistId:"",query:"",sort:"title",sortReversed:false,visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false};
+const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],cloud:{source:"device",url:"https://wrld-cloud.zaavangonzaless.workers.dev",configured:false,status:"Enter your access key to connect."},settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000},view:"all",playlistId:"",query:"",sort:"title",sortReversed:false,visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false,version:"0.1.15",updates:{state:"idle",latest:"",message:"Not checked yet."}};
 const heart='<svg viewBox="0 0 24 24"><path d="M20.7 5.1a5.6 5.6 0 0 0-7.9 0L12 6l-.8-.9a5.6 5.6 0 0 0-7.9 7.9L12 22l8.7-9a5.6 5.6 0 0 0 0-7.9Z"/></svg>';
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function fmt(ms){var seconds=Math.floor(Math.max(0,Number(ms)||0)/1000);return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")}
@@ -527,9 +527,15 @@ function renderSettings(){
   '</div>'+
   '<div class="settings-heading">Library</div>'+
   '<div class="settings-panel"><button class="settings-action" data-rescan-library="1"><span>Rescan music library<small>Refresh songs indexed on your phone</small></span><span aria-hidden="true">↻</span></button></div>'+
+  '<div class="settings-heading">Updates</div>'+
+  '<div class="settings-panel">'+
+   '<button class="settings-action" type="button" data-check-updates="1"><span>Check for Android updates<small>'+esc(app.updates.message)+'</small></span><span aria-hidden="true">↻</span></button>'+
+   (app.updates.state==="available"?'<button class="settings-action" type="button" data-download-update="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>Download Android v'+esc(app.updates.latest)+'<small>Opens the official GitHub APK in your browser. Android confirms installation.</small></span><span aria-hidden="true">↗</span></button>':'')+
+   '<div class="cloud-help">With the permanent signing certificate, future updates install over WRLD without clearing its data. An older temporary-key beta may require one initial migration.</div>'+
+  '</div>'+
   '<div class="settings-heading">About</div>'+
   '<div class="settings-panel"><div class="settings-about"><div class="settings-about-title">999 · WRLD</div>'+
-   '<div class="settings-about-version">Android v0.1.13 (beta)</div>'+
+   '<div class="settings-about-version">Android v'+esc(app.version)+' (beta)</div>'+
    '<div class="settings-about-desc">Local and private WRLD Cloud playback powered by Android Media3. Cloud music streams from your private Cloudflare R2 library over HTTPS. Your playback preferences stay on this device.</div></div>'+
    '<button class="settings-action" data-open-updates="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>GitHub Releases<small>View the latest Android updates</small></span><span aria-hidden="true">↗</span></button></div>'+
   '</div>';
@@ -678,7 +684,7 @@ function openTrackMenu(id){
 }
 function createDialog(){showSheet("New playlist",'<p>Name your collection.</p><input id="newPlaylistName" maxlength="70" placeholder="Playlist name" autocomplete="off"><button class="sheet-primary" id="confirmPlaylist">Create playlist</button>');setTimeout(function(){el("newPlaylistName")&&el("newPlaylistName").focus()},100)}
 el("list").addEventListener("click",function(event){
- var b=event.target.closest("[data-like],[data-menu],[data-create],[data-open],[data-delete],[data-back],[data-song],[data-rescan-library],[data-open-updates],[data-music-source],[data-save-cloud]");
+ var b=event.target.closest("[data-like],[data-menu],[data-create],[data-open],[data-delete],[data-back],[data-song],[data-rescan-library],[data-open-updates],[data-check-updates],[data-download-update],[data-music-source],[data-save-cloud]");
  if(!b)return;
  if(b.dataset.musicSource){call("setMusicSource",b.dataset.musicSource);return}
  if(b.dataset.saveCloud!==undefined){
@@ -692,6 +698,8 @@ el("list").addEventListener("click",function(event){
   return;
  }
  if(b.dataset.rescanLibrary){call("requestLibrary");notice("Refreshing library…");return}
+ if(b.dataset.checkUpdates){call("checkForUpdates");return}
+ if(b.dataset.downloadUpdate){call("downloadUpdate");return}
  if(b.dataset.openUpdates){call("openUpdates");return}
  if(b.dataset.like){call("setLike",b.dataset.like,!app.liked.has(b.dataset.like));return}
  if(b.dataset.menu){openTrackMenu(b.dataset.menu);return}
@@ -829,8 +837,18 @@ el("volume").addEventListener("blur",function(){
  volumeDragging=false;
  el("volumeShell").classList.remove("is-scrubbing");
 });
-el("updatesButton").addEventListener("click",function(){call("openUpdates")});
+el("updatesButton").addEventListener("click",function(){call("checkForUpdates")});
 window.WRLD={
+ receiveAppVersion:function(version){
+  app.version=String(version||app.version);
+  if(app.view==="settings")renderSettings();
+ },
+ receiveUpdateStatus:function(data){
+  if(!data)return;
+  app.updates={state:String(data.state||"idle"),latest:String(data.latest||""),message:String(data.message||"")};
+  if(app.view==="settings")renderSettings();
+  if(app.updates.state==="available"||app.updates.state==="error")notice(app.updates.message);
+ },
  receiveCloudConfig:function(data){
   if(!data)return;
   app.cloud.source=data.source==="cloud"?"cloud":"device";
