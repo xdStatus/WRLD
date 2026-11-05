@@ -9,10 +9,30 @@ android {
         applicationId = "com.wrld.player"
         minSdk = 26
         targetSdk = 35
-        versionCode = 15
-        versionName = "0.1.14"
+        versionCode = 16
+        versionName = "0.1.15"
     }
-    buildTypes { release { isMinifyEnabled = false } }
+    // Release APKs are signed only when CI supplies the permanent private
+    // keystore through secrets. Local debug builds still work without it.
+    val wrldKeystorePath = System.getenv("WRLD_KEYSTORE_PATH")
+    signingConfigs {
+        if (!wrldKeystorePath.isNullOrBlank()) {
+            create("wrldRelease") {
+                storeFile = file(wrldKeystorePath)
+                storePassword = System.getenv("WRLD_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("WRLD_KEY_ALIAS")
+                keyPassword = System.getenv("WRLD_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+            if (!wrldKeystorePath.isNullOrBlank()) {
+                signingConfig = signingConfigs.getByName("wrldRelease")
+            }
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
