@@ -22,6 +22,19 @@ const header = head.split('<div class="brand">')[1].split("</div>")[0];
 assert.doesNotMatch(header, /Animated 999|class="digit"/);
 assert.match(header, /class="brand-magicule"/);
 
+// This caught the original regression: Android's header is <strong>,
+// whereas the Windows port incorrectly searched for ".brand h1".
+const androidHeader = head.split('<span class="brand-text">')[1].split('<small>Android Edition')[0];
+assert.equal((androidHeader.match(/class="header-letter"/g)||[]).length,4,
+  "Android header must contain all four transfer targets");
+const headerTarget = js.match(/const headerLetters=Array\.from\(document\.querySelectorAll\('([^']+)'\)\)/);
+assert.ok(headerTarget,"Magicule intro must query the Android header");
+assert.equal(headerTarget[1],".brand-text strong .header-letter",
+  "Intro must animate the Android header, not the Windows <h1> selector");
+assert.match(js,/window\.__wrldIntroFrameCount\+\+/,"Animation must expose rendered frame count");
+assert.match(js,/frames:window\.__wrldIntroFrameCount\|\|0/,"Runtime probe must include frame count");
+assert.match(js,/__wrldIntroError/,"Animation failures should be diagnosable");
+
 // Desktop-equivalent choreography and mobile-only performance/safety limits.
 assert.match(js, /const MAGICULE_COUNT=350;/);
 assert.match(js, /const MAGICULE_PER_LETTER=\[88,88,87,87\]/);
@@ -58,6 +71,16 @@ assert.match(js, /if\(b\.dataset\.replayIntro\)\{replayWrldIntro\(\);return\}/);
 assert.match(js, /data-replay-intro="1"/);
 assert.match(js, /Preview Magicule Singularity/);
 assert.doesNotMatch(js, /el\('replayIntro'\)\.addEventListener/);
+
+// Emulator probes assert the animation is visible and actually rendering
+// both at launch and after using the Settings replay button.
+const activity = fs.readFileSync(path.resolve(__dirname,
+  "../app/src/main/java/com/wrld/player/MainActivity.kt"),"utf8");
+const smoke = fs.readFileSync(path.resolve(__dirname,"smoke-test-preview.sh"),"utf8");
+assert.match(activity,/logIntroFrameProbe\("launch"\)/);
+assert.match(activity,/logIntroFrameProbe\("replay"\)/);
+assert.match(smoke,/launch: "running"/);
+assert.match(smoke,/replay: "running"/);
 
 // The native music library, cloud and player survive the visual-only port.
 assert.match(js, /function startSky\(\)/);
