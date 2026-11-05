@@ -120,35 +120,28 @@ class MainActivity : Activity() {
                     if (packageName == "com.wrld.player.preview" &&
                         intent.getBooleanExtra("wrld_smoke_intro", false)) {
                         handler.postDelayed({ logIntroFrameProbe("launch") }, 2_100)
+                        // Wait for Settings to finish rendering before requesting
+                        // replay. On slow emulator WebViews, two rapid native
+                        // clicks can execute before the replay button exists.
                         handler.postDelayed({
                             if (webReady && !isFinishing) {
                                 web.evaluateJavascript(
-                                    "document.querySelector('[data-view=\"settings\"]').click();",
+                                    """(function(){
+                                        document.querySelector('[data-view="settings"]')?.click();
+                                        var tries=0;
+                                        var poll=setInterval(function(){
+                                            var button=document.querySelector('[data-replay-intro="1"]');
+                                            if(button){clearInterval(poll);button.click();}
+                                            else if(++tries>=50)clearInterval(poll);
+                                        },180);
+                                    })();""".trimIndent(),
                                     null
                                 )
                             }
                         }, 9_500)
-                        // Settings can render slowly on an emulator. Poll for the
-                        // actual replay button rather than clicking a null node.
-                        handler.postDelayed({
-                            if (webReady && !isFinishing) {
-                                val replayWhenReady = """
-                                    (function() {
-                                        var attempts = 0;
-                                        function clickWhenReady() {
-                                            var button = document.querySelector('[data-replay-intro="1"]');
-                                            if (button) { button.click(); return; }
-                                            if (++attempts < 45) setTimeout(clickWhenReady, 150);
-                                        }
-                                        clickWhenReady();
-                                    })();
-                                """.trimIndent()
-                                web.evaluateJavascript(replayWhenReady, null)
-                            }
-                        }, 10_300)
-                        handler.postDelayed({ logIntroFrameProbe("replay-early") }, 12_300)
-                        handler.postDelayed({ logIntroFrameProbe("replay-middle") }, 13_300)
-                        handler.postDelayed({ logIntroFrameProbe("replay") }, 14_500)
+                        handler.postDelayed({ logIntroFrameProbe("replay-early") }, 12_100)
+                        handler.postDelayed({ logIntroFrameProbe("replay-middle") }, 13_250)
+                        handler.postDelayed({ logIntroFrameProbe("replay") }, 14_100)
                     }
                     if (musicSource == "cloud") loadCloudLibrary()
                     else if (hasAudioPermission()) loadLibrary() else requestAudioPermission()
