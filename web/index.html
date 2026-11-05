@@ -609,15 +609,15 @@ html,body{width:100%;height:100%;min-width:0}
 
 
 
-/* WRLD 1.8.30 Magicule Studio: rainbow particle typography with four independent launch modes. */
+/* WRLD 1.8.32 Magicule Studio: 250 living magicules, outline glyphs and randomized choreography. */
 .wrld-intro{position:fixed;inset:0;z-index:1000;isolation:isolate;overflow:hidden;pointer-events:none!important;color:white;animation:magiculeOverlaySafetyHide 5.2s steps(1,end) forwards}
 /* Visual-only launch layer. It must never swallow clicks, even when cleanup fails. */
 .wrld-intro,.wrld-intro *{pointer-events:none!important}
 @keyframes magiculeOverlaySafetyHide{0%,99%{visibility:visible}100%{visibility:hidden}}
 .intro-veil{position:absolute;inset:0;opacity:1;will-change:opacity;background:#050609}
 .intro-veil:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 42% 36% at 50% 50%,rgba(124,155,215,.072),transparent 85%)}
-.intro-particles{position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none}
-.intro-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;white-space:nowrap}
+.intro-particles{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;pointer-events:none}
+.intro-logo{position:absolute;z-index:1;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;white-space:nowrap}
 .intro-lettering{display:flex;gap:.18em;font:550 clamp(64px,10vw,104px)/1.18 'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;letter-spacing:0;color:#f6f8ff;opacity:0;transform-origin:center;will-change:opacity,filter,transform}
 .intro-letter{display:inline-block;transform-origin:center center;will-change:transform}
 body.wrld-intro-running .brand h1{visibility:hidden!important}
@@ -767,7 +767,7 @@ body.wrld-intro-running .brand h1{visibility:hidden!important}
         <div class="settings-heading">Launch animation</div>
         <div class="settings-card intro-studio">
           <div class="intro-studio-title">Magicule Studio <span aria-hidden="true">✦</span></div>
-          <p class="intro-studio-help">Choose your startup animation. Tap any concept to save it as the default and preview it immediately. Every version uses 60 rainbow magicules and a WRLD-only logo.</p>
+          <p class="intro-studio-help">Choose your startup animation. Tap any concept to save it as the default and preview it immediately. Every version uses 250 living rainbow magicules and a WRLD-only logo. Every replay is a new arrangement.</p>
           <div class="intro-choices" role="group" aria-label="Choose a WRLD launch animation">
             <button class="intro-choice" type="button" data-intro-mode="singularity"><span class="intro-choice-name">Magicule Singularity <span aria-hidden="true">◉</span></span><span class="intro-choice-description">Magnetic suction and spiraling convergence</span><span class="intro-choice-action">Preview animation</span></button>
             <button class="intro-choice" type="button" data-intro-mode="flow"><span class="intro-choice-name">Prismatic Flow <span aria-hidden="true">〰</span></span><span class="intro-choice-description">Silky streams that weave into each letter</span><span class="intro-choice-action">Preview animation</span></button>
@@ -911,7 +911,7 @@ body.wrld-intro-running .brand h1{visibility:hidden!important}
 'use strict';
 const $ = id => document.getElementById(id);
 const audio = $('audio');
-/* Magicule Studio — four distinct particle choreography modes, one WRLD identity. */
+/* Magicule Studio — four distinct particle choreography modes, now with 250 moving magicules. */
 const wrldIntroMarkup=$('wrldIntro')?.outerHTML||'';
 function recoverWrldIntro(overlay){
  if(!overlay)return;
@@ -924,6 +924,8 @@ window.__wrldIntroStatus=()=>({
  blocking:!!$('wrldIntro')&&getComputedStyle($('wrldIntro')).pointerEvents!=='none',
  mode:introMode
 });
+const MAGICULE_COUNT=250;
+const MAGICULE_PER_LETTER=[63,63,62,62];
 const MAGICULE_MODES={
  singularity:{name:'Magicule Singularity',travel:1020,reveal:1350,transfer:2320,end:3530},
  flow:{name:'Prismatic Flow',travel:1270,reveal:1550,transfer:2360,end:3630},
@@ -962,51 +964,76 @@ function startWrldIntro(mode=introMode){
  const eased=(v)=>1-Math.pow(1-clamp(v),3);
  const lerp=(a,b,t)=>a+(b-a)*t;
  const palette=['#91E8FF','#B8A2FF','#F6A6DB','#A2F1CF','#FFE0A6','#C7E7FF','#D8B7FF','#8FE5EE'];
- let seed=0x57304D47;
+ // New cryptographic entropy when available; fallback remains random on older WebView2.
+ // The saved animation *style* is retained, but every launch and preview is unique.
+ let seed;
+ try{
+  const entropy=new Uint32Array(1);
+  crypto.getRandomValues(entropy);
+  seed=entropy[0]||((Math.random()*4294967296)>>>0);
+ }catch{seed=(Math.random()*4294967296)>>>0}
+ const launchSeed=seed;
+ window.__wrldIntroLastSeed=launchSeed;
  const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
- const magicules=Array.from({length:60},(_,i)=>({
-  i,letter:Math.floor(i/15),size:i%10===0?1.7+rand()*.4:.78+rand()*.62,
-  brightness:.58+rand()*.38,angle:i*2.3999632297+(rand()-.5)*.65,
-  radius:Math.sqrt((i+.65)/60),phase:rand()*6.28319,
-  delay:rand()*125,spin:(rand()-.5)*1.35,
+ const magicules=Array.from({length:MAGICULE_COUNT},(_,i)=>({
+  i,letter:i<126?Math.floor(i/63):2+Math.floor((i-126)/62),
+  size:i%17===0?1.55+rand()*.28:i%5===0?1.08+rand()*.30:.56+rand()*.42,
+  brightness:.53+rand()*.44,angle:rand()*Math.PI*2,
+  radius:Math.sqrt(rand()),phase:rand()*Math.PI*2,
+  delay:rand()*155,spin:(rand()-.5)*1.7,
+  wiggle:.6+rand()*1.15,frequency:.0021+rand()*.0018,
   color:palette[Math.floor(rand()*palette.length)]
  }));
  let width=0,height=0,dpr=1,targets=[],destinations=[],origins=[];
  let stopped=false,frame=0,fallback=0;
  // Independent watchdog: a failed animation frame cannot leave a blocking splash.
- const watchdog=setTimeout(()=>recoverWrldIntro(intro),5100);
+ const watchdog=setTimeout(finish,5100);
  const start=performance.now();
- // Sample the glyph pixels themselves: 15 magicules form each of W, R, L, D.
- // Both center and header are sampled, so transfer particles land on real letter strokes.
+ // Sample the *outline* of each glyph, rather than filling its center.
+ // Farthest-point sampling keeps ~62 positions distributed around each contour.
  function glyphPoints(el,count){
   const rect=el.getBoundingClientRect();
-  if(rect.width<1||rect.height<1)return Array.from({length:count},()=>({x:rect.left+rect.width/2,y:rect.top+rect.height/2}));
+  const fallback=()=>Array.from({length:count},()=>({x:rect.left+rect.width/2,y:rect.top+rect.height/2}));
+  if(rect.width<1||rect.height<1)return fallback();
   const font=getComputedStyle(el);
   const scratch=document.createElement('canvas');
   scratch.width=Math.max(2,Math.min(500,Math.ceil(rect.width*2)));
   scratch.height=Math.max(2,Math.min(340,Math.ceil(rect.height*2)));
   const c=scratch.getContext('2d',{willReadFrequently:true});
-  if(!c)return Array.from({length:count},()=>({x:rect.left+rect.width/2,y:rect.top+rect.height/2}));
+  if(!c)return fallback();
   c.setTransform(scratch.width/rect.width,0,0,scratch.height/rect.height,0,0);
   c.font=font.fontWeight+' '+font.fontSize+' '+font.fontFamily;
-  c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';
-  c.fillText(el.textContent.trim(),rect.width/2,rect.height*.53);
+  c.strokeStyle='#fff';c.lineWidth=2.2;c.lineJoin='round';
+  c.textAlign='center';c.textBaseline='middle';
+  c.strokeText(el.textContent.trim(),rect.width/2,rect.height*.53);
   const data=c.getImageData(0,0,scratch.width,scratch.height).data;
   const pixels=[];
-  for(let y=0;y<scratch.height;y+=2){
-   for(let x=0;x<scratch.width;x+=2){
-    if(data[(y*scratch.width+x)*4+3]>105)pixels.push({x,y});
+  for(let y=1;y<scratch.height-1;y+=2){
+   for(let x=1;x<scratch.width-1;x+=2){
+    if(data[(y*scratch.width+x)*4+3]>95)pixels.push({x,y});
    }
   }
-  if(!pixels.length)return Array.from({length:count},()=>({x:rect.left+rect.width/2,y:rect.top+rect.height/2}));
-  // Stratify along the glyph, rather than clustering random samples at its center.
-  pixels.sort((a,b)=>a.x-b.x || a.y-b.y);
-  return Array.from({length:count},(_,j)=>{
-   const position=Math.min(pixels.length-1,Math.floor(((j+.35+(j*7%13)/45)/count)*pixels.length));
-   const p=pixels[position];
-   return {x:rect.left+(p.x+.5)*rect.width/scratch.width,
-           y:rect.top+(p.y+.5)*rect.height/scratch.height};
-  });
+  if(!pixels.length)return fallback();
+  const picked=[];
+  const distances=new Float64Array(pixels.length);
+  distances.fill(Infinity);
+  let index=Math.floor(rand()*pixels.length);
+  for(let j=0;j<count;j++){
+   const point=pixels[index];
+   picked.push({x:rect.left+(point.x+.5)*rect.width/scratch.width,
+                y:rect.top+(point.y+.5)*rect.height/scratch.height});
+   let largest=-1,next=0;
+   for(let k=0;k<pixels.length;k++){
+    const q=pixels[k],dx=point.x-q.x,dy=point.y-q.y;
+    const d=dx*dx+dy*dy;
+    if(d<distances[k])distances[k]=d;
+    // Tiny per-launch jitter avoids a perfectly repeating dot lattice.
+    const score=distances[k]*(.96+.08*((k*17+j*13)%23)/22);
+    if(score>largest){largest=score;next=k}
+   }
+   index=next;
+  }
+  return picked;
  }
  function refreshGeometry(){
   width=Math.max(1,innerWidth);height=Math.max(1,innerHeight);
@@ -1016,29 +1043,42 @@ function startWrldIntro(mode=introMode){
   // Remove flutter transforms while reading natural letter geometry.
   const transforms=letters.map(el=>el.style.transform);
   letters.forEach(el=>el.style.transform='none');
-  const from=letters.flatMap(el=>glyphPoints(el,15));
+  const from=letters.flatMap((el,i)=>glyphPoints(el,MAGICULE_PER_LETTER[i]));
   letters.forEach((el,i)=>el.style.transform=transforms[i]);
   targets=from;
-  destinations=headerLetters.flatMap(el=>glyphPoints(el,15));
+  destinations=headerLetters.flatMap((el,i)=>glyphPoints(el,MAGICULE_PER_LETTER[i]));
   const rect=lettering.getBoundingClientRect();
   const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
   const spanX=Math.min(width*.38,310),spanY=Math.min(height*.29,185);
   origins=magicules.map(p=>{
-   const a=p.angle,r=.48+p.radius*.82;
+   const a=p.angle,r=.43+p.radius*.94;
    if(mode==='flow'){
     const side=p.i%2===0?-1:1;
-    return {x:cx+side*(75+spanX*(.57+p.radius*.43)),
-            y:cy+Math.sin(p.i*.79)*spanY*.78};
+    return {x:cx+side*(75+spanX*(.56+p.radius*.48)),
+            y:cy+Math.sin(p.i*.79+p.phase)*spanY*.78};
    }
    if(mode==='awakening'){
     const base=targets[p.i];
-    return {x:base.x+Math.cos(a)*(62+spanX*.34*r),
-            y:base.y+Math.sin(a)*(35+spanY*.50*r)};
+    return {x:base.x+Math.cos(a)*(62+spanX*.36*r),
+            y:base.y+Math.sin(a)*(35+spanY*.54*r)};
    }
    return {x:cx+Math.cos(a)*spanX*r,
            y:cy+Math.sin(a)*spanY*r*.95};
   });
  }
+ function livingOffset(p,time){
+  // Subpixel-to-~1.8px breathing and flutter: glyphs stay readable but never freeze.
+  const x=Math.sin(time*p.frequency+p.phase)*p.wiggle
+         +Math.sin(time*.0043+p.phase*1.49)*.16;
+  const y=Math.cos(time*(p.frequency*.83)+p.phase*1.17)*p.wiggle*.73
+         +Math.sin(time*.0037+p.phase*.82)*.22;
+  return {x,y};
+ }
+ function restingPosition(p,time){
+  const base=targets[p.i],offset=livingOffset(p,time);
+  return {x:base.x+offset.x,y:base.y+offset.y};
+ }
+
  function flight(p,time){
   const delay=(mode==='awakening'?p.letter*165:mode==='flow'?p.letter*44:mode==='ascension'?p.letter*55:0)+p.delay;
   const u=clamp((time-230-delay)/config.travel);
@@ -1062,10 +1102,12 @@ function startWrldIntro(mode=introMode){
    y-=43*curvature;
   }
   const float=(1-u)*Math.sin(time*.003+p.phase)*1.5;
-  return {x:x+float,y:y+float*.5,progress:u};
+  const settling=smooth((u-.70)/.30);
+  const wiggle=livingOffset(p,time);
+  return {x:x+float+wiggle.x*settling,y:y+float*.5+wiggle.y*settling,progress:u};
  }
  function transfer(p,time){
-  const from=targets[p.i],to=destinations[p.i];
+  const from=restingPosition(p,config.transfer),to=destinations[p.i];
   const stagger=mode==='awakening'?(3-p.letter)*85:
                 mode==='flow'?p.letter*55:mode==='ascension'?p.letter*32:0;
   const progress=clamp((time-config.transfer-p.delay*.35-stagger)/(mode==='awakening'?1000:940));
@@ -1091,21 +1133,21 @@ function startWrldIntro(mode=introMode){
  function dot(p,x,y,alpha,tail){
   if(alpha<=.007)return;
   const radius=p.size;
-  if(tail&&tail.x!==x){
-   const grad=ctx.createLinearGradient(x,y,tail.x,tail.y);
-   grad.addColorStop(0,p.color);
-   grad.addColorStop(1,'rgba(100,140,220,0)');
-   ctx.lineWidth=Math.max(.7,radius*.7);ctx.lineCap='round';
-   ctx.globalAlpha=alpha*.53;ctx.strokeStyle=grad;
+  // Flat colored tails avoid hundreds of gradient allocations per frame.
+  if(tail&&p.i%3===0){
+   ctx.lineWidth=Math.max(.6,radius*.68);ctx.lineCap='round';
+   ctx.globalAlpha=alpha*.38;ctx.strokeStyle=p.color;
    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tail.x,tail.y);ctx.stroke();
   }
-  ctx.globalAlpha=alpha*.16;ctx.fillStyle=p.color;
-  ctx.beginPath();ctx.arc(x,y,radius*3.25,0,Math.PI*2);ctx.fill();
+  if(p.i%3===0||p.i%17===0){
+   ctx.globalAlpha=alpha*.13;ctx.fillStyle=p.color;
+   ctx.beginPath();ctx.arc(x,y,radius*3.05,0,Math.PI*2);ctx.fill();
+  }
   ctx.globalAlpha=alpha;ctx.fillStyle=p.color;
   ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
-  if(p.i%10===0){
-   ctx.globalAlpha=alpha*.78;ctx.fillStyle='#fff';
-   ctx.beginPath();ctx.arc(x,y,Math.max(.42,radius*.3),0,Math.PI*2);ctx.fill();
+  if(p.i%17===0){
+   ctx.globalAlpha=alpha*.72;ctx.fillStyle='#fff';
+   ctx.beginPath();ctx.arc(x,y,Math.max(.3,radius*.26),0,Math.PI*2);ctx.fill();
   }
   ctx.globalAlpha=1;
  }
@@ -1117,18 +1159,21 @@ function startWrldIntro(mode=introMode){
    let loc,prev,alpha;
    if(inTransfer){
     loc=transfer(p,time);
-    prev=transfer(p,time-35);
-    alpha=p.brightness*Math.min(1,smooth((time-config.transfer)/130)+.1);
-    alpha*=1-smooth((time-(config.end-280))/230);
+    prev=transfer(p,time-28);
+    alpha=p.brightness*(.84+.16*Math.sin(time*p.frequency+p.phase));
+    alpha*=Math.min(1,smooth((time-config.transfer)/145)+.10);
+    alpha*=1-smooth((time-(config.end-265))/235);
    }else{
     loc=flight(p,time);
-    prev=flight(p,time-23);
-    alpha=p.brightness*smooth(time/275)*(1-smooth((time-1810)/330));
+    prev=flight(p,time-28);
+    const settled=smooth((time-(config.reveal-150))/460);
+    const twinkle=.91+.09*Math.sin(time*p.frequency*1.5+p.phase);
+    alpha=p.brightness*smooth(time/250)*(1-.30*settled)*twinkle;
    }
-   const vx=loc.x-prev.x,vy=loc.y-prev.y;
-   const distance=Math.hypot(vx,vy);
-   const factor=Math.min(1.5,Math.max(.4,11/Math.max(1,distance)));
-   const tail=distance>1.5?{x:loc.x-vx*factor,y:loc.y-vy*factor}:null;
+   const dx=loc.x-prev.x,dy=loc.y-prev.y;
+   const distance=Math.hypot(dx,dy);
+   const scale=Math.min(1.25,9/Math.max(1,distance));
+   const tail=distance>2?{x:loc.x-dx*scale,y:loc.y-dy*scale}:null;
    dot(p,loc.x,loc.y,alpha,tail);
   }
  }
