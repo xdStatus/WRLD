@@ -47,6 +47,10 @@ class MainActivity : Activity() {
     private var libraryLoading = false
     private var cloudRequestVersion = 0
     private var queueOpened = false
+    @Volatile private var verifiedUpdateUrl: String? = null
+
+    private fun appVersion(): String =
+        packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0"
 
     private val tick = object : Runnable {
         override fun run() {
@@ -90,6 +94,8 @@ class MainActivity : Activity() {
                     sendCollections()
                     sendHistory()
                     sendAudioSettings()
+                    sendScript("window.WRLD.receiveAppVersion(" +
+                        JSONObject.quote(appVersion()) + ");")
                     sendCloudConfig()
                     sendPlayerState()
                     if (musicSource == "cloud") loadCloudLibrary()
@@ -519,6 +525,51 @@ class MainActivity : Activity() {
                 if (songs.none { it.id == trackId }) return@runOnUiThread
                 collections.toggleTrack(id, trackId)
                 sendCollections()
+            }
+        }
+
+        @JavascriptInterface fun checkForUpdates() {
+            // The WebView itself is restricted to offline assets. Android performs
+            // this public HTTPS request outside WebView on the existing executor.
+            sendScript("window.WRLD.receiveUpdateStatus(" +
+                JSONObject().put("state", "checking")
+                    .put("message", "Checking GitHub for Android updates…").toString() + ");")
+            verifiedUpdateUrl = null
+            executor.execute {
+                val current = appVersion()
+                try {
+                    val result = AndroidUpdateChecker.check(current)
+                    verifiedUpdateUrl = result.downloadUrl
+                    val payload = JSONObject()
+                        .put("state", result.state)
+                        .put("current", result.current)
+                        .put("latest", result.latest)
+                        .put("message", result.message)
+                    sendScript("window.WRLD.receiveUpdateStatus(" + payload.toString() + ");")
+                } catch (error: Exception) {
+                    val payload = JSONObject()
+                        .put("state", "error")
+                        .put("message", "Update check unavailable. Check your connection and try again.")
+                    sendScript("window.WRLD.receiveUpdateStatus(" + payload.toString() + ");")
+                }
+            }
+        }
+
+        @JavascriptInterface fun downloadUpdate() {
+            runOnUiThread {
+                val url = verifiedUpdateUrl
+                if (url == null ||
+                    !url.startsWith("https://github.com/xdStatus/WRLD/releases/download/android-v")) {
+                    showError("Check for a WRLD Android update first.")
+                    return@runOnUiThread
+                }
+                try {
+                    // Android still requires confirmation to install a downloaded APK.
+                    // Replacing an installed app preserves data only if signatures match.
+                    startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+                } catch (_: Exception) {
+                    showError("No browser is available to download the update.")
+                }
             }
         }
 
