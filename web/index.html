@@ -609,8 +609,8 @@ html,body{width:100%;height:100%;min-width:0}
 
 
 
-/* WRLD 1.8.33 — monochrome Singularity: off-screen arrival and particle-fed lettering. */
-.wrld-intro{position:fixed;inset:0;z-index:1000;isolation:isolate;overflow:hidden;pointer-events:none!important;color:white;animation:magiculeOverlaySafetyHide 7.6s steps(1,end) forwards}
+/* WRLD 1.8.34 — 350 white Magicules; particle-only hold before the word resolves. */
+.wrld-intro{position:fixed;inset:0;z-index:1000;isolation:isolate;overflow:hidden;pointer-events:none!important;color:white;animation:magiculeOverlaySafetyHide 9s steps(1,end) forwards}
 /* Visual-only launch layer. It must never swallow clicks, even when cleanup fails. */
 .wrld-intro,.wrld-intro *{pointer-events:none!important}
 @keyframes magiculeOverlaySafetyHide{0%,99%{visibility:visible}100%{visibility:hidden}}
@@ -758,7 +758,7 @@ body.wrld-intro-running .brand h1{visibility:hidden!important}
         <div class="settings-heading">Launch animation</div>
         <div class="settings-card singularity-settings">
           <div class="singularity-settings-title">Magicule Singularity</div>
-          <p class="singularity-settings-description">250 white magicules gather from beyond the window and gradually illuminate WRLD. Each launch is a new constellation.</p>
+          <p class="singularity-settings-description">350 white magicules gather from beyond the window, hover in the shape of WRLD, then illuminate the real lettering. Each launch is a new constellation.</p>
           <button type="button" id="replayIntro" title="Replay Magicule Singularity">Preview Magicule Singularity <span aria-hidden="true">✦</span></button>
         </div>
         <div class="settings-heading">About</div>
@@ -898,9 +898,12 @@ const $ = id => document.getElementById(id);
 const audio = $('audio');
 /* WRLD Magicule Singularity: off-screen white energy physically charges each letter. */
 const wrldIntroMarkup=$('wrldIntro')?.outerHTML||'';
-const MAGICULE_COUNT=250;
-const MAGICULE_PER_LETTER=[63,63,62,62];
-const SINGULARITY={travel:1670,transfer:4680,end:6980};
+const MAGICULE_COUNT=350;
+const MAGICULE_PER_LETTER=[88,88,87,87];
+// The last incoming magicules finish settling before the 700ms particle-only hold.
+const SINGULARITY={
+ travel:1820,hover:3920,reveal:4620,transfer:5920,end:8350
+};
 function recoverWrldIntro(overlay){
  if(overlay?.isConnected)overlay.remove();
  document.body.classList.remove('wrld-intro-running');
@@ -934,7 +937,7 @@ function startWrldIntro(){
  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
  const shades=['#fff','#ededed','#cfcfcf','#b8b8b8','#f7f7f7','#dadada'];
  const magicules=Array.from({length:MAGICULE_COUNT},(_,i)=>({
-  i,letter:i<126?Math.floor(i/63):2+Math.floor((i-126)/62),
+  i,letter:i<88?0:i<176?1:i<263?2:3,
   size:i%19===0?1.65+random()*.28:i%7===0?1.05+random()*.23:.60+random()*.43,
   alpha:.62+random()*.36,phase:random()*Math.PI*2,spin:(random()-.5)*2.4,
   delay:random()*1370,extraTravel:(random()-.5)*220,
@@ -947,7 +950,7 @@ function startWrldIntro(){
  let stopped=false,frame=0,resizeTimer=0,fallback=0;
  const started=performance.now();
  // Outer overlay is ALWAYS click-through; timeout is only a safety fallback.
- const watchdog=setTimeout(finish,7500);
+ const watchdog=setTimeout(finish,8900);
  function makeSurface(elements,spacing){
   const rects=elements.map(el=>el.getBoundingClientRect());
   const left=Math.min(...rects.map(r=>r.left))-spacing;
@@ -1116,8 +1119,10 @@ function startWrldIntro(){
    ctx.globalAlpha=opacity*.10;ctx.fillStyle='#fff';
    ctx.beginPath();ctx.arc(point.x,point.y,p.size*3.2,0,Math.PI*2);ctx.fill();
   }
-  const pulse=.90+.10*Math.sin(time*p.rate*1.9+p.phase);
-  ctx.globalAlpha=opacity*pulse;ctx.fillStyle=p.color;
+  // Brighter only while all particles hold their living, letter-shaped silhouette.
+  const hoverBoost=time>=SINGULARITY.hover&&time<SINGULARITY.reveal?1.16:1;
+  const pulse=(.90+.10*Math.sin(time*p.rate*1.9+p.phase))*hoverBoost;
+  ctx.globalAlpha=Math.min(1,opacity*pulse);ctx.fillStyle=p.color;
   ctx.beginPath();ctx.arc(point.x,point.y,p.size,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;
  }
@@ -1142,16 +1147,20 @@ function startWrldIntro(){
    }
    drawMagicule(p,at,previous,time,opacity);
   }
-  const centerFade=1-smooth((time-SINGULARITY.transfer)/570);
-  const centerFinish=smooth((time-3620)/870);
-  paintSurface(center,centerFade,centerFinish,12);
+  // Until reveal, ONLY particles are visible: they settle and hover as WRLD
+  // for 700ms before the font grows out of their charged arrival positions.
+  const centerReveal=smooth((time-SINGULARITY.reveal)/340);
+  const centerFade=centerReveal*(1-smooth((time-SINGULARITY.transfer)/520));
+  const centerFinish=smooth((time-(SINGULARITY.reveal+120))/520);
+  const revealBloom=time>=SINGULARITY.reveal&&time<SINGULARITY.reveal+320?1.18:1;
+  paintSurface(center,centerFade,centerFinish,12*revealBloom);
   if(intoTransfer){
-   const headerFade=smooth((time-SINGULARITY.transfer)/190);
-   const headerFinish=smooth((time-6060)/690);
+   const headerFade=smooth((time-SINGULARITY.transfer)/220);
+   const headerFinish=smooth((time-6820)/620);
    paintSurface(dock,headerFade,headerFinish,5);
   }
-  if(time>5400){
-   veil.style.opacity=String(1-smooth((time-5400)/1400));
+  if(time>6100){
+   veil.style.opacity=String(1-smooth((time-6100)/1450));
   }
   if(time>=SINGULARITY.end){finish();return}
  }
