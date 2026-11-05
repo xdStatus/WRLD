@@ -108,4 +108,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.19: adds a glowing A-Z song navigation rail and simplified sorting by Title, Length, Date added, Artist or File type, with a one-click direction flip."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.20: precise A-Z navigation with a smooth warp-like scroll tween, cleaner fluid ColorOS-inspired startup, and removal of the Find missing cloud songs control."
