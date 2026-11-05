@@ -1018,6 +1018,7 @@ window.__wrldIntroStatus=()=>({
  hidden:document.hidden,finishReason:window.__wrldIntroFinishReason||'',
  elapsed:window.__wrldIntroStartedAt?Math.round(performance.now()-window.__wrldIntroStartedAt):0
 });
+let stopCurrentWrldIntro=null;
 function startWrldIntro(explicitPreview){
  const headerWord=document.querySelector('.brand-text strong');
  headerWord?.classList.remove('intro-final-reveal');
@@ -1065,6 +1066,7 @@ function startWrldIntro(explicitPreview){
  const started=performance.now();
  window.__wrldIntroStartedAt=started;
  // Outer overlay is ALWAYS click-through; timeout is only a safety fallback.
+ stopCurrentWrldIntro=()=>finish('replay-restarted');
  const watchdog=setTimeout(()=>finish('watchdog'),8700);
  function makeSurface(elements,spacing){
   const rects=elements.map(el=>el.getBoundingClientRect());
@@ -1237,6 +1239,7 @@ function startWrldIntro(explicitPreview){
  }
  function finish(reason){
   if(stopped)return;
+  stopCurrentWrldIntro=null;
   window.__wrldIntroFinishReason=reason||'watchdog';
   stopped=true;cancelAnimationFrame(frame);
   clearTimeout(fallback);clearTimeout(watchdog);clearTimeout(resizeTimer);
@@ -1284,7 +1287,11 @@ function startWrldIntro(explicitPreview){
  frame=requestAnimationFrame(animationFrame);
 }
 function replayWrldIntro(){
- if(el('wrldIntro')||!wrldIntroMarkup)return;
+ if(!wrldIntroMarkup)return;
+ // On slower Android phones, startup sampling can stretch past the replay
+ // tap. Replace the active intro instead of silently ignoring the request.
+ if(el('wrldIntro'))stopCurrentWrldIntro?.();
+ if(el('wrldIntro'))recoverWrldIntro(el('wrldIntro'));
  document.body.insertAdjacentHTML('afterbegin',wrldIntroMarkup);
  const overlay=el('wrldIntro');
  if(overlay)overlay.style.pointerEvents='none';
