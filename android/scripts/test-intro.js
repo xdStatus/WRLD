@@ -45,6 +45,7 @@ assert.match(js,/document\.addEventListener\('visibilitychange',onVisibility\)/)
 assert.match(js,/dpr=Math\.min\(1\.25/);
 assert.match(js,/lastPaint>=29/);
 assert.match(js,/const reduced=!explicitPreview&&/);
+assert.match(js,/if\(el\('wrldIntro'\)\)stopCurrentWrldIntro\?\.\(\)/,"Settings replay must replace an active launch splash");
 assert.match(js,/try\{startWrldIntro\(true\)\}/);
 assert.match(js,/try\{startWrldIntro\(false\)\}/);
 assert.match(js,/if\(b\.dataset\.replayIntro\)\{replayWrldIntro\(\);return\}/);
