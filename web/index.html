@@ -975,6 +975,7 @@ function startWrldIntro(mode=introMode){
  const launchSeed=seed;
  window.__wrldIntroLastSeed=launchSeed;
  const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ const glyphSamplePhases=Array.from({length:4},()=>rand());
  const magicules=Array.from({length:MAGICULE_COUNT},(_,i)=>({
   i,letter:i<126?Math.floor(i/63):2+Math.floor((i-126)/62),
   size:i%17===0?1.55+rand()*.28:i%5===0?1.08+rand()*.30:.56+rand()*.42,
@@ -985,13 +986,13 @@ function startWrldIntro(mode=introMode){
   color:palette[Math.floor(rand()*palette.length)]
  }));
  let width=0,height=0,dpr=1,targets=[],destinations=[],origins=[];
- let stopped=false,frame=0,fallback=0;
+ let stopped=false,frame=0,fallback=0,resizeTimer=0;
  // Independent watchdog: a failed animation frame cannot leave a blocking splash.
  const watchdog=setTimeout(finish,5100);
  const start=performance.now();
  // Sample the *outline* of each glyph, rather than filling its center.
  // Farthest-point sampling keeps ~62 positions distributed around each contour.
- function glyphPoints(el,count){
+ function glyphPoints(el,count,letterIndex){
   const rect=el.getBoundingClientRect();
   const fallback=()=>Array.from({length:count},()=>({x:rect.left+rect.width/2,y:rect.top+rect.height/2}));
   if(rect.width<1||rect.height<1)return fallback();
@@ -1017,7 +1018,7 @@ function startWrldIntro(mode=introMode){
   const picked=[];
   const distances=new Float64Array(pixels.length);
   distances.fill(Infinity);
-  let index=Math.floor(rand()*pixels.length);
+  let index=Math.floor(glyphSamplePhases[letterIndex]*pixels.length);
   for(let j=0;j<count;j++){
    const point=pixels[index];
    picked.push({x:rect.left+(point.x+.5)*rect.width/scratch.width,
@@ -1043,10 +1044,10 @@ function startWrldIntro(mode=introMode){
   // Remove flutter transforms while reading natural letter geometry.
   const transforms=letters.map(el=>el.style.transform);
   letters.forEach(el=>el.style.transform='none');
-  const from=letters.flatMap((el,i)=>glyphPoints(el,MAGICULE_PER_LETTER[i]));
+  const from=letters.flatMap((el,i)=>glyphPoints(el,MAGICULE_PER_LETTER[i],i));
   letters.forEach((el,i)=>el.style.transform=transforms[i]);
   targets=from;
-  destinations=headerLetters.flatMap((el,i)=>glyphPoints(el,MAGICULE_PER_LETTER[i]));
+  destinations=headerLetters.flatMap((el,i)=>glyphPoints(el,MAGICULE_PER_LETTER[i],i));
   const rect=lettering.getBoundingClientRect();
   const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
   const spanX=Math.min(width*.38,310),spanY=Math.min(height*.29,185);
@@ -1196,7 +1197,7 @@ function startWrldIntro(mode=introMode){
  }
  function finish(){
   if(stopped)return;
-  stopped=true;cancelAnimationFrame(frame);clearTimeout(fallback);clearTimeout(watchdog);
+  stopped=true;cancelAnimationFrame(frame);clearTimeout(fallback);clearTimeout(watchdog);clearTimeout(resizeTimer);
   // onResize is the handler registered below; an old typo here prevented intro cleanup.
   removeEventListener('resize',onResize);
   recoverWrldIntro(intro);
@@ -1214,7 +1215,11 @@ function startWrldIntro(mode=introMode){
  document.body.classList.add('wrld-intro-running');
  function onResize(){
   if(stopped)return;
-  try{refreshGeometry()}catch(error){console.warn('WRLD magicule resize recovered',error);finish()}
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{
+   if(stopped)return;
+   try{refreshGeometry()}catch(error){console.warn('WRLD magicule resize recovered',error);finish()}
+  },100);
  }
  function tick(now){
   if(stopped)return;
