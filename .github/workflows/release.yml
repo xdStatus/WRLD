@@ -72,6 +72,10 @@ jobs:
         run: |
           python -c "from pathlib import Path; s=Path('update_support.py').read_text(encoding='utf-8'); assert s.count('PYINSTALLER_RESET_ENVIRONMENT') >= 3, 'Updater probes and helper need fresh PyInstaller runtime'; assert 'PYINSTALLER_RESET_ENVIRONMENT = \'1\'' in s, 'Update helper must reset PyInstaller environment'"
 
+      - name: Validate WRLD intro animation and logo handoff
+        if: steps.release.outputs.publish == 'true'
+        run: python -m unittest discover -s tests -p test_intro_animation.py -v
+
       - name: Validate desktop WebView JavaScript
         if: steps.release.outputs.publish == 'true'
         shell: pwsh
@@ -120,4 +124,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.27: smoother ColorOS-inspired startup with four light orbs gliding into the center, a gentle glow, and a polished 999 WRLD reveal. Includes secure PyInstaller restart fixes."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.28: 30 tiny gravity-pulled light orbs merge into the actual SVG 999 logo; it transforms and docks into the real top-left WRLD badge while the player fades in. Includes reduced-motion and recovery safeguards."
