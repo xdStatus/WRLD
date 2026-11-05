@@ -19,8 +19,9 @@ assert.match(head,/\.header #updatesButton\{order:1\}/,"Updates button is after 
 assert.match(head,/\.brand-text strong\{opacity:0;filter:blur\(3px\)/,"Actual header letters must begin hidden");
 assert.match(head,/headerMagiculeShimmer/,"Header lettering needs soft shimmer");
 assert.match(head,/strong\.intro-final-reveal\{opacity:1/,"Only final docking reveals wordmark");
-assert.match(js,/const MAGICULE_COUNT=350;/);
-assert.match(js,/const MAGICULE_PER_LETTER=\[88,88,87,87\]/);
+assert.match(js,/const MAGICULE_COUNT=300;/);
+assert.match(js,/const grownSize=p\.size\*\(1\+\.10\*growth\)/,"Particles must grow gradually by 10% during flight");
+assert.match(js,/const MAGICULE_PER_LETTER=\[75,75,75,75\]/);
 assert.match(js,/travel:1820,hover:3920,transfer:5420,reveal:7080,end:8000/);
 assert.equal(5420-3920,1500,"Particles should have an extended living hover");
 assert.match(js,/mode:'centered-particle-to-left-reveal'/);
