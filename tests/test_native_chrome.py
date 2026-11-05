@@ -34,7 +34,7 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('Replay the Launch', MARKUP)
         self.assertIn("const wrldIntroMarkup=$('wrldIntro')?.outerHTML||'';", HTML)
         self.assertIn("document.body.insertAdjacentHTML('afterbegin',wrldIntroMarkup)", HTML)
-        self.assertIn("$('replayIntro').addEventListener('click',()=>replayWrldIntro(introMode))", HTML)
+        self.assertIn("$('replayIntro').addEventListener('click',replayWrldIntro)", HTML)
         self.assertIn("document.body.classList.remove('wrld-intro-running')", HTML)
 
 
