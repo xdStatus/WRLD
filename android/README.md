@@ -281,3 +281,27 @@ because of a signature mismatch, uninstalling the prior beta can remove
 its stored likes, playlists, history, settings, and private cloud access key.
 Avoid uninstalling unless prepared to reconfigure them. Device music files
 and R2 data are not affected.
+
+## Android v0.1.15 (pending signing) — desktop Magicule Singularity on mobile
+
+The Android WebView now includes the monochrome WRLD Magicule Singularity
+startup sequence from Windows 1.8.34. A fresh set of **350 white magicules**
+arrives from outside the display on curved paths, settles into the WRLD
+lettering, and hovers in the particle-only shape for **700 ms** before the
+font becomes visible through a soft illuminated mask. The letters then
+reconstruct the small WRLD wordmark in the Android header. The previous
+animated 999 header emblem is replaced with the WRLD wordmark for continuity.
+
+Mobile rendering uses a capped canvas pixel ratio and frame rate to reduce
+load. The intro is always touch-through, cleans itself up on app backgrounding,
+honors reduced-motion preferences and has a hard timeout. Android Settings
+includes **Preview Magicule Singularity** for replaying the randomized
+animation. The music library, playback service, WRLD Cloud connection, and
+desktop intro are otherwise untouched.
+
+This work is committed to the unreleased 0.1.15 source. The build pipeline
+intentionally refuses to publish an APK until the owner's permanent
+GitHub Actions signing secrets are configured and the signing certificate
+is verified. Do not install a new temporary debug-signed APK over your
+working 0.1.14 beta merely to preview the animation. See
+[SIGNING_SETUP.md](SIGNING_SETUP.md) for the one-time migration instructions.
