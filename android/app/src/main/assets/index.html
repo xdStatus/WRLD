@@ -17,7 +17,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .haze{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 70% 50% at 88% 6%,rgba(255,255,255,.04),transparent 78%),radial-gradient(ellipse 65% 50% at 10% 90%,rgba(255,255,255,.025),transparent)}
 .shell{position:relative;z-index:1;max-width:820px;margin:auto;padding:19px 19px calc(194px + env(safe-area-inset-bottom));min-height:100vh}
 .header{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:15px}
-.brand{display:flex;align-items:center;gap:11px;min-width:0;order:2;margin-left:auto}.header #updatesButton{order:1}
+.brand{display:flex;align-items:center;gap:11px;min-width:0;order:0;margin-right:auto}.header #updatesButton{order:1}
 .brand-logo{padding:0;display:flex;gap:0;align-items:center;justify-content:center;height:46px;width:91px;flex:none;white-space:nowrap;color:white;transition:filter .5s var(--ease)}
 
 .digit{display:inline-block;font-size:39px;font-style:italic;line-height:1;letter-spacing:-.14em;font-weight:730;transform-origin:50% 58%;animation:ninewave 2.7s cubic-bezier(.44,0,.21,1) infinite}
@@ -38,8 +38,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .intro-letter{display:inline-block}
 .brand-magicule{width:8px;height:8px;flex:none;border-radius:50%;background:#fff;box-shadow:0 0 6px #ccc,0 0 13px #777}
 .brand-text strong{display:flex;gap:.13em;letter-spacing:0;font-weight:670}
-.brand-text .header-letter{display:inline-block}.brand-text strong{visibility:hidden}.header-magicule-canvas{position:absolute;top:0;left:0;pointer-events:none;display:block;z-index:2}.brand-text small{text-align:right}
-body.wrld-intro-running .header-magicule-canvas{visibility:hidden}
+.brand-text .header-letter{display:inline-block}
+.brand-text strong{opacity:0;filter:blur(3px);transition:opacity .62s ease-out,filter .72s ease-out;text-shadow:0 0 0 transparent}
+.brand-text strong.intro-final-reveal{opacity:1;filter:blur(0);animation:headerMagiculeShimmer 1.35s ease-out 1 both}
+@keyframes headerMagiculeShimmer{0%{text-shadow:0 0 20px rgba(255,255,255,.90),0 0 8px rgba(255,255,255,.65)}45%{text-shadow:0 0 13px rgba(255,255,255,.62)}100%{text-shadow:0 0 3px rgba(255,255,255,.12)}}
+.header-magicule-canvas{display:none}
+body.wrld-intro-running{overscroll-behavior:none}
+body.wrld-intro-running .shell{touch-action:none}
+body.wrld-intro-running .brand-text strong:not(.intro-final-reveal){opacity:0}
 @media(max-width:350px){.intro-lettering{font-size:44px;gap:.13em}}
 
 .outline{border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.025);font-size:11px;letter-spacing:.02em;white-space:nowrap}
@@ -986,7 +992,7 @@ function startSky(){
  resize();active=true;requestAnimationFrame(frame);
 }
 startSky();
-/* Living WRLD particle silhouette; no solid letters, top-right particle dock. */
+/* Centered WRLD Magicules: living particle silhouette, top-left dock, final luminous wordmark. */
 const wrldIntroMarkup=el('wrldIntro')?.outerHTML||'';
 window.__wrldIntroFrameCount=0;
 window.__wrldIntroError='';
@@ -996,48 +1002,25 @@ const MAGICULE_COUNT=350;
 const MAGICULE_PER_LETTER=[88,88,87,87];
 // The last incoming magicules finish settling before the 700ms particle-only hold.
 const SINGULARITY={
- travel:1820,hover:3920,transfer:5420,end:8000
+ travel:1820,hover:3920,transfer:5420,reveal:7080,end:8000
 };
 function recoverWrldIntro(overlay){
  if(overlay?.isConnected)overlay.remove();
  document.body.classList.remove('wrld-intro-running');
+ document.querySelector('.brand-text strong')?.classList.add('intro-final-reveal');
 }
 window.__wrldIntroStatus=()=>({
  active:!!el('wrldIntro'),
  blocking:!!el('wrldIntro')&&getComputedStyle(el('wrldIntro')).pointerEvents!=='none',
- mode:'particle-silhouette',particles:MAGICULE_COUNT,seed:window.__wrldIntroLastSeed,
+ mode:'centered-particle-to-left-reveal',particles:MAGICULE_COUNT,seed:window.__wrldIntroLastSeed,
  frames:window.__wrldIntroFrameCount||0,error:window.__wrldIntroError||'',
  reducedMotion:!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
  hidden:document.hidden,finishReason:window.__wrldIntroFinishReason||'',
  elapsed:window.__wrldIntroStartedAt?Math.round(performance.now()-window.__wrldIntroStartedAt):0
 });
-let headerMagiculeTimer=0;
-function startHeaderMagicules(points,magicules){
- const canvas=el('headerMagicules'),word=document.querySelector('.brand-text strong');
- if(!canvas||!word||!points?.length)return;
- clearInterval(headerMagiculeTimer);
- const rect=word.getBoundingClientRect(),ctx=canvas.getContext('2d');
- if(!ctx)return;
- const dpr=Math.min(1.5,Math.max(1,devicePixelRatio||1));
- canvas.style.width=rect.width+'px';canvas.style.height=rect.height+'px';
- canvas.width=Math.ceil(rect.width*dpr);canvas.height=Math.ceil(rect.height*dpr);
- ctx.setTransform(dpr,0,0,dpr,0,0);
- const dots=points.map((p,i)=>({x:p.x-rect.left,y:p.y-rect.top,size:Math.min(1.05,magicules[i].size*.66),phase:magicules[i].phase}));
- function draw(){
-  if(document.hidden)return;
-  const t=performance.now();ctx.clearRect(0,0,rect.width,rect.height);
-  for(const p of dots){
-   ctx.globalAlpha=.73+.22*Math.sin(t*.002+p.phase);ctx.fillStyle='#fff';
-   ctx.beginPath();ctx.arc(p.x+Math.sin(t*.0018+p.phase)*.25,p.y+Math.cos(t*.0017+p.phase)*.25,p.size,0,Math.PI*2);ctx.fill();
-  }
-  ctx.globalAlpha=1;
- }
- draw();headerMagiculeTimer=setInterval(draw,95);
-}
 function startWrldIntro(explicitPreview){
- clearInterval(headerMagiculeTimer);
- const headerCanvas=el('headerMagicules');
- if(headerCanvas){const h=headerCanvas.getContext('2d');if(h)h.clearRect(0,0,headerCanvas.width,headerCanvas.height)}
+ const headerWord=document.querySelector('.brand-text strong');
+ headerWord?.classList.remove('intro-final-reveal');
  window.__wrldIntroFrameCount=0;
  window.__wrldIntroError='';
  window.__wrldIntroFinishReason='';
@@ -1152,6 +1135,17 @@ function startWrldIntro(explicitPreview){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   center=makeSurface(letters,16);
   dock=makeSurface(headerLetters,7);
+  // Anchor the actual particle cloud to the physical viewport center.
+  // The hidden letters only determine its shape, not its screen position.
+  const bounds={
+   minX:Math.min(...center.points.map(p=>p.x)),
+   maxX:Math.max(...center.points.map(p=>p.x)),
+   minY:Math.min(...center.points.map(p=>p.y)),
+   maxY:Math.max(...center.points.map(p=>p.y))
+  };
+  const offsetX=width/2-(bounds.minX+bounds.maxX)/2;
+  const offsetY=height/2-(bounds.minY+bounds.maxY)/2;
+  center.points=center.points.map(p=>({x:p.x+offsetX,y:p.y+offsetY}));
   origins=magicules.map(p=>{
    const margin=p.edgeDistance,v=p.edgeAt;
    if(p.edge===0)return {x:-margin,y:(v*1.3-.15)*height};
@@ -1183,8 +1177,10 @@ function startWrldIntro(explicitPreview){
   const from=origins[p.i],to=center.points[p.i],c=controls[p.i];
   const drift=living(p,time),rest=smooth((u-.77)/.23);
   const breathe=smooth((time-SINGULARITY.hover)/560);
-  return {x:cubic(from.x,c.c1.x,c.c2.x,to.x,q)+drift.x*rest+Math.cos(time*.00125)*1.1*breathe,
-          y:cubic(from.y,c.c1.y,c.c2.y,to.y,q)+drift.y*rest+Math.sin(time*.00175)*3.2*breathe,
+  // Movement is individual to each dot, so the overall WRLD silhouette
+  // remains centered rather than wandering around the screen.
+  return {x:cubic(from.x,c.c1.x,c.c2.x,to.x,q)+drift.x*rest*breathe,
+          y:cubic(from.y,c.c1.y,c.c2.y,to.y,q)+drift.y*rest*breathe,
           progress:u};
  }
  function transfer(p,time){
@@ -1230,7 +1226,11 @@ function startWrldIntro(explicitPreview){
    const opacity=moving?p.alpha*(1-smooth((time-(SINGULARITY.end-260))/245)):p.alpha*(.85+.15*smooth(time/800));
    drawMagicule(p,at,prev,time,opacity);
   }
-  // Font glyphs are position samplers ONLY; never painted. Dots stay gently alive.
+  // The center stays entirely particle-only. Actual letters appear ONLY
+  // when the cloud has condensed into the small top-left header.
+  if(time>=SINGULARITY.reveal&&!headerWord.classList.contains('intro-final-reveal')){
+   headerWord.classList.add('intro-final-reveal');
+  }
   if(time>5750)veil.style.opacity=String(1-smooth((time-5750)/1530));
   window.__wrldIntroFrameCount++;
   if(time>=SINGULARITY.end){finish('completed');return}
@@ -1243,11 +1243,13 @@ function startWrldIntro(explicitPreview){
   removeEventListener('resize',onResize);
   document.removeEventListener('visibilitychange',onVisibility);
   recoverWrldIntro(intro);
-  if(dock?.points)startHeaderMagicules(dock.points,magicules);
  }
  function onVisibility(){if(document.hidden)finish('page-hidden')}
  function onResize(){
   if(stopped)return;
+  // Ignore small mobile viewport resizes (browser bars / touch scrolling).
+  // This prevents the floating silhouette from jumping to another corner.
+  if(Math.abs(innerWidth-width)<12&&Math.abs(innerHeight-height)<90)return;
   clearTimeout(resizeTimer);
   resizeTimer=setTimeout(()=>{
    if(stopped)return;
