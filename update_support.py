@@ -152,6 +152,7 @@ def _probe_executable(exe: Path):
     try:
         test = subprocess.run(
             [str(exe), '--startup-probe'], timeout=30, check=False,
+            env={**os.environ, 'PYINSTALLER_RESET_ENVIRONMENT': '1'},
             creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0),
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -177,6 +178,8 @@ param(
  [Parameter(Mandatory=$true)][string]$ExpectedSha256
 )
 $ErrorActionPreference = 'Stop'
+# Prevent a new PyInstaller onefile process from inheriting a deleted _MEI runtime.
+$env:PYINSTALLER_RESET_ENVIRONMENT = '1'
 function Test-WRLDExe([string]$Executable) {
   $process = $null
   try {
@@ -280,5 +283,7 @@ def download_and_stage_update():
         params = ['powershell.exe','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass',
                   '-File',str(helper),'-WaitProcessId',str(os.getpid()),
                   '-TargetExe',str(target),'-NewExe',str(exe),'-ExpectedSha256',expected]
-        subprocess.Popen(params, cwd=str(root), creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+        subprocess.Popen(params, cwd=str(root),
+                         env={**os.environ, 'PYINSTALLER_RESET_ENVIRONMENT': '1'},
+                         creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
         return {'ready': True, 'version': status['latest'], 'message': 'Update verified. WRLD will close and restart.'}
