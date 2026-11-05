@@ -1,0 +1,11 @@
+# Build outputs, local developer settings, and Android private keys
+android/.gradle/
+android/build/
+android/app/build/
+android/dist/
+.gradle/
+**/*.p12
+**/*.keystore
+**/*.jks
+**/*GitHub-secrets-PRIVATE*.txt
+**/*signing-password*.txt
