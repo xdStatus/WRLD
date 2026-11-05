@@ -896,364 +896,343 @@ body.wrld-intro-running .brand h1{visibility:hidden!important}
 'use strict';
 const $ = id => document.getElementById(id);
 const audio = $('audio');
-/* Magicule Studio — four distinct particle choreography modes, now with 250 moving magicules. */
+/* WRLD Magicule Singularity: off-screen white energy physically charges each letter. */
 const wrldIntroMarkup=$('wrldIntro')?.outerHTML||'';
+const MAGICULE_COUNT=250;
+const MAGICULE_PER_LETTER=[63,63,62,62];
+const SINGULARITY={travel:1670,transfer:4680,end:6980};
 function recoverWrldIntro(overlay){
- if(!overlay)return;
- overlay.style.pointerEvents='none';
- if(overlay.isConnected)overlay.remove();
+ if(overlay?.isConnected)overlay.remove();
  document.body.classList.remove('wrld-intro-running');
 }
 window.__wrldIntroStatus=()=>({
  active:!!$('wrldIntro'),
  blocking:!!$('wrldIntro')&&getComputedStyle($('wrldIntro')).pointerEvents!=='none',
- mode:introMode
+ mode:'singularity',particles:MAGICULE_COUNT,seed:window.__wrldIntroLastSeed
 });
-const MAGICULE_COUNT=250;
-const MAGICULE_PER_LETTER=[63,63,62,62];
-const MAGICULE_MODES={
- singularity:{name:'Magicule Singularity',travel:1020,reveal:1350,transfer:2320,end:3530},
- flow:{name:'Prismatic Flow',travel:1270,reveal:1550,transfer:2360,end:3630},
- awakening:{name:'Magicule Awakening',travel:850,reveal:1380,transfer:2380,end:3750},
- ascension:{name:'Magicule Ascension',travel:1100,reveal:1470,transfer:2340,end:3600}
-};
-let introMode='ascension';
-try{
- const saved=localStorage.getItem('wrld-magicule-mode-v1');
- if(Object.prototype.hasOwnProperty.call(MAGICULE_MODES,saved))introMode=saved;
-}catch{}
-function renderIntroChoices(){
- document.querySelectorAll('[data-intro-mode]').forEach(button=>{
-  const selected=button.dataset.introMode===introMode;
-  button.classList.toggle('is-selected',selected);
-  button.setAttribute('aria-pressed',String(selected));
-  const action=button.querySelector('.intro-choice-action');
-  if(action)action.textContent=selected?'Selected · Preview again':'Select & preview';
- });
- const status=$('introChoiceStatus');
- if(status)status.textContent='Startup animation: '+MAGICULE_MODES[introMode].name+'.';
-}
-function startWrldIntro(mode=introMode){
+function startWrldIntro(){
  const intro=$('wrldIntro'),veil=$('introVeil'),canvas=$('introParticleCanvas');
- const lettering=$('introLettering'),letters=Array.from(document.querySelectorAll('#introLettering .intro-letter'));
+ const lettering=$('introLettering');
+ const letters=Array.from(document.querySelectorAll('#introLettering .intro-letter'));
  const headerLetters=Array.from(document.querySelectorAll('.brand h1 .header-letter'));
  if(!intro||!veil||!canvas||!lettering||letters.length!==4||headerLetters.length!==4){
-  intro?.remove();return;
+  recoverWrldIntro(intro);return;
  }
- const config=MAGICULE_MODES[mode]||MAGICULE_MODES.ascension;
  const reduced=!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  const ctx=canvas.getContext('2d',{alpha:true});
- if(!ctx){intro.remove();return}
- const clamp=(v)=>Math.max(0,Math.min(1,v));
- const smooth=(v)=>{const t=clamp(v);return t*t*(3-2*t)};
- const eased=(v)=>1-Math.pow(1-clamp(v),3);
+ if(!ctx){recoverWrldIntro(intro);return}
+ const clamp=v=>Math.max(0,Math.min(1,v));
+ const smooth=v=>{const t=clamp(v);return t*t*(3-2*t)};
  const lerp=(a,b,t)=>a+(b-a)*t;
- const palette=['#91E8FF','#B8A2FF','#F6A6DB','#A2F1CF','#FFE0A6','#C7E7FF','#D8B7FF','#8FE5EE'];
- // New cryptographic entropy when available; fallback remains random on older WebView2.
- // The saved animation *style* is retained, but every launch and preview is unique.
+ const cubic=(a,b,c,d,t)=>{const s=1-t;return s*s*s*a+3*s*s*t*b+3*s*t*t*c+t*t*t*d};
  let seed;
  try{
-  const entropy=new Uint32Array(1);
-  crypto.getRandomValues(entropy);
+  const entropy=new Uint32Array(1);crypto.getRandomValues(entropy);
   seed=entropy[0]||((Math.random()*4294967296)>>>0);
  }catch{seed=(Math.random()*4294967296)>>>0}
- const launchSeed=seed;
- window.__wrldIntroLastSeed=launchSeed;
- const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
- const glyphSamplePhases=Array.from({length:4},()=>rand());
+ window.__wrldIntroLastSeed=seed;
+ const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ const shades=['#fff','#ededed','#cfcfcf','#b8b8b8','#f7f7f7','#dadada'];
  const magicules=Array.from({length:MAGICULE_COUNT},(_,i)=>({
   i,letter:i<126?Math.floor(i/63):2+Math.floor((i-126)/62),
-  size:i%17===0?1.55+rand()*.28:i%5===0?1.08+rand()*.30:.56+rand()*.42,
-  brightness:.53+rand()*.44,angle:rand()*Math.PI*2,
-  radius:Math.sqrt(rand()),phase:rand()*Math.PI*2,
-  delay:rand()*155,spin:(rand()-.5)*1.7,
-  wiggle:.6+rand()*1.15,frequency:.0021+rand()*.0018,
-  color:palette[Math.floor(rand()*palette.length)]
+  size:i%19===0?1.65+random()*.28:i%7===0?1.05+random()*.23:.60+random()*.43,
+  alpha:.62+random()*.36,phase:random()*Math.PI*2,spin:(random()-.5)*2.4,
+  delay:random()*1370,extraTravel:(random()-.5)*220,
+  wiggle:.47+random()*1.18,rate:.0022+random()*.0017,
+  color:shades[Math.floor(random()*shades.length)],
+  edge:Math.floor(random()*4),edgeAt:random(),edgeDistance:60+random()*140,
+  centerCharged:false,dockCharged:false
  }));
- let width=0,height=0,dpr=1,targets=[],destinations=[],origins=[];
- let stopped=false,frame=0,fallback=0,resizeTimer=0;
- // Independent watchdog: a failed animation frame cannot leave a blocking splash.
- const watchdog=setTimeout(finish,5100);
- const start=performance.now();
- // Sample the *outline* of each glyph, rather than filling its center.
- // Farthest-point sampling keeps ~62 positions distributed around each contour.
- function glyphPoints(el,count,letterIndex){
-  const rect=el.getBoundingClientRect();
-  const fallback=()=>Array.from({length:count},()=>({x:rect.left+rect.width/2,y:rect.top+rect.height/2}));
-  if(rect.width<1||rect.height<1)return fallback();
-  const font=getComputedStyle(el);
-  const scratch=document.createElement('canvas');
-  scratch.width=Math.max(2,Math.min(500,Math.ceil(rect.width*2)));
-  scratch.height=Math.max(2,Math.min(340,Math.ceil(rect.height*2)));
-  const c=scratch.getContext('2d',{willReadFrequently:true});
-  if(!c)return fallback();
-  c.setTransform(scratch.width/rect.width,0,0,scratch.height/rect.height,0,0);
-  c.font=font.fontWeight+' '+font.fontSize+' '+font.fontFamily;
-  c.strokeStyle='#fff';c.lineWidth=2.2;c.lineJoin='round';
-  c.textAlign='center';c.textBaseline='middle';
-  c.strokeText(el.textContent.trim(),rect.width/2,rect.height*.53);
-  const data=c.getImageData(0,0,scratch.width,scratch.height).data;
-  const pixels=[];
-  for(let y=1;y<scratch.height-1;y+=2){
-   for(let x=1;x<scratch.width-1;x+=2){
-    if(data[(y*scratch.width+x)*4+3]>95)pixels.push({x,y});
+ let width=1,height=1,dpr=1,center=null,dock=null,origins=[],controls=[];
+ let stopped=false,frame=0,resizeTimer=0,fallback=0;
+ const started=performance.now();
+ // Outer overlay is ALWAYS click-through; timeout is only a safety fallback.
+ const watchdog=setTimeout(finish,7500);
+ function makeSurface(elements,spacing){
+  const rects=elements.map(el=>el.getBoundingClientRect());
+  const left=Math.min(...rects.map(r=>r.left))-spacing;
+  const top=Math.min(...rects.map(r=>r.top))-spacing;
+  const right=Math.max(...rects.map(r=>r.right))+spacing;
+  const bottom=Math.max(...rects.map(r=>r.bottom))+spacing;
+  const w=right-left,h=bottom-top;
+  const scale=Math.min(2.5,Math.max(1.5,devicePixelRatio||1));
+  const create=()=>{
+   const c=document.createElement('canvas');
+   c.width=Math.ceil(w*scale);c.height=Math.ceil(h*scale);
+   return c;
+  };
+  const glyph=create(),charges=create(),composite=create();
+  const g=glyph.getContext('2d',{willReadFrequently:true});
+  const m=charges.getContext('2d');
+  const c=composite.getContext('2d');
+  if(!g||!m||!c)throw Error('Magicule glyph canvas unavailable');
+  g.setTransform(scale,0,0,scale,0,0);
+  m.setTransform(scale,0,0,scale,0,0);
+  const letterPixels=[];
+  elements.forEach((el,i)=>{
+   const r=rects[i],style=getComputedStyle(el);
+   g.font=style.fontWeight+' '+style.fontSize+' '+style.fontFamily;
+   g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff';
+   g.fillText(el.textContent.trim(),r.left-left+r.width/2,r.top-top+r.height*.53);
+   letterPixels.push({x0:Math.max(0,Math.floor((r.left-left)*scale)),
+                      y0:Math.max(0,Math.floor((r.top-top)*scale)),
+                      x1:Math.min(glyph.width,Math.ceil((r.right-left)*scale)),
+                      y1:Math.min(glyph.height,Math.ceil((r.bottom-top)*scale))});
+  });
+  const image=g.getImageData(0,0,glyph.width,glyph.height).data;
+  const points=[];
+  letterPixels.forEach((bounds,i)=>{
+   const candidates=[];
+   const step=spacing>10?2:1;
+   for(let y=bounds.y0;y<bounds.y1;y+=step){
+    for(let x=bounds.x0;x<bounds.x1;x+=step){
+     if(image[(y*glyph.width+x)*4+3]>125)candidates.push({x,y});
+    }
    }
-  }
-  if(!pixels.length)return fallback();
-  const picked=[];
-  const distances=new Float64Array(pixels.length);
-  distances.fill(Infinity);
-  let index=Math.floor(glyphSamplePhases[letterIndex]*pixels.length);
-  for(let j=0;j<count;j++){
-   const point=pixels[index];
-   picked.push({x:rect.left+(point.x+.5)*rect.width/scratch.width,
-                y:rect.top+(point.y+.5)*rect.height/scratch.height});
-   let largest=-1,next=0;
-   for(let k=0;k<pixels.length;k++){
-    const q=pixels[k],dx=point.x-q.x,dy=point.y-q.y;
-    const d=dx*dx+dy*dy;
-    if(d<distances[k])distances[k]=d;
-    // Tiny per-launch jitter avoids a perfectly repeating dot lattice.
-    const score=distances[k]*(.96+.08*((k*17+j*13)%23)/22);
-    if(score>largest){largest=score;next=k}
+   const n=MAGICULE_PER_LETTER[i];
+   if(!candidates.length){
+    const r=rects[i];for(let j=0;j<n;j++)points.push({x:r.left+r.width/2,y:r.top+r.height/2});
+    return;
    }
-   index=next;
-  }
-  return picked;
+   // Evenly spread the collisions across the real filled letter, not a dummy outline.
+   // Farthest-point sampling avoids clusters and makes the word emerge everywhere.
+   let index=Math.floor(random()*candidates.length);
+   const distances=new Float32Array(candidates.length);distances.fill(Infinity);
+   for(let j=0;j<n;j++){
+    const sample=candidates[index];
+    points.push({x:left+(sample.x+.5)/scale,y:top+(sample.y+.5)/scale});
+    let next=0,best=-1;
+    for(let k=0;k<candidates.length;k++){
+     const q=candidates[k],dx=q.x-sample.x,dy=q.y-sample.y;
+     const d=dx*dx+dy*dy;if(d<distances[k])distances[k]=d;
+     const score=distances[k];
+     if(score>best){best=score;next=k}
+    }
+    index=next;
+   }
+  });
+  return {left,top,w,h,glyph,charges,composite,maskCtx:m,compositeCtx:c,points};
  }
- function refreshGeometry(){
+ function stamp(surface,point,radius){
+  const x=point.x-surface.left,y=point.y-surface.top;
+  const brush=surface.maskCtx.createRadialGradient(x,y,1,x,y,radius);
+  brush.addColorStop(0,'rgba(255,255,255,1)');
+  brush.addColorStop(.60,'rgba(255,255,255,.98)');
+  brush.addColorStop(1,'rgba(255,255,255,0)');
+  const c=surface.maskCtx;
+  c.fillStyle=brush;c.beginPath();c.arc(x,y,radius,0,Math.PI*2);c.fill();
+ }
+ function geometry(){
   width=Math.max(1,innerWidth);height=Math.max(1,innerHeight);
   dpr=Math.min(1.5,Math.max(1,devicePixelRatio||1));
   canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  // Remove flutter transforms while reading natural letter geometry.
-  const transforms=letters.map(el=>el.style.transform);
-  letters.forEach(el=>el.style.transform='none');
-  const from=letters.flatMap((el,i)=>glyphPoints(el,MAGICULE_PER_LETTER[i],i));
-  letters.forEach((el,i)=>el.style.transform=transforms[i]);
-  targets=from;
-  destinations=headerLetters.flatMap((el,i)=>glyphPoints(el,MAGICULE_PER_LETTER[i],i));
-  const rect=lettering.getBoundingClientRect();
-  const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
-  const spanX=Math.min(width*.38,310),spanY=Math.min(height*.29,185);
+  center=makeSurface(letters,16);
+  dock=makeSurface(headerLetters,7);
+  const ccx=center.left+center.w/2,ccy=center.top+center.h/2;
   origins=magicules.map(p=>{
-   const a=p.angle,r=.43+p.radius*.94;
-   if(mode==='flow'){
-    const side=p.i%2===0?-1:1;
-    return {x:cx+side*(75+spanX*(.56+p.radius*.48)),
-            y:cy+Math.sin(p.i*.79+p.phase)*spanY*.78};
-   }
-   if(mode==='awakening'){
-    const base=targets[p.i];
-    return {x:base.x+Math.cos(a)*(62+spanX*.36*r),
-            y:base.y+Math.sin(a)*(35+spanY*.54*r)};
-   }
-   return {x:cx+Math.cos(a)*spanX*r,
-           y:cy+Math.sin(a)*spanY*r*.95};
+   const margin=p.edgeDistance,v=p.edgeAt;
+   if(p.edge===0)return {x:-margin,y:(v*1.3-.15)*height};
+   if(p.edge===1)return {x:width+margin,y:(v*1.3-.15)*height};
+   if(p.edge===2)return {x:(v*1.3-.15)*width,y:-margin};
+   return {x:(v*1.3-.15)*width,y:height+margin};
   });
- }
- function livingOffset(p,time){
-  // Subpixel-to-~1.8px breathing and flutter: glyphs stay readable but never freeze.
-  const x=Math.sin(time*p.frequency+p.phase)*p.wiggle
-         +Math.sin(time*.0043+p.phase*1.49)*.16;
-  const y=Math.cos(time*(p.frequency*.83)+p.phase*1.17)*p.wiggle*.73
-         +Math.sin(time*.0037+p.phase*.82)*.22;
-  return {x,y};
- }
- function restingPosition(p,time){
-  const base=targets[p.i],offset=livingOffset(p,time);
-  return {x:base.x+offset.x,y:base.y+offset.y};
- }
-
- function flight(p,time){
-  const delay=(mode==='awakening'?p.letter*165:mode==='flow'?p.letter*44:mode==='ascension'?p.letter*55:0)+p.delay;
-  const u=clamp((time-230-delay)/config.travel);
-  const progress=mode==='singularity'?Math.pow(u,3.3):
-                 mode==='ascension'?Math.pow(u,2.45):smooth(u);
-  const from=origins[p.i],to=targets[p.i];
-  let x=lerp(from.x,to.x,progress),y=lerp(from.y,to.y,progress);
-  const curvature=Math.sin(Math.PI*progress)*(1-progress);
-  if(mode==='singularity'){
-   const a=p.angle+p.spin*progress*2.4;
-   x+=Math.cos(a)*46*curvature;
-   y+=Math.sin(a)*38*curvature;
-  }else if(mode==='flow'){
-   x+=Math.sin(progress*Math.PI*2+p.phase)*27*curvature;
-   y+=Math.cos(progress*Math.PI*2+p.phase)*44*curvature;
-  }else if(mode==='awakening'){
-   y-=26*curvature;
-   x+=Math.sin(progress*Math.PI+p.phase)*17*curvature;
-  }else{
-   x+=Math.sin(progress*Math.PI*2+p.phase)*24*curvature;
-   y-=43*curvature;
+  controls=magicules.map(p=>{
+   const from=origins[p.i],to=center.points[p.i];
+   const dx=to.x-from.x,dy=to.y-from.y;
+   const distance=Math.hypot(dx,dy);
+   const bend=p.spin*(Math.min(145,distance*.21));
+   const normalX=-dy/Math.max(1,distance),normalY=dx/Math.max(1,distance);
+   return {c1:{x:from.x+dx*.24+normalX*bend,y:from.y+dy*.24+normalY*bend},
+           c2:{x:to.x+normalX*bend*.52-dx*.12,y:to.y+normalY*bend*.52-dy*.12}};
+  });
+  // Reconstruct a partially formed word if the window resizes mid-flight.
+  for(const p of magicules){
+   if(p.centerCharged)stamp(center,center.points[p.i],17);
+   if(p.dockCharged)stamp(dock,dock.points[p.i],5);
   }
-  const float=(1-u)*Math.sin(time*.003+p.phase)*1.5;
-  const settling=smooth((u-.70)/.30);
-  const wiggle=livingOffset(p,time);
-  return {x:x+float+wiggle.x*settling,y:y+float*.5+wiggle.y*settling,progress:u};
+ }
+ function living(p,time){
+  return {x:(Math.sin(time*p.rate+p.phase)+.22*Math.sin(time*.004+p.phase*1.8))*p.wiggle,
+          y:(Math.cos(time*p.rate*.91+p.phase*1.3)+.22*Math.sin(time*.0034+p.phase))*p.wiggle*.7};
+ }
+ function arrivalProgress(p,time){
+  return clamp((time-170-p.delay)/(SINGULARITY.travel+p.extraTravel));
+ }
+ function flight(p,time){
+  const u=arrivalProgress(p,time);
+  const q=Math.pow(u,1.75);
+  const from=origins[p.i],to=center.points[p.i],c=controls[p.i];
+  const drift=living(p,time),rest=smooth((u-.77)/.23);
+  return {x:cubic(from.x,c.c1.x,c.c2.x,to.x,q)+drift.x*rest,
+          y:cubic(from.y,c.c1.y,c.c2.y,to.y,q)+drift.y*rest,
+          progress:u};
  }
  function transfer(p,time){
-  const from=restingPosition(p,config.transfer),to=destinations[p.i];
-  const stagger=mode==='awakening'?(3-p.letter)*85:
-                mode==='flow'?p.letter*55:mode==='ascension'?p.letter*32:0;
-  const progress=clamp((time-config.transfer-p.delay*.35-stagger)/(mode==='awakening'?1000:940));
-  const t=mode==='singularity'?Math.pow(progress,1.6):smooth(progress);
-  // Curved Bézier routing prevents the wordmark from moving like a single PNG.
-  const bend=Math.sin(Math.PI*t);
-  let x=lerp(from.x,to.x,t),y=lerp(from.y,to.y,t);
-  if(mode==='singularity'){
-   x+=Math.sin(p.phase)*42*bend;
-   y-=56*bend;
-  }else if(mode==='flow'){
-   x+=Math.sin(t*Math.PI*2+p.phase)*38*bend;
-   y-=83*bend;
-  }else if(mode==='awakening'){
-   x+=Math.sin(p.phase)*21*bend;
-   y-=48*bend;
-  }else{
-   x+=Math.sin(t*Math.PI+p.phase)*30*bend;
-   y-=67*bend;
-  }
-  return {x,y,progress};
+  const start=SINGULARITY.transfer+p.delay*.19;
+  const u=clamp((time-start)/1330),q=smooth(u);
+  const from=center.points[p.i],to=dock.points[p.i];
+  const drift=living(p,SINGULARITY.transfer);
+  const dx=to.x-from.x,dy=to.y-from.y,dist=Math.hypot(dx,dy);
+  const bend=Math.sin(p.phase)*Math.min(110,dist*.17);
+  const nx=-dy/Math.max(1,dist),ny=dx/Math.max(1,dist);
+  return {x:cubic(from.x+drift.x,from.x+dx*.24+nx*bend,to.x-dx*.1+nx*bend*.7,to.x,q),
+          y:cubic(from.y+drift.y,from.y+dy*.24+ny*bend,to.y-dy*.1+ny*bend*.7,to.y,q),
+          progress:u};
  }
- function dot(p,x,y,alpha,tail){
-  if(alpha<=.007)return;
-  const radius=p.size;
-  // Flat colored tails avoid hundreds of gradient allocations per frame.
-  if(tail&&p.i%3===0){
-   ctx.lineWidth=Math.max(.6,radius*.68);ctx.lineCap='round';
-   ctx.globalAlpha=alpha*.38;ctx.strokeStyle=p.color;
-   ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tail.x,tail.y);ctx.stroke();
+ function paintSurface(surface,fade,finishStrength,blur){
+  if(fade<=.003)return;
+  const c=surface.compositeCtx;
+  c.setTransform(1,0,0,1,0,0);
+  c.clearRect(0,0,surface.composite.width,surface.composite.height);
+  c.globalCompositeOperation='source-over';c.globalAlpha=1;
+  c.drawImage(surface.glyph,0,0);
+  c.globalCompositeOperation='destination-in';
+  c.drawImage(surface.charges,0,0);
+  c.globalCompositeOperation='source-over';
+  ctx.save();
+  ctx.globalAlpha=fade;
+  ctx.shadowColor='#fff';ctx.shadowBlur=blur;
+  ctx.drawImage(surface.composite,surface.left,surface.top,surface.w,surface.h);
+  if(finishStrength>.002){
+   ctx.shadowBlur=blur*.5;
+   ctx.globalAlpha=fade*finishStrength;
+   ctx.drawImage(surface.glyph,surface.left,surface.top,surface.w,surface.h);
   }
-  if(p.i%3===0||p.i%17===0){
-   ctx.globalAlpha=alpha*.13;ctx.fillStyle=p.color;
-   ctx.beginPath();ctx.arc(x,y,radius*3.05,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+ }
+ function drawMagicule(p,point,previous,time,opacity){
+  if(opacity<=.008||point.x< -15||point.x>width+15||point.y< -15||point.y>height+15)return;
+  const distance=Math.hypot(point.x-previous.x,point.y-previous.y);
+  if(distance>2.2&&p.i%2===0){
+   ctx.globalAlpha=opacity*.24;ctx.strokeStyle=p.color;
+   ctx.lineCap='round';ctx.lineWidth=.64;
+   const scale=Math.min(1,12/distance);
+   ctx.beginPath();ctx.moveTo(point.x,point.y);
+   ctx.lineTo(point.x-(point.x-previous.x)*scale,point.y-(point.y-previous.y)*scale);
+   ctx.stroke();
   }
-  ctx.globalAlpha=alpha;ctx.fillStyle=p.color;
-  ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
-  if(p.i%17===0){
-   ctx.globalAlpha=alpha*.72;ctx.fillStyle='#fff';
-   ctx.beginPath();ctx.arc(x,y,Math.max(.3,radius*.26),0,Math.PI*2);ctx.fill();
+  if(p.i%7===0){
+   ctx.globalAlpha=opacity*.10;ctx.fillStyle='#fff';
+   ctx.beginPath();ctx.arc(point.x,point.y,p.size*3.2,0,Math.PI*2);ctx.fill();
   }
+  const pulse=.90+.10*Math.sin(time*p.rate*1.9+p.phase);
+  ctx.globalAlpha=opacity*pulse;ctx.fillStyle=p.color;
+  ctx.beginPath();ctx.arc(point.x,point.y,p.size,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;
  }
- function renderParticles(time){
+ function render(now){
+  const time=now-started;
   ctx.clearRect(0,0,width,height);
-  const inTransfer=time>=config.transfer;
-  if(time>config.end+100)return;
+  const intoTransfer=time>=SINGULARITY.transfer;
   for(const p of magicules){
-   let loc,prev,alpha;
-   if(inTransfer){
-    loc=transfer(p,time);
-    prev=transfer(p,time-28);
-    alpha=p.brightness*(.84+.16*Math.sin(time*p.frequency+p.phase));
-    alpha*=Math.min(1,smooth((time-config.transfer)/145)+.10);
-    alpha*=1-smooth((time-(config.end-265))/235);
+   let at,previous,opacity;
+   if(intoTransfer){
+    at=transfer(p,time);previous=transfer(p,time-32);
+    if(at.progress>.965&&!p.dockCharged){
+     p.dockCharged=true;stamp(dock,dock.points[p.i],5.2);
+    }
+    opacity=p.alpha*(1-smooth((time-(SINGULARITY.end-315))/300));
    }else{
-    loc=flight(p,time);
-    prev=flight(p,time-28);
-    const settled=smooth((time-(config.reveal-150))/460);
-    const twinkle=.91+.09*Math.sin(time*p.frequency*1.5+p.phase);
-    alpha=p.brightness*smooth(time/250)*(1-.30*settled)*twinkle;
+    at=flight(p,time);previous=flight(p,time-27);
+    if(at.progress>.955&&!p.centerCharged){
+     p.centerCharged=true;stamp(center,center.points[p.i],17);
+    }
+    opacity=p.alpha*(.85+.15*smooth(time/800));
    }
-   const dx=loc.x-prev.x,dy=loc.y-prev.y;
-   const distance=Math.hypot(dx,dy);
-   const scale=Math.min(1.25,9/Math.max(1,distance));
-   const tail=distance>2?{x:loc.x-dx*scale,y:loc.y-dy*scale}:null;
-   dot(p,loc.x,loc.y,alpha,tail);
+   drawMagicule(p,at,previous,time,opacity);
   }
- }
- function renderLettering(time){
-  const introFade=smooth((time-config.reveal)/440);
-  const transferFade=1-smooth((time-config.transfer-50)/310);
-  lettering.style.opacity=String(introFade*transferFade);
-  const flutter=smooth((time-1870)/160)*(1-smooth((time-2320)/230));
-  const glow=8+flutter*14;
-  lettering.style.filter='drop-shadow(0 0 '+glow+'px rgba(183,194,255,'+(.18+flutter*.24)+'))';
-  letters.forEach((letter,i)=>{
-   let opacity=introFade;
-   if(mode==='awakening')opacity=smooth((time-config.reveal-i*90)/330);
-   else if(mode==='flow')opacity=smooth((time-config.reveal-i*70)/375);
-   letter.style.opacity=String(opacity);
-   const bounce=flutter*Math.sin((time-1850)/145-i*.95);
-   letter.style.transform='translate3d(0,'+(-bounce*2.5)+'px,0) scale('+(1+Math.abs(bounce)*.013)+')';
-   letter.style.textShadow=flutter>.01?'0 0 '+(glow*.6)+'px '+palette[(i*2)%palette.length]:'none';
-  });
+  const centerFade=1-smooth((time-SINGULARITY.transfer)/570);
+  const centerFinish=smooth((time-3620)/870);
+  paintSurface(center,centerFade,centerFinish,12);
+  if(intoTransfer){
+   const headerFade=smooth((time-SINGULARITY.transfer)/190);
+   const headerFinish=smooth((time-6060)/690);
+   paintSurface(dock,headerFade,headerFinish,5);
+  }
+  if(time>5400){
+   veil.style.opacity=String(1-smooth((time-5400)/1400));
+  }
+  if(time>=SINGULARITY.end){finish();return}
+  frame=requestAnimationFrame(render);
  }
  function finish(){
   if(stopped)return;
-  stopped=true;cancelAnimationFrame(frame);clearTimeout(fallback);clearTimeout(watchdog);clearTimeout(resizeTimer);
-  // onResize is the handler registered below; an old typo here prevented intro cleanup.
+  stopped=true;cancelAnimationFrame(frame);
+  clearTimeout(fallback);clearTimeout(watchdog);clearTimeout(resizeTimer);
   removeEventListener('resize',onResize);
   recoverWrldIntro(intro);
  }
- if(reduced){
-  lettering.style.opacity='1';
-  veil.style.transition='opacity .22s ease';
-  document.body.classList.add('wrld-intro-running');
-  requestAnimationFrame(()=>veil.style.opacity='0');
-  fallback=setTimeout(finish,330);
-  return;
- }
- try{refreshGeometry()}
- catch(error){console.warn('WRLD magicule geometry unavailable',error);clearTimeout(watchdog);recoverWrldIntro(intro);return}
- document.body.classList.add('wrld-intro-running');
  function onResize(){
   if(stopped)return;
   clearTimeout(resizeTimer);
   resizeTimer=setTimeout(()=>{
    if(stopped)return;
-   try{refreshGeometry()}catch(error){console.warn('WRLD magicule resize recovered',error);finish()}
-  },100);
+   try{geometry()}catch(error){console.warn('WRLD singularity resize recovered',error);finish()}
+  },120);
  }
- function tick(now){
+ if(reduced){
+  document.body.classList.add('wrld-intro-running');
+  veil.style.transition='opacity .2s ease';
+  requestAnimationFrame(()=>{if(!stopped)veil.style.opacity='0'});
+  fallback=setTimeout(finish,280);
+  return;
+ }
+ try{geometry()}
+ catch(error){console.warn('WRLD singularity geometry recovered',error);finish();return}
+ document.body.classList.add('wrld-intro-running');
+ addEventListener('resize',onResize,{passive:true});
+ function safeRender(now){
   if(stopped)return;
-  try{
-   const time=now-start;
-   renderParticles(time);
-   renderLettering(time);
-   if(time>=config.transfer+140){
-    veil.style.opacity=String(1-smooth((time-(config.transfer+140))/870));
-   }
-   if(time>=config.end){finish();return}
-   frame=requestAnimationFrame(tick);
-  }catch(error){
-   console.warn('WRLD magicule animation recovered',error);finish();
+  try{render(now)}catch(error){
+   console.warn('WRLD singularity recovered after animation error',error);finish();
   }
  }
- addEventListener('resize',onResize,{passive:true});
- fallback=setTimeout(finish,4800);
- frame=requestAnimationFrame(tick);
+ // A frame request is wrapped so any drawing error can never trap the player.
+ function animationFrame(now){
+  if(stopped)return;
+  try{
+   const time=now-started;
+   ctx.clearRect(0,0,width,height);
+   const intoTransfer=time>=SINGULARITY.transfer;
+   for(const p of magicules){
+    let at,previous,opacity;
+    if(intoTransfer){
+     at=transfer(p,time);previous=transfer(p,time-32);
+     if(at.progress>.965&&!p.dockCharged){
+      p.dockCharged=true;stamp(dock,dock.points[p.i],5.2);
+     }
+     opacity=p.alpha*(1-smooth((time-(SINGULARITY.end-315))/300));
+    }else{
+     at=flight(p,time);previous=flight(p,time-27);
+     if(at.progress>.955&&!p.centerCharged){
+      p.centerCharged=true;stamp(center,center.points[p.i],17);
+     }
+     opacity=p.alpha*(.85+.15*smooth(time/800));
+    }
+    drawMagicule(p,at,previous,time,opacity);
+   }
+   const centerFade=1-smooth((time-SINGULARITY.transfer)/570);
+   paintSurface(center,centerFade,smooth((time-3620)/870),12);
+   if(intoTransfer)paintSurface(dock,smooth((time-SINGULARITY.transfer)/190),smooth((time-6060)/690),5);
+   if(time>5400)veil.style.opacity=String(1-smooth((time-5400)/1400));
+   if(time>=SINGULARITY.end){finish();return}
+   frame=requestAnimationFrame(animationFrame);
+  }catch(error){console.warn('WRLD singularity animation recovered',error);finish()}
+ }
+ frame=requestAnimationFrame(animationFrame);
 }
-function replayWrldIntro(mode=introMode){
+function replayWrldIntro(){
  if($('wrldIntro')||!wrldIntroMarkup)return;
  document.body.insertAdjacentHTML('afterbegin',wrldIntroMarkup);
  const overlay=$('wrldIntro');
  if(overlay)overlay.style.pointerEvents='none';
- try{startWrldIntro(mode)}
- catch(error){
-  console.warn('WRLD intro replay recovered safely',error);
-  recoverWrldIntro($('wrldIntro'));
- }
+ try{startWrldIntro()}
+ catch(error){console.warn('WRLD singularity replay recovered',error);recoverWrldIntro(overlay)}
 }
-renderIntroChoices();
-document.querySelectorAll('[data-intro-mode]').forEach(button=>{
- button.addEventListener('click',()=>{
-  if($('wrldIntro'))return;
-  const mode=button.dataset.introMode;
-  if(!Object.prototype.hasOwnProperty.call(MAGICULE_MODES,mode))return;
-  introMode=mode;
-  try{localStorage.setItem('wrld-magicule-mode-v1',mode)}catch{}
-  renderIntroChoices();
-  replayWrldIntro(mode);
- });
-});
-$('replayIntro').addEventListener('click',()=>replayWrldIntro(introMode));
-try{startWrldIntro(introMode)}
-catch(error){
- console.warn('WRLD intro initialization recovered safely',error);
- recoverWrldIntro($('wrldIntro'));
-}
+$('replayIntro').addEventListener('click',replayWrldIntro);
+try{startWrldIntro()}
+catch(error){console.warn('WRLD singularity launch recovered',error);recoverWrldIntro($('wrldIntro'))}
 let cloudConnected=false;
 let cloudKeyEditing=false;
 function renderCloudKeyControls(){
