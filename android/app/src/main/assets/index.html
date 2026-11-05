@@ -990,6 +990,8 @@ startSky();
 const wrldIntroMarkup=el('wrldIntro')?.outerHTML||'';
 window.__wrldIntroFrameCount=0;
 window.__wrldIntroError='';
+window.__wrldIntroFinishReason='';
+window.__wrldIntroStartedAt=0;
 const MAGICULE_COUNT=350;
 const MAGICULE_PER_LETTER=[88,88,87,87];
 // The last incoming magicules finish settling before the 700ms particle-only hold.
@@ -1005,11 +1007,14 @@ window.__wrldIntroStatus=()=>({
  blocking:!!el('wrldIntro')&&getComputedStyle(el('wrldIntro')).pointerEvents!=='none',
  mode:'singularity',particles:MAGICULE_COUNT,seed:window.__wrldIntroLastSeed,
  frames:window.__wrldIntroFrameCount||0,error:window.__wrldIntroError||'',
- reducedMotion:!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+ reducedMotion:!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
+ hidden:document.hidden,finishReason:window.__wrldIntroFinishReason||'',
+ elapsed:window.__wrldIntroStartedAt?Math.round(performance.now()-window.__wrldIntroStartedAt):0
 });
 function startWrldIntro(explicitPreview){
  window.__wrldIntroFrameCount=0;
  window.__wrldIntroError='';
+ window.__wrldIntroFinishReason='';
  const intro=el('wrldIntro'),veil=el('introVeil'),canvas=el('introParticleCanvas');
  const lettering=el('introLettering');
  const letters=Array.from(document.querySelectorAll('#introLettering .intro-letter'));
@@ -1049,6 +1054,7 @@ function startWrldIntro(explicitPreview){
  let width=1,height=1,dpr=1,center=null,dock=null,origins=[],controls=[];
  let stopped=false,frame=0,resizeTimer=0,fallback=0,lastPaint=0;
  const started=performance.now();
+ window.__wrldIntroStartedAt=started;
  // Outer overlay is ALWAYS click-through; timeout is only a safety fallback.
  const watchdog=setTimeout(finish,8900);
  function makeSurface(elements,spacing){
@@ -1262,34 +1268,35 @@ function startWrldIntro(explicitPreview){
    veil.style.opacity=String(1-smooth((time-6100)/1450));
   }
   window.__wrldIntroFrameCount++;
-  if(time>=SINGULARITY.end){finish();return}
+  if(time>=SINGULARITY.end){finish('completed');return}
  }
- function finish(){
+ function finish(reason){
   if(stopped)return;
+  window.__wrldIntroFinishReason=reason||'watchdog';
   stopped=true;cancelAnimationFrame(frame);
   clearTimeout(fallback);clearTimeout(watchdog);clearTimeout(resizeTimer);
   removeEventListener('resize',onResize);
   document.removeEventListener('visibilitychange',onVisibility);
   recoverWrldIntro(intro);
  }
- function onVisibility(){if(document.hidden)finish()}
+ function onVisibility(){if(document.hidden)finish('page-hidden')}
  function onResize(){
   if(stopped)return;
   clearTimeout(resizeTimer);
   resizeTimer=setTimeout(()=>{
    if(stopped)return;
-   try{geometry()}catch(error){window.__wrldIntroError=String(error);console.warn('WRLD singularity resize recovered',error);finish()}
+   try{geometry()}catch(error){window.__wrldIntroError=String(error);console.warn('WRLD singularity resize recovered',error);finish('resize-error')}
   },120);
  }
  if(reduced){
   document.body.classList.add('wrld-intro-running');
   veil.style.transition='opacity .2s ease';
   requestAnimationFrame(()=>{if(!stopped)veil.style.opacity='0'});
-  fallback=setTimeout(finish,280);
+  fallback=setTimeout(()=>finish('reduced-motion'),280);
   return;
  }
  try{geometry()}
- catch(error){window.__wrldIntroError=String(error);console.warn('WRLD singularity geometry recovered',error);finish();return}
+ catch(error){window.__wrldIntroError=String(error);console.warn('WRLD singularity geometry recovered',error);finish('geometry-error');return}
  document.body.classList.add('wrld-intro-running');
  addEventListener('resize',onResize,{passive:true});
  document.addEventListener('visibilitychange',onVisibility);
@@ -1303,7 +1310,7 @@ function startWrldIntro(explicitPreview){
   }catch(error){
    window.__wrldIntroError=String(error);
    console.warn('WRLD singularity animation recovered',error);
-   finish();
+   finish('render-error');
   }
  }
  frame=requestAnimationFrame(animationFrame);
