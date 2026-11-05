@@ -108,4 +108,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.23: GitHub update checks and downloads now use the Windows trust store for secure TLS certificate verification, matching the working WRLD Cloud connection."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.24: sorting direction or category always resets the library to the first song in the new order, retaining the smoothly rotating flip arrow. Also includes Windows-trust-store updater fixes."
