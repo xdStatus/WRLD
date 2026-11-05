@@ -34,5 +34,6 @@ adb shell am start -W -n "$ACTIVITY"
 sleep 4
 check_alive
 
-adb shell pm list packages | tr -d '\r' | grep -Fxq "package:$PACKAGE"
+adb shell pm list packages | tr -d '\r' > "$RUNNER_TEMP/installed-packages.txt"
+grep -Fxq "package:$PACKAGE" "$RUNNER_TEMP/installed-packages.txt"
 echo "WRLD Preview launch and resume passed."
