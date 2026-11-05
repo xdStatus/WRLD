@@ -34,6 +34,10 @@ assert.equal(headerTarget[1],".brand-text strong .header-letter",
 assert.match(js,/window\.__wrldIntroFrameCount\+\+/,"Animation must expose rendered frame count");
 assert.match(js,/frames:window\.__wrldIntroFrameCount\|\|0/,"Runtime probe must include frame count");
 assert.match(js,/__wrldIntroError/,"Animation failures should be diagnosable");
+assert.match(js,/const reduced=!explicitPreview&&/,"Automatic animation respects reduce motion");
+assert.match(js,/try\{startWrldIntro\(true\)\}/,"Explicit Settings replay bypasses reduced motion");
+assert.match(js,/try\{startWrldIntro\(false\)\}/,"Launch honors reduced motion");
+assert.match(js,/reducedMotion:/,"Diagnostics include Android motion preference");
 
 // Desktop-equivalent choreography and mobile-only performance/safety limits.
 assert.match(js, /const MAGICULE_COUNT=350;/);
