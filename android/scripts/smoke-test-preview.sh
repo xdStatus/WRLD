@@ -13,6 +13,10 @@ echo "Checking the preview is a separate package that cannot replace normal WRLD
 echo "Installing isolated preview APK"
 adb install -r "$APK"
 adb shell pm grant "$PACKAGE" android.permission.READ_MEDIA_AUDIO || true
+# The splash is a motion-driven feature. Test it with Android animation scales enabled.
+adb shell settings put global window_animation_scale 1
+adb shell settings put global transition_animation_scale 1
+adb shell settings put global animator_duration_scale 1
 adb logcat -c
 adb shell am start -W -n "$ACTIVITY" --ez wrld_smoke_intro true
 # The emulator-only test clicks Settings and replays the intro at 9.85s.
