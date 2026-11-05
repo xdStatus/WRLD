@@ -46,6 +46,8 @@ jobs:
           node --check /tmp/wrld-android-ui.js
       - name: Test Android reverse sorting
         run: node android/scripts/test-sort.js
+      - name: Test Android Magicule Singularity
+        run: node android/scripts/test-intro.js
       - name: Verify Android update feature integration
         run: node android/scripts/test-updates.js
       - name: Build debug-signed Android APK
