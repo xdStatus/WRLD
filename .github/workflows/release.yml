@@ -128,4 +128,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.29: restores the seamless frameless window with header-only drag targets to prevent jumpy window movement; adds minimize/maximize/close controls and a Replay the Launch button under Settings > About."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.30: Magicule Studio adds four selectable, replayable launch animations (Singularity, Prismatic Flow, Awakening, Ascension) using 60 rainbow magicules that form WRLD lettering and transfer into the header; selected mode persists."
