@@ -12,16 +12,33 @@ MARKUP = HTML.split("<body>", 1)[1].split("<script>", 1)[0]
 
 
 class IntroAnimationContractTests(unittest.TestCase):
-    def test_sixty_rainbow_magicules_form_letter_shapes(self):
-        self.assertIn("length:60", HTML)
-        self.assertIn("Math.floor(i/15)", HTML)  # 15 per letter
+    def test_250_rainbow_magicules_form_continuous_letter_outlines(self):
+        self.assertIn("const MAGICULE_COUNT=250;", HTML)
+        self.assertIn("MAGICULE_PER_LETTER=[63,63,62,62]", HTML)
+        self.assertIn("Array.from({length:MAGICULE_COUNT}", HTML)
+        self.assertIn("c.strokeText(", HTML)
         self.assertIn("getImageData", HTML)
-        self.assertIn("glyphPoints(el,count)", HTML)
+        self.assertIn("new Float64Array(pixels.length)", HTML)  # contour spacing
+        self.assertIn("glyphPoints(el,count,letterIndex)", HTML)
         self.assertIn("targets=from", HTML)
         self.assertIn("destinations=headerLetters.flatMap", HTML)
         self.assertIn("const palette=", HTML)
         self.assertNotIn('class="intro-dot"', MARKUP)
         self.assertNotIn('id="introCore"', MARKUP)
+
+    def test_unique_randomness_per_launch_and_living_particle_motion(self):
+        self.assertIn("crypto.getRandomValues(entropy)", HTML)
+        self.assertIn("seed=(Math.random()*4294967296)>>>0", HTML)
+        self.assertIn("window.__wrldIntroLastSeed=launchSeed", HTML)
+        self.assertIn("glyphSamplePhases[letterIndex]", HTML)
+        self.assertIn("function livingOffset(p,time)", HTML)
+        self.assertIn("wiggle:.6+rand()*1.15", HTML)
+        self.assertIn("const settling=smooth((u-.70)/.30)", HTML)
+        self.assertIn("wiggle.x*settling", HTML)
+        self.assertIn("restingPosition(p,config.transfer)", HTML)
+        self.assertNotIn("createLinearGradient(x,y,tail.x,tail.y)", HTML)
+        self.assertIn("resizeTimer=setTimeout(", HTML)
+        self.assertIn("clearTimeout(resizeTimer)", HTML)
 
     def test_four_distinct_modes_in_settings(self):
         for key, name in [
@@ -66,7 +83,7 @@ class IntroAnimationContractTests(unittest.TestCase):
         self.assertIn(".wrld-intro,.wrld-intro *{pointer-events:none!important}", HTML)
         self.assertIn("removeEventListener('resize',onResize)", HTML)
         self.assertNotIn("removeEventListener('resize',resize)", HTML)
-        self.assertIn("setTimeout(()=>recoverWrldIntro(intro),5100)", HTML)
+        self.assertIn("setTimeout(finish,5100)", HTML)
         self.assertIn("magiculeOverlaySafetyHide", HTML)
         self.assertIn("recoverWrldIntro(intro)", HTML)
         self.assertNotIn("pointer-events:all;color:white", HTML)
