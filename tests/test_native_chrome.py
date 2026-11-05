@@ -31,7 +31,7 @@ class NativeChromeContractTests(unittest.TestCase):
 
     def test_about_replay_uses_original_intro(self):
         self.assertIn('id="replayIntro"', MARKUP)
-        self.assertIn('Replay the Launch', MARKUP)
+        self.assertIn('Preview Magicule Singularity', MARKUP)
         self.assertIn("const wrldIntroMarkup=$('wrldIntro')?.outerHTML||'';", HTML)
         self.assertIn("document.body.insertAdjacentHTML('afterbegin',wrldIntroMarkup)", HTML)
         self.assertIn("$('replayIntro').addEventListener('click',replayWrldIntro)", HTML)
