@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/android-intro-preview.yml'
+      - 'android/scripts/smoke-test-preview.sh'
   workflow_dispatch:
 
 permissions:
