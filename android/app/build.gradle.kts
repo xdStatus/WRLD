@@ -26,7 +26,15 @@ android {
         }
     }
     buildTypes {
+        // Preview is a separate Android application. It can be installed next to
+        // the user's real WRLD without touching playlists, likes or cloud keys.
+        getByName("debug") {
+            val preview = System.getenv("WRLD_ANDROID_PREVIEW") == "1"
+            manifestPlaceholders["appLabel"] = if (preview) "WRLD Preview" else "WRLD"
+            if (preview) applicationIdSuffix = ".preview"
+        }
         getByName("release") {
+            manifestPlaceholders["appLabel"] = "WRLD"
             isMinifyEnabled = false
             if (!wrldKeystorePath.isNullOrBlank()) {
                 signingConfig = signingConfigs.getByName("wrldRelease")
