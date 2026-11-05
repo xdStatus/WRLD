@@ -608,39 +608,20 @@ body.native-shell .window-chrome{display:none!important}
 
 
 
-/* WRLD 1.8.27: four soft light orbs flow into a single luminous center. */
-.wrld-intro{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:hidden;isolation:isolate;background:#050609;color:#f8faff;opacity:1;visibility:visible;pointer-events:all;transition:opacity .65s cubic-bezier(.22,1,.36,1),visibility .65s}
-.wrld-intro.is-finished{opacity:0;visibility:hidden;pointer-events:none}
-.wrld-intro:before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 36% 38% at 50% 50%,rgba(144,171,216,.065),transparent 78%);animation:introAmbientLight 2.45s ease-in-out both}
-.intro-stage{position:relative;width:min(70vw,340px);height:235px;display:grid;place-items:center;isolation:isolate}
-.intro-dot{position:absolute;left:calc(50% - 4px);top:calc(50% - 4px);width:8px;height:8px;border-radius:50%;opacity:0;background:radial-gradient(circle at 35% 33%,#fff 0%,#e5efff 65%,#afc7ef 100%);box-shadow:0 0 8px rgba(235,245,255,.65),0 0 21px rgba(163,199,255,.24);will-change:transform,opacity;--dx:-95px;--dy:-45px;animation:wrldOrbFlight 1.52s cubic-bezier(.64,0,.18,1) both}
-.intro-dot:before{content:'';position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(circle,rgba(208,226,255,.20),transparent 72%)}
-.intro-dot:nth-child(1){--dx:-106px;--dy:-52px;animation-delay:.00s}
-.intro-dot:nth-child(2){--dx:108px;--dy:-43px;animation-delay:.07s}
-.intro-dot:nth-child(3){--dx:-95px;--dy:61px;animation-delay:.12s}
-.intro-dot:nth-child(4){--dx:103px;--dy:57px;animation-delay:.17s}
-.intro-bloom{position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff;box-shadow:0 0 12px rgba(255,255,255,.78),0 0 30px rgba(181,209,255,.34),0 0 65px rgba(146,183,249,.12);opacity:0;pointer-events:none;animation:wrldMergeGlow 1.03s 1.03s cubic-bezier(.25,.7,.25,1) both}
-.intro-bloom:after{content:'';position:absolute;inset:-19px;border-radius:50%;background:radial-gradient(circle,rgba(237,246,255,.27),rgba(188,213,250,.10) 39%,transparent 70%);filter:blur(9px)}
-.wrld-intro-center{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;opacity:0;transform:translateY(8px) scale(.975);filter:blur(7px);animation:wrldIntroLogo 1.06s 1.48s cubic-bezier(.22,1,.36,1) both;pointer-events:none}
-.wrld-intro-number{font:200 clamp(66px,11vw,104px)/1 'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;letter-spacing:-.075em;padding-right:.075em;text-shadow:0 0 24px rgba(255,255,255,.15)}
-.wrld-intro-wordmark{font-size:13px;font-weight:550;letter-spacing:.59em;padding-left:.59em}
-@keyframes wrldOrbFlight{
- 0%{opacity:0;transform:translate3d(var(--dx),var(--dy),0) scale(.55)}
- 15%{opacity:.95;transform:translate3d(var(--dx),var(--dy),0) scale(.85)}
- 58%{opacity:1}
- 82%{opacity:.98;transform:translate3d(calc(var(--dx) * .12),calc(var(--dy) * .12),0) scale(1)}
- 95%{opacity:.35;transform:translate3d(0,0,0) scale(.55)}
- 100%{opacity:0;transform:translate3d(0,0,0) scale(.1)}
-}
-@keyframes wrldMergeGlow{
- 0%,12%{opacity:0;transform:scale(.28);filter:blur(2px)}
- 34%{opacity:.91;transform:scale(1);filter:blur(0)}
- 62%{opacity:.55;transform:scale(2);filter:blur(3px)}
- 100%{opacity:0;transform:scale(4.3);filter:blur(13px)}
-}
-@keyframes wrldIntroLogo{0%{opacity:0;transform:translateY(8px) scale(.975);filter:blur(7px)}70%{opacity:1;filter:blur(0)}100%{opacity:1;transform:none;filter:blur(0)}}
-@keyframes introAmbientLight{0%{opacity:.2}68%{opacity:.94}100%{opacity:.6}}
-@media(prefers-reduced-motion:reduce){.wrld-intro .intro-dot,.wrld-intro .intro-bloom{display:none}.wrld-intro-center{animation:none;opacity:1;transform:none;filter:none}.wrld-intro{transition:none}}
+/* WRLD 1.8.28 — fluid-gravity logo reveal and shared-element header handoff. */
+.wrld-intro{position:fixed;inset:0;z-index:1000;isolation:isolate;overflow:hidden;color:#f7faff;pointer-events:all}
+.intro-veil{position:absolute;inset:0;background:#050609;opacity:1;pointer-events:none;will-change:opacity}
+.intro-veil:after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 37% 43% at 50% 50%,rgba(158,180,227,.075),transparent 82%)}
+.intro-particles{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.intro-core{position:absolute;width:12px;height:12px;left:50%;top:50%;border-radius:50%;opacity:0;pointer-events:none;background:#fff;box-shadow:0 0 12px rgba(255,255,255,.8),0 0 28px rgba(190,217,255,.4),0 0 52px rgba(151,194,255,.16);transform:translate(-50%,-50%) scale(.25);will-change:opacity,transform}
+.intro-core:before{content:'';position:absolute;inset:-15px;border-radius:50%;background:radial-gradient(circle,rgba(229,240,255,.26),rgba(160,204,255,.08) 42%,transparent 72%);filter:blur(6px)}
+.intro-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:9px;pointer-events:none}
+.intro-mark{width:clamp(125px,21vw,178px);aspect-ratio:112/64;color:#f5f8ff;opacity:0;transform-origin:center center;will-change:transform,opacity}
+.intro-mark svg{display:block;width:100%;height:100%;overflow:visible;fill:none;stroke:currentColor;stroke-width:4.6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(234,244,255,.2))}
+.intro-mark svg .logo-wave-digit{animation:none!important;transform:none!important;opacity:1!important}
+.intro-wordmark{color:#f5f7fd;font-size:13px;font-weight:550;letter-spacing:.54em;padding-left:.54em;line-height:1.4;opacity:0;transform-origin:center center;will-change:transform,opacity}
+body.wrld-intro-running #logoCometBtn svg,body.wrld-intro-running .brand h1{visibility:hidden!important}
+@media(prefers-reduced-motion:reduce){.intro-core,.intro-particles{display:none!important}}
 #cloudConnectionStatus{display:block;font-weight:600;letter-spacing:.025em;color:#a2a2a2}
 #cloudConnectionStatus.is-connected{color:#65d68c;text-shadow:0 0 10px rgba(89,218,129,.24)}
 #cloudConnectionStatus.is-error{color:#f29898}
@@ -649,7 +630,7 @@ body.native-shell .window-chrome{display:none!important}
 .cloud-key-editor{display:flex;flex-direction:column;gap:9px}
 .cloud-change-key{align-self:flex-start;min-height:36px}
 .cloud-config.is-local{display:none!important}
-@media(prefers-reduced-motion:reduce){.wrld-intro *,.wrld-intro:before{animation:none!important}.wrld-intro{transition:none}}
+
 
 /* Compact alphabet navigation and glowing hover */
 .library-list-layout{display:flex;flex:1;min-width:0;min-height:0;overflow:hidden}
@@ -675,14 +656,12 @@ body.native-shell .window-chrome{display:none!important}
 </head>
 <body>
 <div id="wrldIntro" class="wrld-intro" aria-label="WRLD starting" role="status">
-  <div class="intro-stage" aria-hidden="true">
-    <span class="intro-dot"></span><span class="intro-dot"></span>
-    <span class="intro-dot"></span><span class="intro-dot"></span>
-    <div class="intro-bloom"></div>
-    <div class="wrld-intro-center">
-      <div class="wrld-intro-number">999</div>
-      <div class="wrld-intro-wordmark">WRLD</div>
-    </div>
+  <div id="introVeil" class="intro-veil" aria-hidden="true"></div>
+  <canvas id="introParticleCanvas" class="intro-particles" aria-hidden="true"></canvas>
+  <div id="introCore" class="intro-core" aria-hidden="true"></div>
+  <div id="introLogo" class="intro-logo" aria-hidden="true">
+    <div id="introMark" class="intro-mark"></div>
+    <div id="introWordmark" class="intro-wordmark">WRLD</div>
   </div>
 </div>
 <canvas id="starfield" aria-hidden="true"></canvas>
@@ -904,9 +883,187 @@ body.native-shell .window-chrome{display:none!important}
 const $ = id => document.getElementById(id);
 const audio = $('audio');
 const intro=$('wrldIntro');
-// The brief introduction is intentionally theatrical; it does not delay library loading.
-setTimeout(()=>intro.classList.add('is-finished'),2490);
-setTimeout(()=>intro.remove(),3180);
+function startWrldIntro(){
+ const veil=$('introVeil'),canvas=$('introParticleCanvas'),core=$('introCore');
+ const mark=$('introMark'),word=$('introWordmark');
+ const headerMark=document.querySelector('#logoCometBtn svg');
+ const headerWord=document.querySelector('.brand h1');
+ if(!intro||!veil||!canvas||!core||!mark||!word||!headerMark||!headerWord){
+  intro?.remove();return;
+ }
+ let stopped=false,frame=0,fallback=0;
+ const reduced=!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+ const clone=headerMark.cloneNode(true);
+ clone.setAttribute('aria-hidden','true');
+ clone.removeAttribute('id');
+ mark.appendChild(clone);
+ const paths=Array.from(clone.querySelectorAll('path'));
+ const lengths=paths.map(path=>path.getTotalLength());
+ const viewBox=clone.viewBox.baseVal;
+ const ctx=canvas.getContext('2d',{alpha:true});
+ if(!ctx||!paths.length||!lengths.every(Number.isFinite)){intro.remove();return}
+ // The header remains hidden until the moving SVG has arrived at its exact position.
+ document.body.classList.add('wrld-intro-running');
+ const originalMarkVisibility=headerMark.style.visibility;
+ const originalWordVisibility=headerWord.style.visibility;
+ let vw=1,vh=1,dpr=1,centerX=0,centerY=0,points=[],dock=null;
+ let lastSizeW=0,lastSizeH=0;
+ const started=performance.now(),clamp=v=>Math.max(0,Math.min(1,v));
+ const smooth=v=>{const t=clamp(v);return t*t*(3-2*t)};
+ const cubic=v=>1-Math.pow(1-clamp(v),3);
+ let seed=0x99912828;
+ const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ const particles=Array.from({length:30},(_,i)=>{
+  const angle=i*2.3999632297+(random()-.5)*.52;
+  const radius=.48+random()*.52;
+  return {i,angle,radius,spin:(random()-.5)*.48,
+    delay:random()*112,phase:random()*Math.PI*2,
+    size:i%5===0?1.65+random()*.35:.85+random()*.48,
+    brightness:.52+random()*.47};
+ });
+ function layout(){
+  vw=Math.max(1,innerWidth);vh=Math.max(1,innerHeight);
+  dpr=Math.min(devicePixelRatio||1,1.5);
+  canvas.width=Math.round(vw*dpr);canvas.height=Math.round(vh*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const rect=mark.getBoundingClientRect();
+  centerX=rect.left+rect.width/2;centerY=rect.top+rect.height/2;
+  core.style.left=centerX+'px';core.style.top=centerY+'px';
+  points=particles.map(p=>{
+   const pathIndex=p.i%paths.length;
+   const position=Math.floor(p.i/paths.length);
+   const count=Math.ceil((particles.length-pathIndex)/paths.length);
+   const location=paths[pathIndex].getPointAtLength(lengths[pathIndex]*(position+.5)/count);
+   return {
+    x:rect.left+(location.x-viewBox.x)*rect.width/viewBox.width,
+    y:rect.top+(location.y-viewBox.y)*rect.height/viewBox.height
+   };
+  });
+ }
+ function measureDock(){
+  // Resting bounds are measured without an existing flight transform.
+  const a=mark.style.transform,b=word.style.transform;
+  mark.style.transform='none';word.style.transform='none';
+  const fromMark=mark.getBoundingClientRect(),fromWord=word.getBoundingClientRect();
+  mark.style.transform=a;word.style.transform=b;
+  const toMark=headerMark.getBoundingClientRect(),toWord=headerWord.getBoundingClientRect();
+  const offset=(from,to)=>({
+   dx:to.left+to.width/2-from.left-from.width/2,
+   dy:to.top+to.height/2-from.top-from.height/2,
+   sx:to.width/Math.max(1,from.width),
+   sy:to.height/Math.max(1,from.height)
+  });
+  return {mark:offset(fromMark,toMark),word:offset(fromWord,toWord)};
+ }
+ function resize(){
+  if(stopped)return;
+  const current=mark.style.transform,prev=word.style.transform;
+  mark.style.transform='none';word.style.transform='none';
+  layout();
+  mark.style.transform=current;word.style.transform=prev;
+  if(dock)dock=measureDock();
+ }
+ function finish(){
+  if(stopped)return;
+  stopped=true;cancelAnimationFrame(frame);clearTimeout(fallback);
+  removeEventListener('resize',resize);
+  headerMark.style.visibility=originalMarkVisibility;
+  headerWord.style.visibility=originalWordVisibility;
+  document.body.classList.remove('wrld-intro-running');
+  intro.remove();
+ }
+ if(reduced){
+  for(const path of paths){path.style.strokeDasharray='none';path.style.strokeDashoffset='0'}
+  mark.style.opacity='1';word.style.opacity='1';
+  veil.style.transition='opacity .22s ease';veil.style.opacity='0';
+  fallback=setTimeout(finish,350);
+  return;
+ }
+ layout();
+ for(let i=0;i<paths.length;i++){
+  paths[i].style.strokeDasharray=String(lengths[i]);
+  paths[i].style.strokeDashoffset=String(lengths[i]);
+ }
+ const suction=(p,time)=>{
+  const pull=clamp((time-210-p.delay)/(900-p.delay));
+  const radius=1-Math.pow(pull,3.2);
+  const angle=p.angle+p.spin*pull*pull;
+  const span=Math.min(vw*.35,250);
+  const r=(68+span*p.radius)*radius;
+  const float=(1-pull)*Math.sin(time*.003+p.phase)*2.1;
+  return {x:centerX+Math.cos(angle)*r+float,
+          y:centerY+Math.sin(angle)*r*.72+float*.48,pull};
+ };
+ function particleAt(p,time){
+  if(time<1120)return suction(p,time);
+  const q=cubic((time-1100-p.delay*.25)/510),target=points[p.i];
+  const from=suction(p,1120);
+  return {x:from.x+(target.x-from.x)*q,y:from.y+(target.y-from.y)*q,pull:1,forming:q};
+ }
+ function paintParticles(time){
+  ctx.clearRect(0,0,vw,vh);
+  if(time>1710)return;
+  for(const p of particles){
+   const loc=particleAt(p,time);
+   const alpha=p.brightness*clamp(time/240)*(time<1400?1:1-smooth((time-1400)/290));
+   if(alpha<=.006)continue;
+   const radius=p.size;
+   if(time>450&&time<1120){
+    const speed=Math.pow(loc.pull,2.3);
+    const trail=Math.min(18,16*speed);
+    const outward=Math.atan2(loc.y-centerY,loc.x-centerX);
+    const tx=loc.x+Math.cos(outward)*trail,ty=loc.y+Math.sin(outward)*trail;
+    const gradient=ctx.createLinearGradient(loc.x,loc.y,tx,ty);
+    gradient.addColorStop(0,'rgba(239,247,255,'+(alpha*.72)+')');
+    gradient.addColorStop(1,'rgba(170,210,255,0)');
+    ctx.lineWidth=Math.max(.65,radius*.65);ctx.lineCap='round';ctx.strokeStyle=gradient;
+    ctx.beginPath();ctx.moveTo(loc.x,loc.y);ctx.lineTo(tx,ty);ctx.stroke();
+   }
+   ctx.globalAlpha=alpha*.19;
+   ctx.fillStyle='#B8D5FF';ctx.beginPath();ctx.arc(loc.x,loc.y,radius*3.1,0,Math.PI*2);ctx.fill();
+   ctx.globalAlpha=alpha;
+   ctx.fillStyle=p.i%5===0?'#FFFFFF':'#E7F1FF';
+   ctx.beginPath();ctx.arc(loc.x,loc.y,radius,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+ }
+ function fly(element,geometry,progress,arc){
+  const e=smooth(progress),bend=-arc*Math.sin(Math.PI*e);
+  const sx=1+(geometry.sx-1)*e,sy=1+(geometry.sy-1)*e;
+  element.style.transform='translate3d('+(geometry.dx*e)+'px,'+(geometry.dy*e+bend)+'px,0) scale('+sx+','+sy+')';
+ }
+ function tick(now){
+  if(stopped)return;
+  try{
+   const time=now-started;
+   if(time<1750)paintParticles(time);
+   else if(canvas.width)ctx.clearRect(0,0,vw,vh);
+   const light=time<950?0:time<1210?smooth((time-950)/260):1-smooth((time-1210)/350);
+   core.style.opacity=String(Math.max(0,light*.85));
+   core.style.transform='translate(-50%,-50%) scale('+(0.35+light*1.45)+')';
+   const reveal=cubic((time-1190)/470);
+   mark.style.opacity=String(clamp((time-1200)/225));
+   paths.forEach((path,i)=>{path.style.strokeDashoffset=String(lengths[i]*(1-reveal))});
+   word.style.opacity=String(smooth((time-1420)/330));
+   if(time>=1780){
+    if(!dock)dock=measureDock();
+    const phase=clamp((time-1780)/930);
+    fly(mark,dock.mark,phase,17);
+    fly(word,dock.word,phase,12);
+    veil.style.opacity=String(1-smooth((time-1870)/840));
+   }
+   if(time>=2780){finish();return}
+   frame=requestAnimationFrame(tick);
+  }catch(error){
+   console.warn('WRLD intro recovered after animation error',error);
+   finish();
+  }
+ }
+ addEventListener('resize',resize,{passive:true});
+ fallback=setTimeout(finish,4000);
+ frame=requestAnimationFrame(tick);
+}
+startWrldIntro();
 let cloudConnected=false;
 let cloudKeyEditing=false;
 function renderCloudKeyControls(){
