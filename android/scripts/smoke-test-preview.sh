@@ -20,7 +20,7 @@ adb shell settings put global animator_duration_scale 1
 adb logcat -c
 adb shell am start -W -n "$ACTIVITY" --ez wrld_smoke_intro true
 # The emulator-only test clicks Settings and replays the intro at 9.85s.
-sleep 14
+sleep 19
 adb logcat -d -s WRLDIntroCheck:I > "$RUNNER_TEMP/intro-runtime-check.txt"
 cat "$RUNNER_TEMP/intro-runtime-check.txt"
 if ! grep -Fq 'launch: "running"' "$RUNNER_TEMP/intro-runtime-check.txt"; then
