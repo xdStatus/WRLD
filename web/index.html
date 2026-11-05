@@ -1154,7 +1154,6 @@ function startWrldIntro(){
    veil.style.opacity=String(1-smooth((time-5400)/1400));
   }
   if(time>=SINGULARITY.end){finish();return}
-  frame=requestAnimationFrame(render);
  }
  function finish(){
   if(stopped)return;
@@ -1182,43 +1181,16 @@ function startWrldIntro(){
  catch(error){console.warn('WRLD singularity geometry recovered',error);finish();return}
  document.body.classList.add('wrld-intro-running');
  addEventListener('resize',onResize,{passive:true});
- function safeRender(now){
-  if(stopped)return;
-  try{render(now)}catch(error){
-   console.warn('WRLD singularity recovered after animation error',error);finish();
-  }
- }
  // A frame request is wrapped so any drawing error can never trap the player.
  function animationFrame(now){
   if(stopped)return;
   try{
-   const time=now-started;
-   ctx.clearRect(0,0,width,height);
-   const intoTransfer=time>=SINGULARITY.transfer;
-   for(const p of magicules){
-    let at,previous,opacity;
-    if(intoTransfer){
-     at=transfer(p,time);previous=transfer(p,time-32);
-     if(at.progress>.965&&!p.dockCharged){
-      p.dockCharged=true;stamp(dock,dock.points[p.i],5.2);
-     }
-     opacity=p.alpha*(1-smooth((time-(SINGULARITY.end-315))/300));
-    }else{
-     at=flight(p,time);previous=flight(p,time-27);
-     if(at.progress>.955&&!p.centerCharged){
-      p.centerCharged=true;stamp(center,center.points[p.i],17);
-     }
-     opacity=p.alpha*(.85+.15*smooth(time/800));
-    }
-    drawMagicule(p,at,previous,time,opacity);
-   }
-   const centerFade=1-smooth((time-SINGULARITY.transfer)/570);
-   paintSurface(center,centerFade,smooth((time-3620)/870),12);
-   if(intoTransfer)paintSurface(dock,smooth((time-SINGULARITY.transfer)/190),smooth((time-6060)/690),5);
-   if(time>5400)veil.style.opacity=String(1-smooth((time-5400)/1400));
-   if(time>=SINGULARITY.end){finish();return}
-   frame=requestAnimationFrame(animationFrame);
-  }catch(error){console.warn('WRLD singularity animation recovered',error);finish()}
+   render(now);
+   if(!stopped)frame=requestAnimationFrame(animationFrame);
+  }catch(error){
+   console.warn('WRLD singularity animation recovered',error);
+   finish();
+  }
  }
  frame=requestAnimationFrame(animationFrame);
 }
