@@ -181,9 +181,15 @@ try {
    if (Test-Path -LiteralPath $backup) { Move-Item -LiteralPath $backup -Destination $TargetExe -Force }
    throw
  }
- if (-not (Test-WRLDExe $TargetExe)) {
-   # Even a verified executable may fail after replacement on a particular PC.
-   # Restore the previous version and reopen it rather than leaving WRLD broken.
+ # Retry startup verification after replacement: one-file extraction may fail
+ # transiently on Windows even if the downloaded executable passed its first probe.
+ $probePassed = $false
+ for ($attempt = 0; $attempt -lt 3; $attempt++) {
+   if (Test-WRLDExe $TargetExe) { $probePassed = $true; break }
+   Start-Sleep -Seconds 2
+ }
+ if (-not $probePassed) {
+   # Restore the previous version instead of leaving a failed update installed.
    $failed = Join-Path ([IO.Path]::GetDirectoryName($TargetExe)) 'WRLD.failed.exe'
    if (Test-Path -LiteralPath $failed) { Remove-Item -LiteralPath $failed -Force }
    Move-Item -LiteralPath $TargetExe -Destination $failed -Force
@@ -193,7 +199,10 @@ try {
    }
    throw 'The updated WRLD.exe failed its launch test. The previous version was restored and reopened.'
  }
- Start-Process -FilePath $TargetExe -WorkingDirectory ([IO.Path]::GetDirectoryName($TargetExe))
+ # Give the probe's temporary one-file extraction time to close before launch.
+ Start-Sleep -Seconds 2
+ $launched = Start-Process -FilePath $TargetExe -WorkingDirectory ([IO.Path]::GetDirectoryName($TargetExe)) -PassThru
+ if (-not $launched) { throw 'WRLD did not start after the update was installed.' }
 } catch {
   $log = Join-Path $env:APPDATA 'WRLDPlayer\update-error.txt'
   $_ | Out-String | Set-Content -LiteralPath $log -Encoding UTF8
