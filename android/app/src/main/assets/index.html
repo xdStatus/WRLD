@@ -564,7 +564,7 @@ function renderSettings(){
   '</div>'+
   '<div class="settings-heading">Launch animation</div>'+
   '<div class="settings-panel">'+
-   '<button class="settings-action" data-replay-intro="1" type="button"><span>Preview Magicule Singularity<small>350 white magicules form WRLD, hover, and rebuild the header.</small></span><span aria-hidden="true">✦</span></button>'+
+   '<button class="settings-action" data-replay-intro="1" type="button"><span>Preview Magicule Singularity<small>300 white magicules form WRLD, hover, and rebuild the header.</small></span><span aria-hidden="true">✦</span></button>'+
   '</div>'+
   '<div class="settings-heading">About</div>'+
   '<div class="settings-panel"><div class="settings-about"><div class="settings-about-title">999 · WRLD</div>'+
@@ -998,8 +998,8 @@ window.__wrldIntroFrameCount=0;
 window.__wrldIntroError='';
 window.__wrldIntroFinishReason='';
 window.__wrldIntroStartedAt=0;
-const MAGICULE_COUNT=350;
-const MAGICULE_PER_LETTER=[88,88,87,87];
+const MAGICULE_COUNT=300;
+const MAGICULE_PER_LETTER=[75,75,75,75];
 // The last incoming magicules finish settling before the 700ms particle-only hold.
 const SINGULARITY={
  travel:1820,hover:3920,transfer:5420,reveal:7080,end:8000
@@ -1052,7 +1052,7 @@ function startWrldIntro(explicitPreview){
  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
  const shades=['#fff','#ededed','#cfcfcf','#b8b8b8','#f7f7f7','#dadada'];
  const magicules=Array.from({length:MAGICULE_COUNT},(_,i)=>({
-  i,letter:i<88?0:i<176?1:i<263?2:3,
+  i,letter:Math.floor(i/75),
   size:i%19===0?1.65+random()*.28:i%7===0?1.05+random()*.23:.60+random()*.43,
   alpha:.62+random()*.36,phase:random()*Math.PI*2,spin:(random()-.5)*2.4,
   delay:random()*1370,extraTravel:(random()-.5)*220,
@@ -1208,6 +1208,9 @@ function startWrldIntro(explicitPreview){
           progress:u};
  }
  function drawMagicule(p,point,previous,time,opacity){
+   // Gradually increase radius by 10% during flight, retaining it after formation.
+   const growth=smooth(arrivalProgress(p,time));
+   const grownSize=p.size*(1+.10*growth);
   if(opacity<=.008||point.x< -15||point.x>width+15||point.y< -15||point.y>height+15)return;
   const distance=Math.hypot(point.x-previous.x,point.y-previous.y);
   if(distance>2.2&&p.i%2===0){
@@ -1220,13 +1223,13 @@ function startWrldIntro(explicitPreview){
   }
   if(p.i%7===0){
    ctx.globalAlpha=opacity*.10;ctx.fillStyle='#fff';
-   ctx.beginPath();ctx.arc(point.x,point.y,p.size*3.2,0,Math.PI*2);ctx.fill();
+   ctx.beginPath();ctx.arc(point.x,point.y,grownSize*3.2,0,Math.PI*2);ctx.fill();
   }
   // Brighter only while all particles hold their living, letter-shaped silhouette.
   const hoverBoost=time>=SINGULARITY.hover&&time<SINGULARITY.transfer?1.18:1;
   const pulse=(.81+.19*Math.sin(time*p.rate*2.2+p.phase+Math.sin(time*.002+p.i*.12)))*hoverBoost;
   ctx.globalAlpha=Math.min(1,opacity*pulse);ctx.fillStyle=p.color;
-  ctx.beginPath();ctx.arc(point.x,point.y,p.size,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(point.x,point.y,grownSize,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;
  }
  function render(now){
