@@ -34,9 +34,9 @@ assert.match(js,/const headerLetters=Array\.from\(document\.querySelectorAll\('\
 assert.match(js,/const glyph=create\(\)/,"Font used only to sample particle positions");
 assert.match(js,/const image=g\.getImageData/,"Samples actual WRLD shapes");
 assert.match(js,/const gatherFreedom=\(1-smooth\(\(u-\.25\)\/\.75\)\)/,"Particles must gradually settle while gathering");
-assert.match(js,/const settle=\.18\+\.82\*gatherFreedom/,"Formed WRLD must retain only a tiny shimmer");
+assert.match(js,/const settle=\.06\+\.94\*gatherFreedom/,"Formed WRLD must retain only a tiny shimmer");
 assert.match(js,/const arrival=smooth\(\(u-\.35\)\/\.65\)/,"Independent motion begins during arrival");
-assert.match(js,/drift\.x\*\(3\.8\*settle\)\*arrival/,"Particles move independently without a whole-logo wave");
+assert.match(js,/drift\.x\*\(2\.0\*settle\)\*arrival/,"Particles move independently without a whole-logo wave");
 assert.doesNotMatch(js,/const breathe=smooth|const ripple=Math\.sin|const aliveX=dx\*breath/,"The completed logo should not sway or ripple");
 assert.match(js,/const from=flight\(p,SINGULARITY\.transfer\)/,"Transfer should not snap from moving hover");
 assert.match(js,/const pulse=\(\.81\+\.19\*Math\.sin/,"Magicules visibly shimmer while hovering");
