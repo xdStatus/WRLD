@@ -149,6 +149,12 @@ body.wrld-intro-running .brand-text strong:not(.intro-final-reveal){opacity:0}
 .playlist-cover{height:55px;width:55px;border-radius:12px;background:linear-gradient(130deg,#353535,#0c0c0c);display:grid;place-items:center;border:1px solid rgba(255,255,255,.13);font-size:24px}
 .playlist-name{font-size:14px;font-weight:600;display:block}
 .playlist-count{font-size:11px;color:#aaa;display:block;margin-top:5px}
+
+/* Long-press the now-playing song and drop it onto a playlist. */
+.now-queue-trigger{touch-action:pan-y}
+.playlist-card.drag-target{border-color:rgba(255,255,255,.9);background:rgba(255,255,255,.19);box-shadow:0 0 0 2px rgba(255,255,255,.12)}
+.song-drag-ghost{position:fixed;z-index:1000;pointer-events:none;left:0;top:0;max-width:230px;min-width:135px;padding:12px 15px;border-radius:14px;background:rgba(40,40,40,.96);border:1px solid rgba(255,255,255,.65);box-shadow:0 14px 40px #000a;color:white;font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transform:translate(-50%,-125%);opacity:.98}
+.song-drag-hint{position:fixed;z-index:999;pointer-events:none;left:50%;top:18%;transform:translateX(-50%);padding:9px 14px;border-radius:18px;background:#252525;color:white;border:1px solid #777;font-size:12px;white-space:nowrap}
 .playlist-create{border:1px dashed rgba(255,255,255,.25);background:rgba(255,255,255,.022)}
 .tiny-action{font-size:11px;color:#ddd;border:1px solid rgba(255,255,255,.19);padding:7px 10px;border-radius:9px}
 .dock{position:fixed;z-index:4;bottom:0;left:0;right:0;padding:13px 19px calc(15px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(13,13,13,.89),rgba(5,5,5,.98));border-top:1px solid rgba(255,255,255,.18);backdrop-filter:blur(12px)}
@@ -757,6 +763,87 @@ el("list").addEventListener("click",function(event){
 el("overlay").addEventListener("click",function(e){if(e.target===el("overlay"))hideSheet()});
 el("openQueueButton").setAttribute("aria-expanded","false");
 el("openQueueButton").setAttribute("aria-controls","queueDrawer");
+
+// Long press the now-playing song, then drag it over a playlist card.
+// A tap still opens Up Next; only an intentional hold starts dragging.
+var songDrag=null;
+var songDragTimer=0;
+var songDragSuppressClick=false;
+function songDragTarget(x,y){
+ var node=document.elementFromPoint(x,y);
+ return node&&node.closest?node.closest(".playlist-card[data-open]"):null;
+}
+function endSongDrag(event,cancel){
+ clearTimeout(songDragTimer);songDragTimer=0;
+ if(!songDrag)return;
+ var drag=songDrag;
+ songDrag=null;
+ if(drag.started){
+  songDragSuppressClick=true;
+  var target=!cancel?songDragTarget(event.clientX,event.clientY):null;
+  if(drag.target)drag.target.classList.remove("drag-target");
+  if(drag.ghost)drag.ghost.remove();
+  if(drag.hint)drag.hint.remove();
+  if(target&&drag.id){
+   var p=app.playlists.find(function(item){return item.id===target.dataset.open});
+   if(p){
+    if((p.ids||[]).includes(drag.id))notice("Already in "+p.name);
+    else{call("togglePlaylist",p.id,drag.id);notice("Adding to "+p.name+"…")}
+   }
+  }
+ }
+}
+var dragSource=el("openQueueButton");
+dragSource.addEventListener("pointerdown",function(event){
+ if(event.button!==0||!app.currentId||!app.map.has(app.currentId))return;
+ var song=app.map.get(app.currentId);
+ songDrag={id:app.currentId,title:song.title||"Current song",x:event.clientX,y:event.clientY,x0:event.clientX,y0:event.clientY,started:false,target:null,ghost:null,hint:null,pointerId:event.pointerId};
+ clearTimeout(songDragTimer);
+ songDragTimer=setTimeout(function(){
+  if(!songDrag||songDrag.pointerId!==event.pointerId)return;
+  songDrag.started=true;
+  songDragSuppressClick=true;
+  if(app.view!=="playlists")setView("playlists");
+  var ghost=document.createElement("div");
+  ghost.className="song-drag-ghost";
+  ghost.textContent="♫ "+songDrag.title;
+  document.body.appendChild(ghost);
+  songDrag.ghost=ghost;
+  var hint=document.createElement("div");
+  hint.className="song-drag-hint";
+  hint.textContent="Drop on a playlist to add";
+  document.body.appendChild(hint);
+  songDrag.hint=hint;
+  ghost.style.left=songDrag.x+"px";ghost.style.top=songDrag.y+"px";
+  if(navigator.vibrate)navigator.vibrate(30);
+ },380);
+});
+document.addEventListener("pointermove",function(event){
+ if(!songDrag||event.pointerId!==songDrag.pointerId)return;
+ songDrag.x=event.clientX;songDrag.y=event.clientY;
+ if(!songDrag.started){
+  if(Math.hypot(event.clientX-songDrag.x0,event.clientY-songDrag.y0)>14)clearTimeout(songDragTimer);
+  return;
+ }
+ event.preventDefault();
+ if(songDrag.ghost){songDrag.ghost.style.left=event.clientX+"px";songDrag.ghost.style.top=event.clientY+"px"}
+ var target=songDragTarget(event.clientX,event.clientY);
+ if(target!==songDrag.target){
+  if(songDrag.target)songDrag.target.classList.remove("drag-target");
+  songDrag.target=target;
+  if(target)target.classList.add("drag-target");
+ }
+},{passive:false});
+document.addEventListener("pointerup",function(event){
+ if(songDrag&&event.pointerId===songDrag.pointerId)endSongDrag(event,false);
+});
+document.addEventListener("pointercancel",function(event){
+ if(songDrag&&event.pointerId===songDrag.pointerId)endSongDrag(event,true);
+});
+dragSource.addEventListener("click",function(event){
+ if(songDragSuppressClick){event.stopImmediatePropagation();event.preventDefault();songDragSuppressClick=false}
+},true);
+
 el("openQueueButton").addEventListener("click",toggleQueue);
 el("closeQueue").addEventListener("click",closeQueue);
 // Tap the grip, or pull it up/down; both control the same attached drawer.
