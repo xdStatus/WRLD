@@ -65,10 +65,10 @@ body.wrld-intro-running .brand-text strong:not(.intro-final-reveal){opacity:0}
 .tab:active{transform:scale(.95)}
 .tab-indicator{position:absolute;left:0;bottom:0;height:2px;width:0;transform:translate3d(0,0,0);border-radius:3px;background:#f4f4f4;box-shadow:0 0 12px rgba(255,255,255,.25);pointer-events:none;transition:transform .4s cubic-bezier(.2,.88,.22,1),width .4s cubic-bezier(.2,.88,.22,1)}
 /* Only composite the view for the short tab transition, not while idle. */
-.content-stage{transition:opacity .33s cubic-bezier(.22,1,.36,1),transform .38s cubic-bezier(.22,1,.36,1)}
-.content-stage.view-changing{opacity:0;transform:translate3d(calc(var(--view-direction,1) * -36px),0,0);pointer-events:none}
-.content-stage.view-entering{opacity:0;transform:translate3d(calc(var(--view-direction,1) * 36px),0,0);transition:none}
-.content-stage.view-changing *{pointer-events:none}
+.content-stage{position:relative;opacity:1;transform:none}
+.content-stage.view-changing,.content-stage.view-entering{opacity:1;transform:none}
+.view-slide-snapshot{position:absolute;z-index:2;pointer-events:none;overflow:hidden;contain:paint}
+@media(prefers-reduced-motion:reduce){.view-slide-snapshot{display:none}}
 .shuffle-all-row{display:flex;align-items:center;gap:12px;margin:0 0 17px}
 .shuffle-all{display:flex;align-items:center;justify-content:center;gap:10px;flex:none;min-height:42px;padding:0 16px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.095);color:#f6f6f6;border-radius:12px;font-size:12px;font-weight:620;letter-spacing:.025em;transition:transform .18s,background .18s,border-color .18s}
 .shuffle-all svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
@@ -469,34 +469,49 @@ function setView(name,id){
   t.classList.toggle("active",t.dataset.view===name||(name==="playlist"&&t.dataset.view==="playlists"));
  });
  moveTabIndicator(false);
- // Cancel pending swaps so fast repeated taps never show the wrong tab.
+ // Keep both pages visible during a real side-by-side slide.
  viewChangeSeq++;
  var sequence=viewChangeSeq;
  if(viewChangeTimer!==null){clearTimeout(viewChangeTimer);viewChangeTimer=null}
  var stage=el("viewStage");
- if(reduceMotion){
-  stage.classList.remove("view-changing","view-entering");
+ if(window.wrldViewSlideCleanup)window.wrldViewSlideCleanup();
+ stage.classList.remove("view-changing","view-entering");
+ if(reduceMotion||!stage.animate){
   render();refreshTabData(name);
   return;
  }
- stage.style.setProperty("--view-direction",String(direction));
- stage.classList.remove("view-entering");
- stage.classList.add("view-changing");
- viewChangeTimer=setTimeout(function(){
-  if(sequence!==viewChangeSeq)return;
-  viewChangeTimer=null;
-  stage.classList.remove("view-changing");
-  stage.classList.add("view-entering");
-  render();
-  refreshTabData(name);
-  // Start the incoming page offscreen, then animate it toward the center.
-  requestAnimationFrame(function(){
-   if(sequence!==viewChangeSeq)return;
-   requestAnimationFrame(function(){
-    if(sequence===viewChangeSeq)stage.classList.remove("view-entering");
-   });
-  });
- },115);
+ var parent=stage.parentElement;
+ var rect=stage.getBoundingClientRect();
+ var parentRect=parent.getBoundingClientRect();
+ var snapshot=stage.cloneNode(true);
+ snapshot.removeAttribute("id");
+ snapshot.className="view-slide-snapshot";
+ snapshot.style.left=(rect.left-parentRect.left+parent.scrollLeft)+"px";
+ snapshot.style.top=(rect.top-parentRect.top+parent.scrollTop)+"px";
+ snapshot.style.width=rect.width+"px";
+ snapshot.style.height=rect.height+"px";
+ parent.style.position="relative";
+ parent.appendChild(snapshot);
+ render();
+ refreshTabData(name);
+ var width=Math.max(1,rect.width);
+ var duration=350;
+ var easing="cubic-bezier(.22,.8,.22,1)";
+ var outgoing=snapshot.animate([
+  {transform:"translate3d(0,0,0)",opacity:1},
+  {transform:"translate3d("+(-direction*width)+"px,0,0)",opacity:1}
+ ],{duration:duration,easing:easing,fill:"forwards"});
+ var incoming=stage.animate([
+  {transform:"translate3d("+(direction*width)+"px,0,0)",opacity:1},
+  {transform:"translate3d(0,0,0)",opacity:1}
+ ],{duration:duration,easing:easing,fill:"forwards"});
+ var cleanup=function(){
+  outgoing.cancel();incoming.cancel();snapshot.remove();
+  if(window.wrldViewSlideCleanup===cleanup)window.wrldViewSlideCleanup=null;
+ };
+ window.wrldViewSlideCleanup=cleanup;
+ incoming.onfinish=function(){if(sequence===viewChangeSeq)cleanup()};
+
 }
 function render(){
  var isSettings=app.view==="settings";
