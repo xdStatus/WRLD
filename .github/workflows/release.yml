@@ -57,6 +57,10 @@ jobs:
         if: steps.release.outputs.publish == 'true'
         run: python -m unittest discover -s tests -p test_cloud.py -v
 
+      - name: Test Windows cloud sync HTTP transport
+        if: steps.release.outputs.publish == 'true'
+        run: python -m unittest discover -s tests -p test_cloud_sync_transport.py -v
+
       - name: Test Windows cloud collections and conflict handling
         if: steps.release.outputs.publish == 'true'
         run: python -m unittest discover -s tests -p test_cloud_collections.py -v
@@ -133,4 +137,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.37: WRLD Cloud likes, playlists, and playback history synchronization with Android, local collection isolation, and Windows update checks that ignore Android release tags."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.38: Fix Cloudflare 403 errors on Windows sync requests by matching the cloud music client's User-Agent. Includes cloud likes, playlists, and history synchronization."
