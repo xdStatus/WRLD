@@ -8,13 +8,14 @@ const read = (p) => fs.readFileSync(path.join(root, p), "utf8");
 const ui = read("android/app/src/main/assets/index.html");
 const activity = read("android/app/src/main/java/com/wrld/player/MainActivity.kt");
 const checker = read("android/app/src/main/java/com/wrld/player/AndroidUpdateChecker.kt");
+const service = read("android/app/src/main/java/com/wrld/player/PlaybackService.kt");
 const gradle = read("android/app/build.gradle.kts");
 const workflow = read(".github/workflows/android.yml");
 const fingerprint = read("android/signing-cert.sha256").trim();
 
 assert.match(fingerprint, /^[a-f0-9]{64}$/, "Public certificate fingerprint must be SHA-256");
 assert.match(gradle, /versionName = "0\.1\.15"/);
-assert.match(gradle, /versionCode = 16/);
+assert.match(gradle, /versionCode = 17/);
 assert.match(gradle, /WRLD_KEYSTORE_PATH/);
 assert.match(gradle, /signingConfig = signingConfigs\.getByName\("wrldRelease"\)/);
 
@@ -51,4 +52,14 @@ assert.match(workflow, /android\/signing-cert\.sha256/);
 assert.match(workflow, /android-v0\.1\.15/);
 assert.doesNotMatch(workflow, /cp android\/app\/build\/outputs\/apk\/debug\/app-debug\.apk android\/dist/,
   "NEVER publish ephemeral debug APKs");
+assert.match(service, /wrld-listening/);
+assert.match(service, /SystemClock\.elapsedRealtime\(\)/);
+assert.match(service, /activePlayer\?\.isPlaying == true/);
+assert.match(service, /putLong\("totalMs", listeningMs\)/);
+assert.match(activity, /requestListeningTime\(\)/);
+assert.match(activity, /receiveListeningTime/);
+assert.match(ui, /Total listening time:/);
+assert.match(ui, /fmtListening\(app\.listeningMs\)/);
+assert.match(ui, /cloud-status\.is-connected/);
+assert.match(ui, /cloudConnected\(\)/);
 console.log("Android update checks: trusted GitHub releases, in-app controls, fixed APK signature, protected CI.");
