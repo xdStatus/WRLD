@@ -503,6 +503,14 @@ function setView(name,id){
  // Keep the outgoing toolbar in the inert snapshot so its title and sort
  // can lift away before the incoming toolbar drops into the same space.
  var snapshotToolbar=snapshot.querySelector(".toolbar");
+ // On leaving Settings, discard its content immediately. Preserve only
+ // the outgoing toolbar snapshot so the Settings title can still rise away.
+ // Without this, the inert snapshot keeps playback controls visible for the
+ // full 1.2-second title transition despite Settings stagger being disabled.
+ if(previousView==="settings"){
+  var outgoingSettingsContent=snapshot.querySelector(".list");
+  if(outgoingSettingsContent)outgoingSettingsContent.remove();
+ }
  render();
  // History arrives asynchronously and re-renders its rows. Wait until the
  // navigation settles so the response cannot replace mid-animation nodes.
