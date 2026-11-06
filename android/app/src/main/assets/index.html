@@ -897,7 +897,7 @@ function finishQueueDrag(e,cancel){
  drawer.style.height="";
  drawer.style.visibility="";
  if(cancel)return;
- var open=drag.start>0 ? drag.height>queueMaxHeight()*.88 : drag.height>queueMaxHeight()*.35;
+ var open=drag.start>0 ? drag.height>queueMaxHeight()*.88 : drag.height>queueMaxHeight()*.12;
  if(open)openQueue();else closeQueue();
 }
 el("queueGrip").addEventListener("pointerup",function(e){finishQueueDrag(e,false)});
@@ -944,7 +944,7 @@ function endSongQueueSwipe(e){
  drawer.classList.remove("is-dragging");
  drawer.style.height="";
  drawer.style.visibility="";
- if(isQueueOpen() ? (swipe.height||0)>queueMaxHeight()*.88 : (swipe.height||0)>queueMaxHeight()*.35)openQueue();else closeQueue();
+ if(isQueueOpen() ? (swipe.height||0)>queueMaxHeight()*.88 : (swipe.height||0)>queueMaxHeight()*.12)openQueue();else closeQueue();
 }
 document.addEventListener("pointerup",endSongQueueSwipe);
 document.addEventListener("pointercancel",endSongQueueSwipe);
