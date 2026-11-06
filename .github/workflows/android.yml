@@ -139,12 +139,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p android/dist
-          cp android/app/build/outputs/apk/release/app-release.apk android/dist/WRLD-Android-v0.1.16.apk
+          cp android/app/build/outputs/apk/release/app-release.apk android/dist/WRLD-Android-v0.1.17.apk
           cd android/dist
-          sha256sum WRLD-Android-v0.1.16.apk > WRLD-Android-v0.1.16.apk.sha256
+          sha256sum WRLD-Android-v0.1.17.apk > WRLD-Android-v0.1.17.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: WRLD-Android-v0.1.16
+          name: WRLD-Android-v0.1.17
           path: android/dist/*
           if-no-files-found: error
       - name: Publish permanently signed Android beta
@@ -153,11 +153,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="android-v0.1.16"
+          TAG="android-v0.1.17"
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "::error::$TAG already exists. Refusing to overwrite an existing signed release."
             exit 1
           fi
-          gh release create "$TAG" android/dist/WRLD-Android-v0.1.16.apk android/dist/WRLD-Android-v0.1.16.apk.sha256 \
-            --target "$GITHUB_SHA" --title "WRLD Android v0.1.16 (permanently signed beta)" \
-            --notes "WRLD Android 0.1.16: permanently signed APK and in-app update checks. Future updates signed with the same certificate can replace this build without losing app data. The old temporary debug-signed betas may require one initial signing migration. Opens the official GitHub Android APK with Android installation confirmation. Cloudflare R2 and music playback remain unchanged."
+          gh release create "$TAG" android/dist/WRLD-Android-v0.1.17.apk android/dist/WRLD-Android-v0.1.17.apk.sha256 \
+            --target "$GITHUB_SHA" --title "WRLD Android v0.1.17 (permanently signed beta)" \
+            --notes "WRLD Android 0.1.17: 300 particles move freely while gathering into WRLD, then settle to a subtle shimmer before the top-left logo reveal. Permanent signing and in-app updates remain unchanged. Future updates signed with the same certificate can replace this build without losing app data. The old temporary debug-signed betas may require one initial signing migration. Opens the official GitHub Android APK with Android installation confirmation. Cloudflare R2 and music playback remain unchanged."
