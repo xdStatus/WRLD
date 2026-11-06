@@ -3,6 +3,7 @@ package com.wrld.player
 import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -39,6 +40,36 @@ class PlaybackService : MediaSessionService() {
         )
     }
     private val mainHandler = Handler(Looper.getMainLooper())
+    // Persist actual playback time in the audio service, including background listening.
+    private val listeningPrefs by lazy { getSharedPreferences("wrld-listening", MODE_PRIVATE) }
+    private var lastListeningTickMs = 0L
+    private var listeningMs = 0L
+    private var lastListeningSaveMs = 0L
+    private val listeningTick = object : Runnable {
+        override fun run() {
+            accumulateListeningTime()
+            if (activePlayer?.isPlaying == true) mainHandler.postDelayed(this, 1000L)
+        }
+    }
+
+    private fun accumulateListeningTime() {
+        val now = SystemClock.elapsedRealtime()
+        if (lastListeningTickMs != 0L) {
+            listeningMs += (now - lastListeningTickMs).coerceIn(0L, 5000L)
+        }
+        lastListeningTickMs = if (activePlayer?.isPlaying == true) now else 0L
+        if (now - lastListeningSaveMs >= 5000L || lastListeningTickMs == 0L) {
+            listeningPrefs.edit().putLong("totalMs", listeningMs).apply()
+            lastListeningSaveMs = now
+        }
+    }
+
+    private fun refreshListeningLoop() {
+        accumulateListeningTime()
+        mainHandler.removeCallbacks(listeningTick)
+        if (activePlayer?.isPlaying == true) mainHandler.postDelayed(listeningTick, 1000L)
+    }
+
 
     private val fadeTick = object : Runnable {
         override fun run() {
@@ -64,6 +95,7 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
+        listeningMs = listeningPrefs.getLong("totalMs", 0L).coerceAtLeast(0L)
         audioStore = AudioSettingsStore(applicationContext)
         audioSettings = audioStore.read()
         baseVolume = audioStore.prefs.getFloat("volume", 0.10f).coerceIn(0f, 1f)
@@ -101,6 +133,7 @@ class PlaybackService : MediaSessionService() {
                     player.currentMediaItem?.mediaId?.let { history.record(it) }
                 }
                 refreshEnvelopeLoop()
+                refreshListeningLoop()
             }
 
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
@@ -153,6 +186,9 @@ class PlaybackService : MediaSessionService() {
 
     override fun onDestroy() {
         mainHandler.removeCallbacks(fadeTick)
+        mainHandler.removeCallbacks(listeningTick)
+        accumulateListeningTime()
+        listeningPrefs.edit().putLong("totalMs", listeningMs).commit()
         if (::audioStore.isInitialized)
             audioStore.prefs.unregisterOnSharedPreferenceChangeListener(preferenceListener)
         cloudPrefs.unregisterOnSharedPreferenceChangeListener(cloudListener)
