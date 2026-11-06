@@ -1602,7 +1602,16 @@ function saveAudioSettings(){
 function recordPlayed(id){
  if(!trackById(id))return;
  state.history=[id,...state.history.filter(old=>old!==id)].slice(0,50);
- try{localStorage.setItem('wrld-desktop-history-v1',JSON.stringify(state.history))}catch{}
+ if(state.cloudSource==='cloud'){
+  post('/api/cloud/collection-action',{action:'played',track_id:id}).then(data=>{
+   if(state.cloudSource==='cloud'&&Array.isArray(data.history)){
+    state.history=data.history;
+    if(state.view==='history')applyFilter();
+   }
+  }).catch(()=>{});
+ }else{
+  try{localStorage.setItem('wrld-desktop-history-v1',JSON.stringify(state.history))}catch{}
+ }
  if(state.view==='history'&&viewTransitionTimer===0)applyFilter();
 }
 function shuffleAll(){
@@ -1767,6 +1776,12 @@ async function selectLibrarySource(source){
  try{localStorage.setItem('wrld-library-source',source)}catch{}
  renderSettings();
  await loadTracks();
+ await fetchCollections();
+ if(source==='cloud')await fetchCloudHistory();
+ else{
+  try{const saved=JSON.parse(localStorage.getItem('wrld-desktop-history-v1')||'[]');state.history=Array.isArray(saved)?saved.slice(0,50):[]}catch{state.history=[]}
+  if(state.view==='history')applyFilter();
+ }
 }
 $('sourceLocal').addEventListener('click',()=>selectLibrarySource('local'));
 $('sourceCloud').addEventListener('click',()=>selectLibrarySource('cloud'));
@@ -1836,11 +1851,25 @@ $('cancelFolderBtn').addEventListener('click',()=>{$('folderDialog').close()});
 
 // Collections are stored on the local Python service, not in browser-only storage.
 // This preserves favorites/playlists across browser profiles, cache clears and port changes.
+async function fetchCloudHistory(){
+ if(state.cloudSource!=='cloud')return;
+ try{
+  const response=await fetch('/api/cloud/collections',{cache:'no-store'});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error||'Could not load cloud history');
+  if(state.cloudSource==='cloud'){
+   state.history=Array.isArray(data.history)?data.history.slice(0,50):[];
+   if(state.view==='history')applyFilter();
+  }
+ }catch(error){toast(error.message||'Could not load cloud history')}
+}
 async function fetchCollections(){
   try{
-    const response=await fetch('/api/collections',{cache:'no-store'});
+    const source=state.cloudSource;
+    const response=await fetch(source==='cloud'?'/api/cloud/collections':'/api/collections',{cache:'no-store'});
     if(!response.ok)throw new Error('Could not load saved collections');
     const data=await response.json();
+    if(source!==state.cloudSource)return;
     state.liked=new Set(data.liked||[]);
     state.playlists=Array.isArray(data.playlists)?data.playlists:[];
     state.collectionsReady=true;
@@ -1849,7 +1878,9 @@ async function fetchCollections(){
 }
 async function changeCollection(action,payload={}){
   try{
-    const data=await post('/api/collection-action',{action,...payload});
+    const source=state.cloudSource;
+    const data=await post(source==='cloud'?'/api/cloud/collection-action':'/api/collection-action',{action,...payload});
+    if(source!==state.cloudSource)return null;
     state.liked=new Set(data.liked||[]);
     state.playlists=Array.isArray(data.playlists)?data.playlists:[];
     if(state.view==='playlist'&&!activePlaylist()){state.view='playlists';state.activePlaylist=null}
