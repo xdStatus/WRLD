@@ -57,6 +57,10 @@ jobs:
         if: steps.release.outputs.publish == 'true'
         run: python -m unittest discover -s tests -p test_cloud.py -v
 
+      - name: Test Windows cloud collections and conflict handling
+        if: steps.release.outputs.publish == 'true'
+        run: python -m unittest discover -s tests -p test_cloud_collections.py -v
+
       - name: Test Cloudflare Worker backend
         if: steps.release.outputs.publish == 'true'
         run: python -m unittest discover -s tests -p test_cloud_backend.py -v
@@ -92,7 +96,7 @@ jobs:
         if: steps.release.outputs.publish == 'true'
         shell: pwsh
         run: |
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name WRLD --icon web/favicon.ico --add-data "web;web" --collect-all webview --collect-all truststore --hidden-import clr --hidden-import webview.platforms.edgechromium native.py
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name WRLD --icon web/favicon.ico --add-data "web;web" --collect-all webview --collect-all truststore --hidden-import clr --hidden-import webview.platforms.edgechromium --hidden-import cloud_backend --hidden-import cloud_sync --hidden-import cloud_collections native.py
 
       - name: Check packaged EXE starts before publishing
         if: steps.release.outputs.publish == 'true'
@@ -129,4 +133,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.36: Android-matched 300 white magicules gather into a centered living WRLD silhouette, move freely while gathering, settle into a subtle shimmer, then glide to the top-left and reveal the glowing WRLD wordmark. Existing Windows features are unchanged."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.37: WRLD Cloud likes, playlists, and playback history synchronization with Android, local collection isolation, and Windows update checks that ignore Android release tags."
