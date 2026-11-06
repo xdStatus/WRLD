@@ -85,6 +85,9 @@ body.wrld-intro-running .brand-text strong:not(.intro-final-reveal){opacity:0}
 .cloud-input-row input{min-width:0;flex:1;padding:11px 10px;border:1px solid rgba(255,255,255,.2);background:#171717;color:#fff;border-radius:10px;font-size:12px}
 .cloud-input-row button{border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.09);border-radius:10px;padding:0 12px;font-size:12px}
 .cloud-status{font-size:11px;color:#a7a7a7;padding:0 15px 15px;line-height:1.5}
+.cloud-status.is-connected{color:#4ade80;font-weight:650;text-shadow:0 0 12px rgba(74,222,128,.19)}
+.settings-about-listening{font-size:12px;color:#eee;margin-top:14px;font-weight:600}
+.settings-about-listening strong{color:#4ade80;font-variant-numeric:tabular-nums}
 .cloud-help{color:#989898;font-size:10px;line-height:1.6;padding:0 15px 16px}
 .settings-panel{border:1px solid rgba(255,255,255,.15);border-radius:17px;background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.019));overflow:hidden}
 .settings-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;min-height:77px;position:relative}
@@ -345,9 +348,16 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 "use strict";
 const el=function(id){return document.getElementById(id)};
 const call=function(method){try{if(!window.WRLDNative)return;var args=Array.prototype.slice.call(arguments,1);return window.WRLDNative[method].apply(window.WRLDNative,args)}catch(error){notice("Android connection unavailable");}};
-const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],cloud:{source:"device",url:"https://wrld-cloud.zaavangonzaless.workers.dev",configured:false,status:"Enter your access key to connect."},settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000},view:"all",playlistId:"",query:"",sort:"title",sortReversed:false,visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false,version:"0.1.15",updates:{state:"idle",latest:"",message:"Not checked yet."}};
+const app={songs:[],map:new Map(),liked:new Set(),playlists:[],history:[],cloud:{source:"device",url:"https://wrld-cloud.zaavangonzaless.workers.dev",configured:false,status:"Enter your access key to connect."},settings:{fadeIn:false,fadeOut:false,gapless:true,fadeDurationMs:2000},view:"all",playlistId:"",query:"",sort:"title",sortReversed:false,visible:[],displayed:0,player:{id:"",playing:false,position:0,duration:0,volume:0.1,repeat:"off"},menuSong:"",permission:false,version:"0.1.16",listeningMs:0,updates:{state:"idle",latest:"",message:"Not checked yet."}};
 const heart='<svg viewBox="0 0 24 24"><path d="M20.7 5.1a5.6 5.6 0 0 0-7.9 0L12 6l-.8-.9a5.6 5.6 0 0 0-7.9 7.9L12 22l8.7-9a5.6 5.6 0 0 0 0-7.9Z"/></svg>';
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function fmtListening(ms){
+ var seconds=Math.floor(Math.max(0,Number(ms)||0)/1000);
+ var hours=Math.floor(seconds/3600);
+ var minutes=Math.floor((seconds%3600)/60);
+ return hours+"h "+minutes+"m";
+}
+function cloudConnected(){return app.cloud.source==="cloud" && /^Connected(?:\\b|\\s|\\s*·)/i.test(app.cloud.status)}
 function fmt(ms){var seconds=Math.floor(Math.max(0,Number(ms)||0)/1000);return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")}
 var toastTimer;
 function notice(message){var t=el("toast");t.textContent=message; t.classList.add("visible");clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove("visible")},2700)}
@@ -438,7 +448,7 @@ function moveTabIndicator(first){
 }
 function refreshTabData(name){
  if(name==="history")call("requestHistory");
- if(name==="settings"){call("requestAudioSettings");call("requestCloudConfig")}
+ if(name==="settings"){call("requestAudioSettings");call("requestCloudConfig");call("requestListeningTime")}
 }
 function setView(name,id){
  var targetId=id||"";
@@ -551,7 +561,7 @@ function renderSettings(){
    '<label class="cloud-source-label">Cloudflare Worker · https://wrld-cloud.zaavangonzaless.workers.dev</label>'+
    '<label class="cloud-source-label" for="cloudAccessKey">Private access key (saved securely on this phone)</label>'+
    '<div class="cloud-input-row"><input id="cloudAccessKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="'+(app.cloud.configured?'Key saved · leave blank to keep':'Paste WRLD_ACCESS_TOKEN')+'"><button type="button" data-save-cloud="1">Connect</button></div>'+
-   '<div class="cloud-status" id="cloudStatus">'+esc(app.cloud.status)+'</div>'+
+   '<div class="cloud-status'+(cloudConnected()?' is-connected':'')+'" id="cloudStatus">'+esc(app.cloud.status)+'</div>'+
    '<div class="cloud-help">Your music streams from your private Cloudflare R2 bucket. No Tailscale, Windows server or local music files required. Do not share your access key.</div>'+
   '</div>'+
   '<div class="settings-heading">Library</div>'+
@@ -568,7 +578,8 @@ function renderSettings(){
   '</div>'+
   '<div class="settings-heading">About</div>'+
   '<div class="settings-panel"><div class="settings-about"><div class="settings-about-title">999 · WRLD</div>'+
-   '<div class="settings-about-version">Android v'+esc(app.version)+' (beta)</div>'+
+   '<div class="settings-about-version">Android v'+esc(app.version)+' (beta)</div>'+ 
+   '<div class="settings-about-listening">Total listening time: <strong id="totalListeningTime">'+fmtListening(app.listeningMs)+'</strong></div>'+
    '<div class="settings-about-desc">Local and private WRLD Cloud playback powered by Android Media3. Cloud music streams from your private Cloudflare R2 library over HTTPS. Your playback preferences stay on this device.</div></div>'+
    '<button class="settings-action" data-open-updates="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>GitHub Releases<small>View the latest Android updates</small></span><span aria-hidden="true">↗</span></button></div>'+
   '</div>';
@@ -883,6 +894,10 @@ window.WRLD={
   if(app.view==="settings")renderSettings();
   if(app.updates.state==="available"||app.updates.state==="error")notice(app.updates.message);
  },
+ receiveListeningTime:function(ms){
+  app.listeningMs=Math.max(0,Number(ms)||0);
+  var label=el("totalListeningTime");if(label)label.textContent=fmtListening(app.listeningMs);
+ },
  receiveCloudConfig:function(data){
   if(!data)return;
   app.cloud.source=data.source==="cloud"?"cloud":"device";
@@ -892,7 +907,7 @@ window.WRLD={
  },
  receiveCloudStatus:function(message){
   app.cloud.status=String(message||"");
-  var label=el("cloudStatus");if(label)label.textContent=app.cloud.status;
+  var label=el("cloudStatus");if(label){label.textContent=app.cloud.status;label.classList.toggle("is-connected",cloudConnected());}
  },
  receiveLibrary:function(data){app.songs=Array.isArray(data.songs)?data.songs:[];app.map=new Map(app.songs.map(function(s){s.id=String(s.id);return [s.id,s]}));app.permission=false;el("folderStatus").textContent=app.songs.length+(app.cloud.source==="cloud"?" songs from WRLD Cloud":" local audio files found");el("shuffleAllBtn").disabled=app.songs.length===0;render();renderNow()},
  receiveCollections:function(data){app.liked=new Set((data.liked||[]).map(String));app.playlists=Array.isArray(data.playlists)?data.playlists.map(function(p){return {id:String(p.id),name:String(p.name),ids:(p.ids||[]).map(String)}}):[];render();renderNow()},
