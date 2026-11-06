@@ -50,6 +50,7 @@ class MainActivity : Activity() {
     private var cloudCollections = JSONObject().put("liked", JSONArray())
         .put("playlists", JSONArray()).put("history", JSONArray()).put("listeningMs", 0L)
     private var cloudSyncBusy = false
+    private var lastCloudPlayedId = ""
 
     private fun refreshCloudCollections() {
         if (musicSource != "cloud" || cloudSyncBusy) return
@@ -288,6 +289,14 @@ class MainActivity : Activity() {
                     player.addListener(object : Player.Listener {
                         override fun onEvents(player: Player, events: Player.Events) {
                             sendPlayerState()
+                            if (musicSource == "cloud" &&
+                                events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)) {
+                                val id = player.currentMediaItem?.mediaId ?: ""
+                                if (id.startsWith("r2_") && id != lastCloudPlayedId) {
+                                    lastCloudPlayedId = id
+                                    mutateCloudCollections { CloudCollectionMerge.addHistory(it, id) }
+                                }
+                            }
                             if (queueOpened &&
                                 (events.contains(Player.EVENT_TIMELINE_CHANGED) ||
                                     events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION))) {
@@ -467,6 +476,7 @@ class MainActivity : Activity() {
             runOnUiThread {
                 if (value != "device" && value != "cloud") return@runOnUiThread
                 musicSource = value
+                lastCloudPlayedId = ""
                 getSharedPreferences("wrld-cloud", MODE_PRIVATE).edit()
                     .putString("source", value).apply()
                 sendCloudConfig()
@@ -485,6 +495,7 @@ class MainActivity : Activity() {
                 try {
                     CloudSecrets.save(this@MainActivity, value.trim())
                     musicSource = "cloud"
+                    lastCloudPlayedId = ""
                     getSharedPreferences("wrld-cloud", MODE_PRIVATE).edit()
                         .putString("source", "cloud").apply()
                     sendCloudConfig()
@@ -545,7 +556,10 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface fun requestHistory() {
-            runOnUiThread { sendHistory() }
+            runOnUiThread {
+                sendHistory()
+                if (musicSource == "cloud") refreshCloudCollections()
+            }
         }
 
         @JavascriptInterface fun requestLibrary() {
