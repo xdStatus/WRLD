@@ -536,7 +536,7 @@ function constellationArtwork(id){
  for(var i=0;i<95;i++){background+='<circle cx="'+(3+random()*94).toFixed(1)+'" cy="'+(3+random()*94).toFixed(1)+'" r="'+(.13+random()*.5).toFixed(2)+'" fill="#f1f5ff" opacity="'+(.12+random()*.38).toFixed(2)+'"/>'}
  for(var j=0;j<11;j++){var angle=j*Math.PI*2/11+(random()-.5)*.8,rad=12+random()*26;points.push({x:50+Math.cos(angle)*rad,y:50+Math.sin(angle)*rad,r:.8+random()*1.1})}
  var order=points.map(function(_,i){return i}).sort(function(a,b){return points[a].x-points[b].x});
- for(var k=1;k<order.length;k++){var a=points[order[k-1]],b=points[order[k]];lines+='<line x1="'+a.x.toFixed(1)+'" y1="'+a.y.toFixed(1)+'" x2="'+b.x.toFixed(1)+'" y2="'+a.y.toFixed(1)+'" stroke="#c7d5ef" stroke-opacity=".43" stroke-width=".42"/>'}
+ for(var k=1;k<order.length;k++){var a=points[order[k-1]],b=points[order[k]];lines+='<line x1="'+a.x.toFixed(1)+'" y1="'+a.y.toFixed(1)+'" x2="'+b.x.toFixed(1)+'" y2="'+b.y.toFixed(1)+'" stroke="#c7d5ef" stroke-opacity=".43" stroke-width=".42"/>'}
  for(var n=0;n<points.length;n++){var p=points[n];dots+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+(p.r*2.5).toFixed(1)+'" fill="#dce8ff" opacity=".13"/><circle class="'+(n%3===0?'constellation-bright':'')+'" cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+p.r.toFixed(2)+'" fill="#f5f8ff"/>'}
  return '<svg class="constellation-svg" viewBox="0 0 100 100" aria-hidden="true"><g>'+background+'</g><g class="constellation-motion">'+lines+dots+'</g></svg>';
 }
