@@ -707,6 +707,40 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 .shuffle-all-btn:active{transform:scale(.96)}
 @media(prefers-reduced-motion:reduce){.header-settings svg,.constellation-playing .constellation-motion,.constellation-playing .constellation-bright{animation:none!important}.player .queue-drawer{transition:none!important}}
 
+
+/* Android-matched navigation: isolated transparent rows, not opaque page clones. */
+.wrld-row-overlay{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none;background:transparent}
+.wrld-outgoing-row{will-change:transform,opacity;pointer-events:none;box-shadow:none!important}
+.wrld-outgoing-row.song{background:#11131a;display:grid}
+.wrld-outgoing-row.playlist-card{background:#11131a}
+.now-playing-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:14px}
+.now-playing-top .now-badge{border-bottom:0;padding-bottom:0;flex:none}
+.now-listening{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right;min-width:0}
+.now-listening span{font-size:9px;letter-spacing:.13em;color:#878b98;white-space:nowrap}
+.now-listening strong{font-size:12px;font-weight:620;color:#f1f4ff;font-variant-numeric:tabular-nums}
+#visualizer .constellation-motion{transform-origin:50% 50%}
+#visualizer.constellation-playing .constellation-motion,
+#visualizerWrap.constellation-playing .constellation-motion{animation:wrldDesktopWideDrift 6.5s ease-in-out infinite alternate}
+#visualizerWrap.constellation-playing .constellation-bright{animation:wrldDesktopBrightTwinkle 2.6s ease-in-out infinite alternate}
+@keyframes wrldDesktopWideDrift{0%{transform:translate(-8px,7px) rotate(-3deg) scale(.96)}50%{transform:translate(3px,-4px) rotate(1.8deg) scale(1.03)}100%{transform:translate(9px,-8px) rotate(3.5deg) scale(.99)}}
+@keyframes wrldDesktopBrightTwinkle{0%{opacity:.42}50%{opacity:1;filter:drop-shadow(0 0 1px white)}100%{opacity:.65}}
+/* Replicate Android's seek glow, two trailing rays, tooltip and native slider behavior. */
+.seek-shell{height:32px;touch-action:none}
+.seek-shell .seek-track{height:4px;background:rgba(233,233,233,.24);border-radius:999px;transition:height .2s cubic-bezier(.22,1,.36,1)}
+.seek-shell .seek-fill{position:relative;height:100%;background:linear-gradient(90deg,#b6c4ff,#c9d4ff 72%,#fff);transition:width .1s linear;box-shadow:none}
+.seek-shell .seek-head{position:absolute;right:0;top:50%;height:4px;width:3px;transform:translateY(-50%);border-radius:99px;background:#fff;box-shadow:0 0 3px rgba(255,255,255,.75);isolation:isolate}
+.seek-shell .seek-head::before,.seek-shell .seek-head::after{content:"";position:absolute;right:0;top:50%;width:calc(104px * var(--line-growth,0));height:16px;opacity:var(--line-growth,0);transform-origin:100% 50%;background:radial-gradient(ellipse 103px 7px at 100% 50%,rgba(255,255,255,.88) 0%,rgba(216,225,255,.44) 30%,rgba(181,198,255,.13) 65%,transparent 100%);filter:blur(6px);pointer-events:none;transition:width .1s linear,opacity .1s linear}
+.seek-shell .seek-head::before{transform:translateY(-50%) rotate(-12deg)}
+.seek-shell .seek-head::after{transform:translateY(-50%) rotate(12deg)}
+.seek-shell.is-scrubbing .seek-track{height:6px;background:rgba(244,244,244,.29)}
+.seek-shell.is-scrubbing .seek-head{box-shadow:0 0 12px 3px rgba(255,255,255,.64),0 0 23px 5px rgba(230,230,230,.2)}
+#seek{z-index:2;-webkit-appearance:none;appearance:none}
+#seek::-webkit-slider-runnable-track{height:32px;background:transparent}
+#seek::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:32px;background:transparent;border:0}
+.seek-shell .scrub-tooltip{bottom:32px;transform:translateX(-50%) translateY(5px);background:#252525;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:5px 8px;min-width:38px;text-align:center;color:#eee;font-size:10px;opacity:0;transition:opacity .16s,transform .16s;white-space:nowrap}
+.seek-shell.is-scrubbing .scrub-tooltip{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(prefers-reduced-motion:reduce){#visualizerWrap.constellation-playing .constellation-motion,#visualizerWrap.constellation-playing .constellation-bright{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -813,7 +847,7 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
     </div>
 
     <aside class="side glass">
-      <div class="now-badge">Now Playing</div>
+      <div class="now-playing-top"><div class="now-badge">Now Playing</div><div class="now-listening"><span>TOTAL LISTENING TIME</span><strong id="nowListeningTime">0 min</strong></div></div>
       <div class="visualizer-wrap" id="visualizerWrap">
         <div class="visualizer-head">
           <span class="visualizer-kicker">YOUR CONSTELLATION</span>
@@ -848,7 +882,7 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
         <span class="time" id="currentTime">0:00</span>
         <div class="seek-shell" id="seekShell">
           <div class="seek-track" aria-hidden="true"><div class="seek-fill" id="seekFill"><span class="seek-head"></span></div></div>
-          <input id="seek" type="range" min="0" max="100" value="0" step="0.01" aria-label="Seek in song">
+          <input id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek in song">
           <output id="scrubTooltip" class="scrub-tooltip" aria-hidden="true">0:00</output>
         </div>
         <span class="time" id="duration">0:00</span>
@@ -1498,18 +1532,42 @@ function setView(view,playlistId=null){
  clearDesktopTransition();
  if(viewTransitionTimer){clearTimeout(viewTransitionTimer);viewTransitionTimer=0}
  const stage=$('libraryStage');
- // Capture only changing content and header; never snapshot desktop player, stars or menu.
+ const stageRect=stage.getBoundingClientRect();
  const oldHead=stage.querySelector('.library-head');
  const oldRect=oldHead?.getBoundingClientRect();
- const oldBody=stage.querySelector(previous==='settings'?'#settingsPanel':previous==='playlists'?'#playlistGrid':'#libraryListLayout');
- let bodySnapshot=null;
- if(changed&&!reducedMotion&&previous!=='settings'&&oldBody&&!oldBody.classList.contains('hidden')){
-  bodySnapshot=oldBody.cloneNode(true);
-  bodySnapshot.removeAttribute('id');
-  bodySnapshot.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
-  bodySnapshot.classList.add('wrld-content-snapshot');
-  bodySnapshot.setAttribute('aria-hidden','true');
-  bodySnapshot.inert=true;
+ const oldSelector=previous==='playlists'?'#playlistGrid .playlist-card':'#songList .song';
+ const oldScroller=previous==='playlists'?$('playlistGrid'):$('listWrap');
+ // Snapshot only the rows currently in the visible scroll viewport. Never
+ // clone the entire library panel: its old opaque background hid all new rows.
+ let rowOverlay=null;
+ if(changed&&!reducedMotion&&previous!=='settings'&&oldScroller){
+  const bounds=oldScroller.getBoundingClientRect();
+  const clippedTop=Math.max(bounds.top,stageRect.top);
+  const clippedBottom=Math.min(bounds.bottom,stageRect.bottom);
+  rowOverlay=document.createElement('div');
+  rowOverlay.className='wrld-row-overlay';
+  rowOverlay.inert=true;
+  rowOverlay.setAttribute('aria-hidden','true');
+  let copied=0;
+  for(const row of stage.querySelectorAll(oldSelector)){
+   if(copied>=16)break;
+   const rect=row.getBoundingClientRect();
+   if(rect.bottom<=clippedTop||rect.top>=clippedBottom)continue;
+   const copy=row.cloneNode(true);
+   copy.removeAttribute('id');
+   copy.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
+   copy.classList.add('wrld-outgoing-row');
+   copy.style.position='absolute';
+   copy.style.left=(rect.left-stageRect.left)+'px';
+   copy.style.top=(rect.top-stageRect.top)+'px';
+   copy.style.width=rect.width+'px';
+   copy.style.height=rect.height+'px';
+   copy.style.margin='0';
+   copy.style.boxSizing='border-box';
+   rowOverlay.appendChild(copy);
+   copied++;
+  }
+  if(!copied)rowOverlay=null;
  }
  let headerSnapshot=null;
  if(changed&&!reducedMotion&&oldHead&&oldRect){
@@ -1523,65 +1581,63 @@ function setView(view,playlistId=null){
  }
  state.view=view;state.activePlaylist=nextPlaylist;
  state.query=$('search').value;
- closeTrackMenu();updateCollectionNav();moveCollectionIndicator();
+ closeTrackMenu();
+ updateCollectionNav();
+ moveCollectionIndicator();
  applyFilter();
  if(!changed||reducedMotion||!stage.animate)return;
  const sequence=viewTransitionSequence;
- const prevIndex=tabOrder.indexOf(previous==='playlist'?'playlists':previous);
- const nextIndex=tabOrder.indexOf(view==='playlist'?'playlists':view);
- const dir=Math.sign(nextIndex-prevIndex)||1;
+ const before=tabOrder.indexOf(previous==='playlist'?'playlists':previous);
+ const after=tabOrder.indexOf(view==='playlist'?'playlists':view);
+ const direction=Math.sign(after-before)||1;
  const animations=wrldNavAnimations;
  const head=stage.querySelector('.library-head');
- // Old title and sort rise; new title and sort drop, matching Android's 1.2s sequence.
  if(headerSnapshot){
   stage.appendChild(headerSnapshot);
   wrldOldHeader=headerSnapshot;
   animations.push(headerSnapshot.animate([
-   {transform:'translateY(0)',opacity:1},
-   {transform:'translateY(-34px)',opacity:0}
+   {transform:'translate3d(0,0,0)',opacity:1},
+   {transform:'translate3d(0,-34px,0)',opacity:0}
   ],{duration:420,easing:'cubic-bezier(.45,0,.75,.45)',fill:'both'}));
  }
  animations.push(head.animate([
-  {transform:'translateY(-30px)',opacity:0,offset:0},
-  {transform:'translateY(3px)',opacity:1,offset:.84},
-  {transform:'translateY(0)',opacity:1,offset:1}
+  {transform:'translate3d(0,-30px,0)',opacity:0,offset:0},
+  {transform:'translate3d(0,3px,0)',opacity:1,offset:.84},
+  {transform:'translate3d(0,0,0)',opacity:1,offset:1}
  ],{duration:780,delay:420,easing:'cubic-bezier(.2,.8,.25,1)',fill:'both'}));
- function animateRows(nodes,outgoing){
-  const viewRect=stage.getBoundingClientRect(),width=Math.max(160,stage.clientWidth);
-  let visibleIndex=0;
-  nodes.forEach(node=>{
-   if(!node||!node.isConnected)return;
-   const rect=node.getBoundingClientRect();
-   if(rect.bottom<viewRect.top||rect.top>viewRect.bottom)return;
-   const delay=outgoing?0:140+Math.min(visibleIndex++,12)*42;
-   const from=outgoing?0:dir*width;
-   const to=outgoing?-dir*width:0;
-   const frames=outgoing?[
+ if(rowOverlay){
+  stage.appendChild(rowOverlay);
+  wrldStageOverlay=rowOverlay;
+  Array.from(rowOverlay.children).forEach((node,index)=>{
+   animations.push(node.animate([
     {transform:'translate3d(0,0,0)',opacity:1},
-    {transform:'translate3d('+to+'px,0,0)',opacity:0}
-   ]:[
-    {transform:'translate3d('+from+'px,0,0)',opacity:.65,offset:0},
-    {transform:'translate3d('+(-dir*9)+'px,0,0)',opacity:1,offset:.83},
-    {transform:'translate3d(0,0,0)',opacity:1,offset:1}
-   ];
-   animations.push(node.animate(frames,{duration:540,delay,easing:outgoing?'cubic-bezier(.35,0,.25,1)':'cubic-bezier(.22,.7,.25,1)',fill:'both'}));
+    {transform:'translate3d('+(-direction*95)+'px,0,0)',opacity:0}
+   ],{duration:340,delay:Math.min(index,8)*16,easing:'cubic-bezier(.35,0,.25,1)',fill:'both'}));
   });
  }
- if(bodySnapshot){
-  stage.appendChild(bodySnapshot);wrldStageOverlay=bodySnapshot;
-  const outgoing=previous==='playlists'?bodySnapshot.querySelectorAll('.playlist-card'):bodySnapshot.querySelectorAll('.song');
-  animateRows(outgoing,true);
- }
- // Settings panels never stagger; when leaving Settings they disappear immediately.
+ // Do not animate Settings controls (or leave a gray Settings frame behind).
  if(view!=='settings'){
-  const incoming=view==='playlists'?stage.querySelectorAll('#playlistGrid .playlist-card'):stage.querySelectorAll('#songList .song');
-  animateRows(incoming,false);
+  const selector=view==='playlists'?'#playlistGrid .playlist-card':'#songList .song';
+  const scroller=view==='playlists'?$('playlistGrid'):$('listWrap');
+  const bounds=scroller.getBoundingClientRect();
+  let index=0;
+  for(const node of stage.querySelectorAll(selector)){
+   const rect=node.getBoundingClientRect();
+   if(rect.bottom<=Math.max(bounds.top,stageRect.top)||rect.top>=Math.min(bounds.bottom,stageRect.bottom))continue;
+   const offset=direction*Math.min(145,stage.clientWidth*.23);
+   // fill:backwards hides each fresh row until its own delay begins.
+   // Do not animate a panel wrapper: that caused the 1-second blink.
+   animations.push(node.animate([
+    {transform:'translate3d('+offset+'px,0,0)',opacity:0,offset:0,easing:'cubic-bezier(.22,.65,.25,1)'},
+    {transform:'translate3d('+(-direction*8)+'px,0,0)',opacity:1,offset:.85},
+    {transform:'translate3d(0,0,0)',opacity:1,offset:1}
+   ],{duration:460,delay:70+Math.min(index++,12)*42,easing:'linear',fill:'both'}));
+   if(index>=16)break;
+  }
  }
- const last=animations.reduce((one,two)=>{
-  const a=one.effect.getTiming(),b=two.effect.getTiming();
-  return a.delay+a.duration>=b.delay+b.duration?one:two;
- });
- last.onfinish=()=>{if(sequence===viewTransitionSequence)clearDesktopTransition()};
+ // Finish on the final staggered row or title animation, whichever is later.
+ const finished=Promise.allSettled(animations.map(anim=>anim.finished));
+ finished.then(()=>{if(sequence===viewTransitionSequence)clearDesktopTransition()});
 }
 function updateCollectionNav(){
   const nav=state.view==='playlist'?'playlists':state.view;
@@ -1745,6 +1801,8 @@ function updateDesktopListening(){
  desktopListeningTrack=id;desktopListeningPosition=position;
  const label=$('desktopListeningTime');
  if(label)label.textContent=formatDesktopListening(desktopListeningSeconds);
+ const side=$('nowListeningTime');
+ if(side)side.textContent=formatDesktopListening(desktopListeningSeconds);
  try{localStorage.setItem('wrld-listening-seconds-v1',String(desktopListeningSeconds))}catch{}
 }
 audio.addEventListener('timeupdate',updateDesktopListening);
@@ -2143,9 +2201,10 @@ if(state.cloudSource==='cloud')fetchCloudHistory();
 let scrubbing=false;
 function displayProgress(value, timeValue){
   const percent=Math.max(0,Math.min(100,Number(value)||0));
-  $('seek').value=String(percent);
+  $('seek').value=String(Math.round(percent*10));
   $('seekFill').style.width=percent+'%';
-  $('seekShell').style.setProperty('--tip-left',Math.max(5,Math.min(95,percent))+'%');
+  $('seekFill').style.setProperty('--line-growth',String(Math.min(1,percent/75)));
+  $('scrubTooltip').style.left='clamp(21px, '+percent+'%, calc(100% - 21px))';
   $('scrubTooltip').textContent=fmt(timeValue);
   $('currentTime').textContent=fmt(timeValue);
   $('duration').textContent=Number.isFinite(audio.duration)&&audio.duration>0?fmt(audio.duration):'—';
@@ -2196,7 +2255,7 @@ function seekAt(percent){
 }
 const seekShell=$('seekShell');
 $('seek').addEventListener('pointerdown',()=>{scrubbing=true;seekShell.classList.add('is-scrubbing')});
-$('seek').addEventListener('input',e=>seekAt(Number(e.target.value)));
+$('seek').addEventListener('input',e=>seekAt(Number(e.target.value)/10));
 function stopScrub(){if(!scrubbing)return;scrubbing=false;seekShell.classList.remove('is-scrubbing');updateProgress()}
 $('seek').addEventListener('pointerup',stopScrub);
 $('seek').addEventListener('pointercancel',stopScrub);
