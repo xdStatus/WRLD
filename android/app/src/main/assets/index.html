@@ -534,7 +534,24 @@ function setView(name,id){
     var settings=section.querySelector(".settings-page");
     // Animate Settings headings and panels individually, rather than sliding
     // the entire Settings page as one block.
-    var rows=settings?Array.from(settings.children):(grid?Array.from(grid.children):Array.from(section.children));
+    var rows=grid?Array.from(grid.children):Array.from(section.children);
+    if(settings){
+     // Playback controls enter separately: Fade in, Fade out, Fade duration,
+     // and Gapless playback each receive their own staggered animation.
+     // Keep their shared panel stationary so parent/child transforms do not
+     // compound and make the controls appear to jump.
+     rows=[];
+     Array.from(settings.children).forEach(function(child){
+      if(child.classList.contains("settings-panel")){
+       var controls=Array.from(child.children);
+       if(controls.some(function(item){return item.matches('[data-audio-setting],.settings-duration')})){
+        rows.push.apply(rows,controls);
+        return;
+       }
+      }
+      rows.push(child);
+     });
+    }
     var viewportTop=stage.getBoundingClientRect().top;
     var dock=document.querySelector(".dock");
     var viewportBottom=dock?Math.min(window.innerHeight,dock.getBoundingClientRect().top):window.innerHeight;
@@ -1155,17 +1172,8 @@ window.WRLD={
    // The history response replaces #list. Never interrupt an active slide.
    if(el("viewStage").classList.contains("is-sliding"))return;
    render();
-   if(!reduceMotion){
-    Array.from(el("list").querySelectorAll(".track")).slice(0,14).forEach(function(row,i){
-     var rect=row.getBoundingClientRect();
-     if(rect.top>=window.innerHeight)return;
-     row.animate([
-      {transform:"translate3d(28px,0,0)",opacity:.65},
-      {transform:"translate3d(-3px,0,0)",opacity:1,offset:.82},
-      {transform:"translate3d(0,0,0)",opacity:1}
-     ],{duration:480,delay:i*42,easing:"cubic-bezier(.22,.7,.25,1)"});
-    });
-   }
+   // Playback-driven history refreshes must never replay tab animations.
+   // Staggering is owned exclusively by setView() on actual tab changes.
   }
  },
  receiveQueue:function(data){
