@@ -609,7 +609,7 @@ html,body{width:100%;height:100%;min-width:0}
 
 
 
-/* WRLD 1.8.34 — 350 white Magicules; particle-only hold before the word resolves. */
+/* WRLD 1.8.35 — Android-matched 300 Magicules, living particle silhouette and header reveal. */
 .wrld-intro{position:fixed;inset:0;z-index:1000;isolation:isolate;overflow:hidden;pointer-events:none!important;color:white;animation:magiculeOverlaySafetyHide 9s steps(1,end) forwards}
 /* Visual-only launch layer. It must never swallow clicks, even when cleanup fails. */
 .wrld-intro,.wrld-intro *{pointer-events:none!important}
@@ -621,6 +621,8 @@ html,body{width:100%;height:100%;min-width:0}
 .intro-lettering{display:flex;gap:.18em;font:550 clamp(64px,10vw,104px)/1.18 'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;letter-spacing:0;color:#fff;opacity:0;transform-origin:center;will-change:opacity,filter,transform}
 .intro-letter{display:inline-block;transform-origin:center center;will-change:transform}
 body.wrld-intro-running .brand h1{visibility:hidden!important}
+body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!important;animation:wrldHeaderBloom .85s cubic-bezier(.2,.8,.2,1) both}
+@keyframes wrldHeaderBloom{0%{opacity:0;filter:blur(7px) brightness(2.3);text-shadow:0 0 19px #fff}55%{opacity:1;filter:blur(1px) brightness(1.5);text-shadow:0 0 11px #fff}100%{opacity:1;filter:none;text-shadow:none}}
 /* WRLD is the wordmark; the comet Easter egg gets a single, understated magicule. */
 .brand{gap:8px}
 .brand-badge,.brand-badge:hover,.brand-badge:focus-visible{width:24px!important;min-width:24px!important;height:38px!important;padding:0!important;display:grid!important;place-items:center!important}
@@ -898,15 +900,16 @@ const $ = id => document.getElementById(id);
 const audio = $('audio');
 /* WRLD Magicule Singularity: off-screen white energy physically charges each letter. */
 const wrldIntroMarkup=$('wrldIntro')?.outerHTML||'';
-const MAGICULE_COUNT=350;
-const MAGICULE_PER_LETTER=[88,88,87,87];
+const MAGICULE_COUNT=300;
+const MAGICULE_PER_LETTER=[75,75,75,75];
 // The last incoming magicules finish settling before the 700ms particle-only hold.
 const SINGULARITY={
- travel:1820,hover:3920,reveal:4620,transfer:5920,end:8350
+ travel:1820,hover:3920,transfer:5420,reveal:7080,end:8000
 };
 function recoverWrldIntro(overlay){
  if(overlay?.isConnected)overlay.remove();
  document.body.classList.remove('wrld-intro-running');
+ document.querySelector('.brand h1')?.classList.add('intro-final-reveal');
 }
 window.__wrldIntroStatus=()=>({
  active:!!$('wrldIntro'),
@@ -914,6 +917,7 @@ window.__wrldIntroStatus=()=>({
  mode:'singularity',particles:MAGICULE_COUNT,seed:window.__wrldIntroLastSeed
 });
 function startWrldIntro(){
+ document.querySelector('.brand h1')?.classList.remove('intro-final-reveal');
  const intro=$('wrldIntro'),veil=$('introVeil'),canvas=$('introParticleCanvas');
  const lettering=$('introLettering');
  const letters=Array.from(document.querySelectorAll('#introLettering .intro-letter'));
@@ -937,7 +941,7 @@ function startWrldIntro(){
  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
  const shades=['#fff','#ededed','#cfcfcf','#b8b8b8','#f7f7f7','#dadada'];
  const magicules=Array.from({length:MAGICULE_COUNT},(_,i)=>({
-  i,letter:i<88?0:i<176?1:i<263?2:3,
+  i,letter:Math.floor(i/75),
   size:i%19===0?1.65+random()*.28:i%7===0?1.05+random()*.23:.60+random()*.43,
   alpha:.62+random()*.36,phase:random()*Math.PI*2,spin:(random()-.5)*2.4,
   delay:random()*1370,extraTravel:(random()-.5)*220,
@@ -1032,7 +1036,11 @@ function startWrldIntro(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   center=makeSurface(letters,16);
   dock=makeSurface(headerLetters,7);
-  const ccx=center.left+center.w/2,ccy=center.top+center.h/2;
+  const bounds={minX:Math.min(...center.points.map(p=>p.x)),maxX:Math.max(...center.points.map(p=>p.x)),
+   minY:Math.min(...center.points.map(p=>p.y)),maxY:Math.max(...center.points.map(p=>p.y))};
+  const offsetX=width/2-(bounds.minX+bounds.maxX)/2;
+  const offsetY=height/2-(bounds.minY+bounds.maxY)/2;
+  center.points=center.points.map(p=>({x:p.x+offsetX,y:p.y+offsetY}));
   origins=magicules.map(p=>{
    const margin=p.edgeDistance,v=p.edgeAt;
    if(p.edge===0)return {x:-margin,y:(v*1.3-.15)*height};
@@ -1067,15 +1075,21 @@ function startWrldIntro(){
   const q=Math.pow(u,1.75);
   const from=origins[p.i],to=center.points[p.i],c=controls[p.i];
   const drift=living(p,time),rest=smooth((u-.77)/.23);
-  return {x:cubic(from.x,c.c1.x,c.c2.x,to.x,q)+drift.x*rest,
-          y:cubic(from.y,c.c1.y,c.c2.y,to.y,q)+drift.y*rest,
+  const breathe=smooth((time-(SINGULARITY.hover-360))/480);
+  const aliveTime=Math.max(0,time-SINGULARITY.hover),softness=smooth(aliveTime/370);
+  const dx=to.x-width*.5,dy=to.y-height*.5;
+  const breath=.031*Math.sin(aliveTime*.0045)*softness;
+  const ripple=Math.sin(aliveTime*.0077-to.x*.039+p.phase*.28);
+  const shimmer=Math.cos(aliveTime*.0058+to.x*.022+p.phase);
+  return {x:cubic(from.x,c.c1.x,c.c2.x,to.x,q)+drift.x*rest*breathe*2.2+dx*breath+1.65*ripple*softness,
+          y:cubic(from.y,c.c1.y,c.c2.y,to.y,q)+drift.y*rest*breathe*2.2+dy*breath+2.05*shimmer*softness,
           progress:u};
  }
  function transfer(p,time){
   const start=SINGULARITY.transfer+p.delay*.19;
   const u=clamp((time-start)/1330),q=smooth(u);
-  const from=center.points[p.i],to=dock.points[p.i];
-  const drift=living(p,SINGULARITY.transfer);
+  const from=flight(p,SINGULARITY.transfer),to=dock.points[p.i];
+  const drift={x:0,y:0};
   const dx=to.x-from.x,dy=to.y-from.y,dist=Math.hypot(dx,dy);
   const bend=Math.sin(p.phase)*Math.min(110,dist*.17);
   const nx=-dy/Math.max(1,dist),ny=dx/Math.max(1,dist);
@@ -1105,6 +1119,7 @@ function startWrldIntro(){
   ctx.restore();
  }
  function drawMagicule(p,point,previous,time,opacity){
+  const grownSize=p.size*(1+.10*smooth(arrivalProgress(p,time)));
   if(opacity<=.008||point.x< -15||point.x>width+15||point.y< -15||point.y>height+15)return;
   const distance=Math.hypot(point.x-previous.x,point.y-previous.y);
   if(distance>2.2&&p.i%2===0){
@@ -1117,13 +1132,13 @@ function startWrldIntro(){
   }
   if(p.i%7===0){
    ctx.globalAlpha=opacity*.10;ctx.fillStyle='#fff';
-   ctx.beginPath();ctx.arc(point.x,point.y,p.size*3.2,0,Math.PI*2);ctx.fill();
+   ctx.beginPath();ctx.arc(point.x,point.y,grownSize*3.2,0,Math.PI*2);ctx.fill();
   }
   // Brighter only while all particles hold their living, letter-shaped silhouette.
-  const hoverBoost=time>=SINGULARITY.hover&&time<SINGULARITY.reveal?1.16:1;
-  const pulse=(.90+.10*Math.sin(time*p.rate*1.9+p.phase))*hoverBoost;
+  const hoverBoost=time>=SINGULARITY.hover&&time<SINGULARITY.transfer?1.18:1;
+  const pulse=(.81+.19*Math.sin(time*p.rate*2.2+p.phase+Math.sin(time*.002+p.i*.12)))*hoverBoost;
   ctx.globalAlpha=Math.min(1,opacity*pulse);ctx.fillStyle=p.color;
-  ctx.beginPath();ctx.arc(point.x,point.y,p.size,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(point.x,point.y,grownSize,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;
  }
  function render(now){
@@ -1147,21 +1162,9 @@ function startWrldIntro(){
    }
    drawMagicule(p,at,previous,time,opacity);
   }
-  // Until reveal, ONLY particles are visible: they settle and hover as WRLD
-  // for 700ms before the font grows out of their charged arrival positions.
-  const centerReveal=smooth((time-SINGULARITY.reveal)/340);
-  const centerFade=centerReveal*(1-smooth((time-SINGULARITY.transfer)/520));
-  const centerFinish=smooth((time-(SINGULARITY.reveal+120))/520);
-  const revealBloom=time>=SINGULARITY.reveal&&time<SINGULARITY.reveal+320?1.18:1;
-  paintSurface(center,centerFade,centerFinish,12*revealBloom);
-  if(intoTransfer){
-   const headerFade=smooth((time-SINGULARITY.transfer)/220);
-   const headerFinish=smooth((time-6820)/620);
-   paintSurface(dock,headerFade,headerFinish,5);
-  }
-  if(time>6100){
-   veil.style.opacity=String(1-smooth((time-6100)/1450));
-  }
+  // Android parity: keep the center particle-only; reveal letters after docking.
+  if(time>=SINGULARITY.reveal)document.querySelector('.brand h1')?.classList.add('intro-final-reveal');
+  if(time>5750)veil.style.opacity=String(1-smooth((time-5750)/1530));
   if(time>=SINGULARITY.end){finish();return}
  }
  function finish(){
