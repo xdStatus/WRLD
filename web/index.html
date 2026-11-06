@@ -666,6 +666,47 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 .sort-flip.is-reversed .sort-flip-arrow{transform:rotate(180deg)}
 @media(prefers-reduced-motion:reduce){.sort-flip-arrow{transition:none}}
 @media(max-height:650px){.alphabet-letter{font-size:7px}}
+
+/* WRLD Android -> Windows visual parity: desktop geometry stays intact. */
+.header-settings{display:grid;place-items:center;flex:none;width:40px;height:40px;padding:0;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.012);color:#dedede;transition:background .2s,border-color .2s,color .2s,transform .2s}
+.header-settings svg{width:21px;height:21px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;transform-origin:50% 50%;animation:wrldDesktopGearSpin 18s linear infinite}
+.header-settings.active{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.32);color:#fff}
+.header-settings:hover{background:rgba(255,255,255,.065)}
+@keyframes wrldDesktopGearSpin{to{transform:rotate(360deg)}}
+.song{grid-template-columns:42px minmax(0,1fr) 53px;min-height:65px}
+.song-art,.mini-art{display:grid;place-items:center;overflow:hidden;position:relative;flex:none;border:1px solid rgba(255,255,255,.15);border-radius:10px;background:radial-gradient(circle,#171b27,#080a10 80%)}
+.song-art{width:40px;height:40px}
+.mini-art{width:42px;height:42px}
+.constellation-svg{width:100%;height:100%;display:block}
+.constellation-motion{transform-origin:50% 50%}
+.constellation-playing .constellation-motion{animation:wrldConstellationDrift 8s ease-in-out infinite alternate}
+.constellation-playing .constellation-bright{animation:wrldConstellationTwinkle 3.5s ease-in-out infinite alternate}
+@keyframes wrldConstellationDrift{from{transform:translate(-1px,1px) rotate(-1deg)}to{transform:translate(1.5px,-1.5px) rotate(1deg)}}
+@keyframes wrldConstellationTwinkle{from{opacity:.6}to{opacity:1}}
+.visualizer-wrap{background:radial-gradient(circle at 50% 45%,rgba(28,36,57,.5),rgba(4,7,13,.82) 80%);border-radius:15px}
+#visualizer{position:absolute;inset:36px 18px 38px;display:grid;place-items:center;min-height:0;overflow:hidden}
+#visualizer .constellation-svg{width:min(85%,310px);height:100%;object-fit:contain}
+.visualizer-head,.visualizer-footer{z-index:2}
+.library-stage{position:relative;isolation:isolate}
+.library-stage.view-changing{opacity:1;transform:none}
+.library-head{position:relative;z-index:2}
+.wrld-header-snapshot{position:absolute;top:0;left:0;right:0;z-index:6;pointer-events:none;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:0 0 20px;border-bottom:1px solid rgba(255,255,255,.18);overflow:hidden;background:rgba(5,5,5,.90)}
+.wrld-header-snapshot h2{font-size:24px;margin:0}.wrld-header-snapshot p{margin:7px 0 0}
+.wrld-content-snapshot{position:absolute;top:80px;left:0;right:0;bottom:0;z-index:5;overflow:hidden;pointer-events:none;background:#090909}
+.wrld-content-snapshot .song-list{height:100%;overflow:hidden}
+.wrld-listening-card{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:15px 17px;color:#ddd;font-size:12px}
+.wrld-listening-card output{font-variant-numeric:tabular-nums;color:#fff}
+.seek-shell .seek-track{height:4px;background:rgba(233,233,233,.24);border-radius:99px;transition:height .2s cubic-bezier(.22,1,.36,1)}
+.seek-shell .seek-fill{background:linear-gradient(90deg,#b6c4ff,#c9d4ff 72%,#fff);box-shadow:0 0 6px rgba(196,205,255,.2)}
+.seek-shell:hover .seek-track,.seek-shell.is-scrubbing .seek-track{height:8px}
+.seek-shell:hover .seek-head,.seek-shell.is-scrubbing .seek-head{height:10px;box-shadow:0 0 10px 3px rgba(255,255,255,.56)}
+.volume-shell input::-webkit-slider-runnable-track{background:linear-gradient(90deg,#b6c4ff var(--progress,0%),rgba(233,233,233,.24) 0)}
+.volume-shell input::-webkit-slider-thumb{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.08),0 0 10px rgba(205,215,255,.36)}
+.player .queue-drawer{transition:grid-template-rows .54s cubic-bezier(.22,.7,.25,1),opacity .35s ease}
+.shuffle-all-btn{border-radius:11px;transition:background .2s,transform .2s,border-color .2s}
+.shuffle-all-btn:active{transform:scale(.96)}
+@media(prefers-reduced-motion:reduce){.header-settings svg,.constellation-playing .constellation-motion,.constellation-playing .constellation-bright{animation:none!important}.player .queue-drawer{transition:none!important}}
+
 </style>
 </head>
 <body>
@@ -690,6 +731,7 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
       <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="currentColor" fill="none" stroke-width="2"/><path d="m20 20-4.2-4.2" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/></svg>
       <input id="search" type="search" placeholder="Search your songs..." autocomplete="off">
     </label>
+    <button class="header-settings" id="settingsGear" type="button" title="Settings" aria-label="Open Settings" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.00 2.00 L13.52 4.35 L14.98 4.79 L17.56 3.69 L19.07 4.93 L18.49 7.67 L19.21 9.02 L21.81 10.05 L22.00 12.00 L19.65 13.52 L19.21 14.98 L20.31 17.56 L19.07 19.07 L16.33 18.49 L14.98 19.21 L13.95 21.81 L12.00 22.00 L10.48 19.65 L9.02 19.21 L6.44 20.31 L4.93 19.07 L5.51 16.33 L4.79 14.98 L2.19 13.95 L2.00 12.00 L4.35 10.48 L4.79 9.02 L3.69 6.44 L4.93 4.93 L7.67 5.51 L9.02 4.79 L10.05 2.19 Z"/><circle cx="12" cy="12" r="3.2"/></svg></button>
     <nav id="windowChrome" class="window-chrome" aria-label="Window controls" hidden>
       <button id="winMin" type="button" aria-label="Minimize window" title="Minimize">−</button>
       <button id="winMax" type="button" aria-label="Maximize or restore window" title="Maximize or restore">□</button>
@@ -702,9 +744,8 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
       <div class="library-nav" role="tablist" aria-label="Music collections">
         <button class="collection-tab active" id="tabAll" role="tab" aria-selected="true" data-view="all">All songs</button>
         <button class="collection-tab" id="tabLiked" role="tab" aria-selected="false" data-view="liked">Liked <span class="tiny-counter" id="likedNavCount"></span></button>
-        <button class="collection-tab" id="tabHistory" role="tab" aria-selected="false" data-view="history">History</button>
         <button class="collection-tab" id="tabPlaylists" role="tab" aria-selected="false" data-view="playlists">Playlists</button>
-        <button class="collection-tab" id="tabSettings" role="tab" aria-selected="false" data-view="settings">Settings</button>
+        <button class="collection-tab" id="tabHistory" role="tab" aria-selected="false" data-view="history">History</button>
         <button class="shuffle-all-btn" id="shuffleAllBtn" type="button" aria-label="Shuffle all songs" title="Shuffle every song on your computer">Shuffle All</button>
         <button class="new-playlist" id="newPlaylistBtn" type="button" title="Create playlist" aria-label="Create playlist">+ New</button>
         <span class="tab-indicator" id="tabIndicator" aria-hidden="true"></span>
@@ -763,6 +804,8 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
           <p class="singularity-settings-description">300 white magicules gather from beyond the window, subtly grow and breathe in the shape of WRLD, then glide to the top-left where the logo glows into view. Each launch is a new constellation.</p>
           <button type="button" id="replayIntro" title="Replay Magicule Singularity">Preview Magicule Singularity <span aria-hidden="true">✦</span></button>
         </div>
+        <div class="settings-heading">Listening time</div>
+        <div class="settings-card wrld-listening-card"><strong>Total listening time on this PC</strong><output id="desktopListeningTime">0 min</output></div>
         <div class="settings-heading">About</div>
         <div class="settings-card"><div class="settings-about"><strong>WRLD</strong><small id="desktopVersion">WRLD Windows</small><p>Local and Cloudflare R2 music player powered by Windows WebView2. Cloud songs stream securely from your private Worker; likes, playlists and preferences stay on this computer.</p></div><button type="button" class="settings-button" id="settingsUpdates" title="Check for WRLD updates">Check for updates <span id="updateDot" hidden>●</span></button></div>
       </div>
@@ -773,16 +816,12 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
       <div class="now-badge">Now Playing</div>
       <div class="visualizer-wrap" id="visualizerWrap">
         <div class="visualizer-head">
-          <span class="visualizer-kicker">AUDIO REACTIVE</span>
+          <span class="visualizer-kicker">YOUR CONSTELLATION</span>
           <span class="viz-status" id="vizStatus"><span class="viz-indicator"></span><span id="vizStatusText">READY</span></span>
         </div>
-        <canvas class="" id="visualizer" role="img" aria-label="Live audio spectrum reacting to the current song"></canvas>
+        <div id="visualizer" role="img" aria-label="Animated constellation for the selected song"></div>
         <div class="visualizer-footer">
-          <div class="viz-modes" role="group" aria-label="Visualizer style">
-            <button type="button" class="viz-mode" id="vizBars" aria-pressed="true">Spectrum</button>
-            <button type="button" class="viz-mode" id="vizWave" aria-pressed="false">Waveform</button>
-          </div>
-          <span class="visualizer-caption">LIVE SIGNAL</span>
+          <span class="visualizer-caption">WRLD SKY</span>
         </div>
       </div>
       <div>
@@ -797,7 +836,7 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 
   <footer class="player glass" id="playerDock">
     <button type="button" class="player-left now-queue-trigger" id="openQueueButton" aria-label="Expand or collapse Up Next queue" aria-controls="queueDrawer" aria-expanded="false">
-      <div class="mini-art" id="miniArt"><span class="letter">W</span><img alt="Album art"></div>
+      <div class="mini-art" id="miniArt" aria-hidden="true"></div>
       <div class="player-text">
         <b id="playerTitle">Choose a track</b>
         <span id="playerSubtitle">WRLD</span>
@@ -1280,19 +1319,36 @@ function toast(message){
 }
 function trackById(id){return trackIndex.get(id)||null}
 function currentTrack(){return trackById(state.currentId)}
+function constellationArtwork(id){
+ var hash=2166136261,key=String(id||'wrld');
+ for(var h=0;h<key.length;h++){hash^=key.charCodeAt(h);hash=Math.imul(hash,16777619)}
+ var seed=hash>>>0;
+ function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}
+ var background='',points=[],lines='',dots='';
+ for(var i=0;i<22;i++){background+='<circle cx="'+(3+random()*94).toFixed(1)+'" cy="'+(3+random()*94).toFixed(1)+'" r="'+(.13+random()*.5).toFixed(2)+'" fill="#f1f5ff" opacity="'+(.12+random()*.38).toFixed(2)+'"/>'}
+ for(var j=0;j<8;j++){var angle=j*Math.PI*2/8+(random()-.5)*.8,rad=12+random()*26;points.push({x:50+Math.cos(angle)*rad,y:50+Math.sin(angle)*rad,r:.8+random()*1.1})}
+ var order=points.map(function(_,i){return i}).sort(function(a,b){return points[a].x-points[b].x});
+ for(var k=1;k<order.length;k++){var a=points[order[k-1]],b=points[order[k]];lines+='<line x1="'+a.x.toFixed(1)+'" y1="'+a.y.toFixed(1)+'" x2="'+b.x.toFixed(1)+'" y2="'+b.y.toFixed(1)+'" stroke="#c7d5ef" stroke-opacity=".43" stroke-width=".42"/>'}
+ for(var n=0;n<points.length;n++){var p=points[n];dots+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+(p.r*2.5).toFixed(1)+'" fill="#dce8ff" opacity=".13"/><circle class="'+(n%3===0?'constellation-bright':'')+'" cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+p.r.toFixed(2)+'" fill="#f5f8ff"/>'}
+ return '<svg class="constellation-svg" viewBox="0 0 100 100" aria-hidden="true"><g>'+background+'</g><g class="constellation-motion">'+lines+dots+'</g></svg>';
+}
+function updateDesktopConstellations(){
+ const playing=!!state.currentId&&!audio.paused&&!document.hidden;
+ document.querySelectorAll('.song-art').forEach(art=>art.classList.toggle('constellation-playing',playing&&art.dataset.trackId===state.currentId));
+ $('miniArt').classList.toggle('constellation-playing',playing);
+ $('visualizerWrap').classList.toggle('constellation-playing',playing);
+ const now=$('visualizer');
+ if(now&&now.dataset.trackId!==String(state.currentId||'')){
+  now.dataset.trackId=String(state.currentId||'');
+  now.innerHTML=constellationArtwork(state.currentId||'wrld');
+ }
+}
+document.addEventListener('visibilitychange',updateDesktopConstellations);
 function setArt(node,track){
-  const img=node.querySelector('img');
-  const letter=node.querySelector('.letter');
-  const id=track?.id||null;
-  if(node.dataset.trackId===String(id))return;
-  node.dataset.trackId=String(id);
-  node.classList.remove('has-image');
-  if(!track){letter.textContent='W';img.removeAttribute('src');return}
-  letter.textContent='W';
-  img.onload=()=>{if(node.dataset.trackId===String(id))node.classList.add('has-image')};
-  img.onerror=()=>node.classList.remove('has-image');
-  if(id.startsWith('r2_')){img.removeAttribute('src');return}
-  img.src=`/api/art/${encodeURIComponent(id)}`;
+ const id=String(track?.id||'');
+ if(node.dataset.trackId===id)return;
+ node.dataset.trackId=id;
+ node.innerHTML=constellationArtwork(id||'wrld');
 }
 function syncTrackUI(){
   const t=currentTrack();
@@ -1301,6 +1357,7 @@ function syncTrackUI(){
   $('nowTitle').textContent=t?.title||'Nothing playing yet';
   $('nowArtist').textContent=t?.artist||'Pick a song from your library';
   setArt($('miniArt'),t);
+  updateDesktopConstellations();
   const playing=!!t&&!audio.paused;
   $('playBtn').classList.toggle('is-pause',playing);
   $('playerDock').classList.toggle('is-playing',playing);
@@ -1410,11 +1467,23 @@ async function loadTracks(){
 function activePlaylist(){return state.playlists.find(p=>p.id===state.activePlaylist)||null}
 const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let viewTransitionTimer=0,viewTransitionSequence=0;
+let wrldNavAnimations=[],wrldOldHeader=null,wrldStageOverlay=null;
+const tabOrder=['all','liked','playlists','history','settings'];
+function clearDesktopTransition(){
+ wrldNavAnimations.forEach(animation=>{try{animation.cancel()}catch{}});
+ wrldNavAnimations=[];
+ wrldOldHeader?.remove();wrldOldHeader=null;
+ wrldStageOverlay?.remove();wrldStageOverlay=null;
+ $('libraryHeadIncoming')?.remove();
+ $('libraryStage').classList.remove('wrld-navigating');
+}
 function moveCollectionIndicator(initial=false){
  const nav=document.querySelector('.library-nav');
  const tab=nav.querySelector('.collection-tab.active');
  const indicator=$('tabIndicator');
- if(!tab||!indicator)return;
+ if(!indicator)return;
+ if(!tab){indicator.style.opacity='0';return}
+ indicator.style.opacity='1';
  if(initial)indicator.style.transition='none';
  indicator.style.width=tab.offsetWidth+'px';
  indicator.style.transform='translate3d('+tab.offsetLeft+'px,0,0)';
@@ -1423,24 +1492,96 @@ function moveCollectionIndicator(initial=false){
 }
 function setView(view,playlistId=null){
  const nextPlaylist=view==='playlist'?playlistId:null;
- const changed=view!==state.view||state.activePlaylist!==nextPlaylist;
+ const previous=state.view;
+ const changed=view!==previous||state.activePlaylist!==nextPlaylist;
+ ++viewTransitionSequence;
+ clearDesktopTransition();
+ if(viewTransitionTimer){clearTimeout(viewTransitionTimer);viewTransitionTimer=0}
+ const stage=$('libraryStage');
+ // Capture only changing content and header; never snapshot desktop player, stars or menu.
+ const oldHead=stage.querySelector('.library-head');
+ const oldRect=oldHead?.getBoundingClientRect();
+ const oldBody=stage.querySelector(previous==='settings'?'#settingsPanel':previous==='playlists'?'#playlistGrid':'#libraryListLayout');
+ let bodySnapshot=null;
+ if(changed&&!reducedMotion&&previous!=='settings'&&oldBody&&!oldBody.classList.contains('hidden')){
+  bodySnapshot=oldBody.cloneNode(true);
+  bodySnapshot.removeAttribute('id');
+  bodySnapshot.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
+  bodySnapshot.className='wrld-content-snapshot';
+  bodySnapshot.setAttribute('aria-hidden','true');
+  bodySnapshot.inert=true;
+ }
+ let headerSnapshot=null;
+ if(changed&&!reducedMotion&&oldHead&&oldRect){
+  headerSnapshot=oldHead.cloneNode(true);
+  headerSnapshot.removeAttribute('id');
+  headerSnapshot.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
+  headerSnapshot.className='wrld-header-snapshot';
+  headerSnapshot.style.height=oldRect.height+'px';
+  headerSnapshot.setAttribute('aria-hidden','true');
+  headerSnapshot.inert=true;
+ }
  state.view=view;state.activePlaylist=nextPlaylist;
  state.query=$('search').value;
- closeTrackMenu();
- updateCollectionNav();
- moveCollectionIndicator();
- if(viewTransitionTimer){clearTimeout(viewTransitionTimer);viewTransitionTimer=0}
- const stage=$('libraryStage'),sequence=++viewTransitionSequence;
- if(!changed||reducedMotion){
-  stage.classList.remove('view-changing');applyFilter();return;
+ closeTrackMenu();updateCollectionNav();moveCollectionIndicator();
+ applyFilter();
+ if(!changed||reducedMotion||!stage.animate)return;
+ const sequence=viewTransitionSequence;
+ const prevIndex=tabOrder.indexOf(previous==='playlist'?'playlists':previous);
+ const nextIndex=tabOrder.indexOf(view==='playlist'?'playlists':view);
+ const dir=Math.sign(nextIndex-prevIndex)||1;
+ const animations=wrldNavAnimations;
+ const head=stage.querySelector('.library-head');
+ // Old title and sort rise; new title and sort drop, matching Android's 1.2s sequence.
+ if(headerSnapshot){
+  stage.appendChild(headerSnapshot);
+  wrldOldHeader=headerSnapshot;
+  animations.push(headerSnapshot.animate([
+   {transform:'translateY(0)',opacity:1},
+   {transform:'translateY(-34px)',opacity:0}
+  ],{duration:420,easing:'cubic-bezier(.45,0,.75,.45)',fill:'both'}));
  }
- stage.classList.add('view-changing');
- viewTransitionTimer=setTimeout(()=>{
-  if(sequence!==viewTransitionSequence)return;
-  viewTransitionTimer=0;
-  applyFilter();
-  requestAnimationFrame(()=>{if(sequence===viewTransitionSequence)stage.classList.remove('view-changing')});
- },105);
+ animations.push(head.animate([
+  {transform:'translateY(-30px)',opacity:0,offset:0},
+  {transform:'translateY(3px)',opacity:1,offset:.84},
+  {transform:'translateY(0)',opacity:1,offset:1}
+ ],{duration:780,delay:420,easing:'cubic-bezier(.2,.8,.25,1)',fill:'both'}));
+ function animateRows(nodes,outgoing){
+  const viewRect=stage.getBoundingClientRect(),width=Math.max(160,stage.clientWidth);
+  let visibleIndex=0;
+  nodes.forEach(node=>{
+   if(!node||!node.isConnected)return;
+   const rect=node.getBoundingClientRect();
+   if(rect.bottom<viewRect.top||rect.top>viewRect.bottom)return;
+   const delay=outgoing?0:140+Math.min(visibleIndex++,12)*42;
+   const from=outgoing?0:dir*width;
+   const to=outgoing?-dir*width:0;
+   const frames=outgoing?[
+    {transform:'translate3d(0,0,0)',opacity:1},
+    {transform:'translate3d('+to+'px,0,0)',opacity:0}
+   ]:[
+    {transform:'translate3d('+from+'px,0,0)',opacity:.65,offset:0},
+    {transform:'translate3d('+(-dir*9)+'px,0,0)',opacity:1,offset:.83},
+    {transform:'translate3d(0,0,0)',opacity:1,offset:1}
+   ];
+   animations.push(node.animate(frames,{duration:540,delay,easing:outgoing?'cubic-bezier(.35,0,.25,1)':'cubic-bezier(.22,.7,.25,1)',fill:'both'}));
+  });
+ }
+ if(bodySnapshot){
+  stage.appendChild(bodySnapshot);wrldStageOverlay=bodySnapshot;
+  const outgoing=previous==='playlists'?bodySnapshot.querySelectorAll('.playlist-card'):bodySnapshot.querySelectorAll('.song');
+  animateRows(outgoing,true);
+ }
+ // Settings panels never stagger; when leaving Settings they disappear immediately.
+ if(view!=='settings'){
+  const incoming=view==='playlists'?stage.querySelectorAll('#playlistGrid .playlist-card'):stage.querySelectorAll('#songList .song');
+  animateRows(incoming,false);
+ }
+ const last=animations.reduce((one,two)=>{
+  const a=one.effect.getTiming(),b=two.effect.getTiming();
+  return a.delay+a.duration>=b.delay+b.duration?one:two;
+ });
+ last.onfinish=()=>{if(sequence===viewTransitionSequence)clearDesktopTransition()};
 }
 function updateCollectionNav(){
   const nav=state.view==='playlist'?'playlists':state.view;
@@ -1455,6 +1596,8 @@ function updateCollectionNav(){
   $('renamePlaylistBtn').classList.toggle('hidden',state.view!=='playlist');
   $('deletePlaylistBtn').classList.toggle('hidden',state.view!=='playlist');
   $('newPlaylistBtn').classList.toggle('hidden',state.view==='settings');
+  $('settingsGear').classList.toggle('active',state.view==='settings');
+  $('settingsGear').setAttribute('aria-pressed',String(state.view==='settings'));
 }
 
 function sortTracks(tracks){
@@ -1572,7 +1715,7 @@ function applyFilter(){
       row.dataset.id=t.id;
       row.title=t.title;
       const liked=state.liked.has(t.id);
-      row.innerHTML=`<div class="song-index">${i+1}</div><div class="song-info"><div class="song-title">${clean(t.title)}</div><div class="song-sub">${clean(t.artist||'Juice WRLD')} · ${clean(t.format||'Audio')}</div></div><div class="song-format" title="Song length">${Number.isFinite(t.duration)&&t.duration>0?fmt(t.duration):'—'}</div><button class="song-tool like-action ${liked?'is-liked':''}" data-like="${clean(t.id)}" type="button" aria-label="${liked?'Unlike':'Like'} ${clean(t.title)}" aria-pressed="${liked}" title="${liked?'Remove from Liked Songs':'Like song'}">${heartSVG()}</button><button class="song-tool add-action" data-more="${clean(t.id)}" type="button" aria-label="Song options for ${clean(t.title)}" title="Add to playlist / options">${moreSVG()}</button>`;
+      row.innerHTML=`<div class="song-art" data-track-id="${clean(t.id)}">${constellationArtwork(t.id)}</div><div class="song-info"><div class="song-title">${clean(t.title)}</div><div class="song-sub">${clean(t.artist||'Juice WRLD')} · ${clean(t.format||'Audio')}</div></div><div class="song-format" title="Song length">${Number.isFinite(t.duration)&&t.duration>0?fmt(t.duration):'—'}</div><button class="song-tool like-action ${liked?'is-liked':''}" data-like="${clean(t.id)}" type="button" aria-label="${liked?'Unlike':'Like'} ${clean(t.title)}" aria-pressed="${liked}" title="${liked?'Remove from Liked Songs':'Like song'}">${heartSVG()}</button><button class="song-tool add-action" data-more="${clean(t.id)}" type="button" aria-label="Song options for ${clean(t.title)}" title="Add to playlist / options">${moreSVG()}</button>`;
       frag.appendChild(row);
     });
     list.replaceChildren(frag);
@@ -1583,8 +1726,34 @@ function applyFilter(){
   updateAlphabetRail();
   updateCollectionNav();
 }
+let desktopListeningSeconds=0;
+try{desktopListeningSeconds=Math.max(0,Number(localStorage.getItem('wrld-listening-seconds-v1'))||0)}catch{}
+let desktopListeningPosition=0,desktopListeningTrack='';
+function formatDesktopListening(seconds){
+ const minutes=Math.floor(seconds/60);
+ if(minutes<60)return minutes+' min';
+ const hours=Math.floor(minutes/60);
+ return hours+' hr '+(minutes%60)+' min';
+}
+function updateDesktopListening(){
+ const id=state.currentId||'';
+ const position=audio.currentTime||0;
+ if(id===desktopListeningTrack&&!audio.paused&&!audio.seeking){
+  const step=position-desktopListeningPosition;
+  if(step>0&&step<4)desktopListeningSeconds+=step;
+ }
+ desktopListeningTrack=id;desktopListeningPosition=position;
+ const label=$('desktopListeningTime');
+ if(label)label.textContent=formatDesktopListening(desktopListeningSeconds);
+ try{localStorage.setItem('wrld-listening-seconds-v1',String(desktopListeningSeconds))}catch{}
+}
+audio.addEventListener('timeupdate',updateDesktopListening);
+audio.addEventListener('seeking',()=>{desktopListeningTrack='';desktopListeningPosition=audio.currentTime||0});
+audio.addEventListener('pause',updateDesktopListening);
+audio.addEventListener('ended',updateDesktopListening);
 function renderSettings(){
  const s=state.settings;
+ $('desktopListeningTime').textContent=formatDesktopListening(desktopListeningSeconds);
  $('settingFadeIn').checked=s.fadeIn;
  $('settingFadeOut').checked=s.fadeOut;
  $('settingGapless').checked=s.gapless;
@@ -1659,7 +1828,6 @@ async function playTrack(id, preserveOrder=false){
  state.currentId=id;
  audio.src=(id.startsWith('r2_')?'/cloud/media/':'/media/')+encodeURIComponent(id);
  applyVolumeEnvelope();
- ensureAudioAnalysis();
  syncTrackUI();
  renderQueue();
  try{
@@ -1669,7 +1837,7 @@ async function playTrack(id, preserveOrder=false){
 }
 function togglePlay(){
  if(!state.currentId){if(state.filtered.length)playTrack(state.filtered[0].id);return}
- if(audio.paused){ensureAudioAnalysis();audio.play().catch(()=>toast('Could not resume audio'));}
+ if(audio.paused){audio.play().catch(()=>toast('Could not resume audio'));}
  else audio.pause();
 }
 function moveTrack(step, automatic=false){
@@ -1895,6 +2063,7 @@ async function changeLike(id,enabled){
 }
 $('nowLikeBtn').addEventListener('click',()=>{if(state.currentId)changeLike(state.currentId,!state.liked.has(state.currentId))});
 document.querySelectorAll('.collection-tab').forEach(tab=>tab.addEventListener('click',()=>setView(tab.dataset.view)));
+$('settingsGear').addEventListener('click',()=>setView('settings'));
 $('backPlaylistsBtn').addEventListener('click',()=>setView('playlists'));
 $('playlistGrid').addEventListener('click',e=>{
   if(e.target.closest('#createPlaylistCard'))return openPlaylistDialog('create');
@@ -2122,11 +2291,12 @@ function ensureAudioAnalysis(){
   }
 }
 function updateVisualizerLabels(){
-  const t=currentTrack(),playing=!!t&&!audio.paused;
-  $('visualizerWrap').classList.toggle('is-playing',playing);
-  $('vizStatus').classList.toggle('is-playing',playing);
-  $('vizStatusText').textContent=wrldAudioAnalysisError?'UNAVAILABLE':playing?'PLAYING':t?'PAUSED':'READY';
-  $('nowPlayingNote').textContent=wrldAudioAnalysisError?'Audio visualizer unavailable':playing?'Following the sound in real time':t?'Paused':'Ready when you are';
+ const t=currentTrack(),playing=!!t&&!audio.paused;
+ $('visualizerWrap').classList.toggle('is-playing',playing);
+ $('vizStatus').classList.toggle('is-playing',playing);
+ $('vizStatusText').textContent=playing?'PLAYING':t?'PAUSED':'READY';
+ $('nowPlayingNote').textContent=playing?'Your constellation is alive':t?'Constellation paused':'Ready when you are';
+ updateDesktopConstellations();
 }
 function initAudioVisualizer(){
   const canvas=$('visualizer'),ctx=canvas?.getContext('2d');
@@ -2230,10 +2400,10 @@ function initAudioVisualizer(){
   requestAnimationFrame(frame);
   window.__wrldVisualizerStatus=()=>({frames:wrldVizFrames,mode:wrldVisualizerMode,peak:wrldLastPeak,audioContextState:wrldAudioCtx?.state||'not yet started',playing:!audio.paused,currentTrack:state.currentId,canvasWidth:width,analysisError:wrldAudioAnalysisError});
 }
-audio.addEventListener('play',()=>{ensureAudioAnalysis();updateVisualizerLabels()});
+audio.addEventListener('play',updateVisualizerLabels);
 audio.addEventListener('pause',updateVisualizerLabels);
 audio.addEventListener('ended',updateVisualizerLabels);
-initAudioVisualizer();
+// Desktop playback now uses the same song-seeded constellation artwork as Android.
 
 function initStarfield(){
  const canvas=$('starfield');
