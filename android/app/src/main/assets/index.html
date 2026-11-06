@@ -495,8 +495,9 @@ function setView(name,id){
  render();
  refreshTabData(name);
  var width=Math.max(1,rect.width);
- var duration=350;
- var easing="cubic-bezier(.22,.8,.22,1)";
+ // Ease in gently, accelerate through the middle, and settle softly at the end.
+ var duration=460;
+ var easing="cubic-bezier(.65,0,.25,1)";
  var outgoing=snapshot.animate([
   {transform:"translate3d(0,0,0)",opacity:1},
   {transform:"translate3d("+(-direction*width)+"px,0,0)",opacity:1}
