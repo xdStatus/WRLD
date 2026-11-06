@@ -14,8 +14,10 @@ const workflow = read(".github/workflows/android.yml");
 const fingerprint = read("android/signing-cert.sha256").trim();
 
 assert.match(fingerprint, /^[a-f0-9]{64}$/, "Public certificate fingerprint must be SHA-256");
-assert.match(gradle, /versionName = "0\.1\.26"/);
-assert.match(gradle, /versionCode = 28/);
+const versionName = gradle.match(/versionName\\s*=\\s*"([^"]+)"/)?.[1];
+const versionCode = Number(gradle.match(/versionCode\\s*=\\s*(\\d+)/)?.[1]);
+assert.match(versionName || "", /^\\d+\\.\\d+\\.\\d+$/, "Gradle must declare a semantic version");
+assert.ok(Number.isInteger(versionCode) && versionCode > 0, "Gradle must declare a valid versionCode");
 assert.match(gradle, /WRLD_KEYSTORE_PATH/);
 assert.match(gradle, /signingConfig = signingConfigs\.getByName\("wrldRelease"\)/);
 
@@ -49,7 +51,7 @@ assert.match(workflow, /secrets\.WRLD_ANDROID_KEY_ALIAS/);
 assert.match(workflow, /apksigner/);
 assert.match(workflow, /assembleRelease/);
 assert.match(workflow, /android\/signing-cert\.sha256/);
-assert.match(workflow, /android-v0\.1\.27/);
+assert.ok(workflow.includes("android-v" + versionName), "Release workflow tag must match Gradle versionName");
 assert.doesNotMatch(workflow, /cp android\/app\/build\/outputs\/apk\/debug\/app-debug\.apk android\/dist/,
   "NEVER publish ephemeral debug APKs");
 assert.match(service, /wrld-listening/);
