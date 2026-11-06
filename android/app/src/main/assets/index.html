@@ -17,7 +17,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .haze{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 70% 50% at 88% 6%,rgba(255,255,255,.04),transparent 78%),radial-gradient(ellipse 65% 50% at 10% 90%,rgba(255,255,255,.025),transparent)}
 .shell{position:relative;z-index:1;max-width:820px;margin:auto;padding:19px 19px calc(194px + env(safe-area-inset-bottom));min-height:100vh}
 .header{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:15px}
-.brand{display:flex;align-items:center;gap:11px;min-width:0;order:0;margin-right:auto}.header #updatesButton{order:1}
+.brand{display:flex;align-items:center;gap:11px;min-width:0;order:0;margin-right:auto}
 .brand-logo{padding:0;display:flex;gap:0;align-items:center;justify-content:center;height:46px;width:91px;flex:none;white-space:nowrap;color:white;transition:filter .5s var(--ease)}
 
 .digit{display:inline-block;font-size:39px;font-style:italic;line-height:1;letter-spacing:-.14em;font-weight:730;transform-origin:50% 58%;animation:ninewave 2.7s cubic-bezier(.44,0,.21,1) infinite}
@@ -278,7 +278,7 @@ input[type=range]{accent-color:#eee;cursor:pointer}
    <span class="brand-magicule" aria-hidden="true"></span>
    <span class="brand-text"><strong aria-label="WRLD"><span class="header-letter">W</span><span class="header-letter">R</span><span class="header-letter">L</span><span class="header-letter">D</span></strong><canvas id="headerMagicules" class="header-magicule-canvas" aria-hidden="true"></canvas><small>Android Edition</small></span>
   </div>
-  <button class="outline" id="updatesButton" type="button">Updates ↻</button>
+
  </header>
  <section class="hero"><div class="eyebrow">YOUR MUSIC, YOUR WRLD</div><h1>Listen differently.</h1><p id="folderStatus">Discovering music on this device…</p></section>
  <label class="search-wrap">
@@ -1002,7 +1002,7 @@ el("volume").addEventListener("blur",function(){
  volumeDragging=false;
  el("volumeShell").classList.remove("is-scrubbing");
 });
-el("updatesButton").addEventListener("click",function(){call("checkForUpdates")});
+
 window.WRLD={
  receiveAppVersion:function(version){
   app.version=String(version||app.version);
