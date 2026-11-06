@@ -1126,11 +1126,11 @@ function startWrldIntro(explicitPreview){
  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
  const shades=['#fff','#ededed','#cfcfcf','#b8b8b8','#f7f7f7','#dadada'];
  const magicules=Array.from({length:MAGICULE_COUNT},(_,i)=>({
-  i,letter:Math.floor(i/75),
+  i,letter:Math.floor(i/(MAGICULE_COUNT/4)),
   size:i%19===0?1.65+random()*.28:i%7===0?1.05+random()*.23:.60+random()*.43,
   alpha:.62+random()*.36,phase:random()*Math.PI*2,spin:(random()-.5)*2.4,
   delay:random()*650,extraTravel:(random()-.5)*110,
-  wiggle:.47+random()*1.18,rate:.0022+random()*.0017,
+  wiggle:.30+random()*.42,rate:.0022+random()*.0017,
   color:shades[Math.floor(random()*shades.length)],
   edge:Math.floor(random()*4),edgeAt:random(),edgeDistance:60+random()*140,
   
@@ -1185,7 +1185,7 @@ function startWrldIntro(explicitPreview){
     const r=rects[i];for(let j=0;j<n;j++)points.push({x:r.left+r.width/2,y:r.top+r.height/2});
     return;
    }
-   // Evenly spread the collisions across the real filled letter, not a dummy outline.
+   // Exactly 75 targets per letter, selected by max-min distance across each glyph.\n   // Keep the settled drift subpixel so the evenly spaced targets stay separated.
    // Farthest-point sampling avoids clusters and makes the word emerge everywhere.
    let index=Math.floor(random()*candidates.length);
    const distances=new Float32Array(candidates.length);distances.fill(Infinity);
@@ -1255,10 +1255,10 @@ function startWrldIntro(explicitPreview){
   // once the particles reach their positions in the WRLD silhouette.
   const drift=living(p,time);
   const gatherFreedom=(1-smooth((u-.25)/.75));
-  const settle=.18+.82*gatherFreedom;
+  const settle=.06+.94*gatherFreedom;
   const arrival=smooth((u-.35)/.65);
-  return {x:cubic(from.x,c.c1.x,c.c2.x,to.x,q)+drift.x*(3.8*settle)*arrival,
-          y:cubic(from.y,c.c1.y,c.c2.y,to.y,q)+drift.y*(3.8*settle)*arrival,
+  return {x:cubic(from.x,c.c1.x,c.c2.x,to.x,q)+drift.x*(2.0*settle)*arrival,
+          y:cubic(from.y,c.c1.y,c.c2.y,to.y,q)+drift.y*(2.0*settle)*arrival,
           progress:u};
  }
  function transfer(p,time){
@@ -1289,9 +1289,9 @@ function startWrldIntro(explicitPreview){
    ctx.lineTo(point.x-(point.x-previous.x)*scale,point.y-(point.y-previous.y)*scale);
    ctx.stroke();
   }
-  if(p.i%7===0){
-   ctx.globalAlpha=opacity*.10;ctx.fillStyle='#fff';
-   ctx.beginPath();ctx.arc(point.x,point.y,grownSize*3.2,0,Math.PI*2);ctx.fill();
+  if(p.i%11===0){
+   ctx.globalAlpha=opacity*.065;ctx.fillStyle='#fff';
+   ctx.beginPath();ctx.arc(point.x,point.y,grownSize*2.4,0,Math.PI*2);ctx.fill();
   }
   // Brighter only while all particles hold their living, letter-shaped silhouette.
   const hoverBoost=time>=SINGULARITY.hover&&time<SINGULARITY.transfer?1.18:1;
