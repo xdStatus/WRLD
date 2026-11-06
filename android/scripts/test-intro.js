@@ -15,7 +15,7 @@ for(const marker of ['id="wrldIntro"','id="introVeil"','id="introParticleCanvas"
  assert.ok(head.includes(marker),"Missing required intro markup: "+marker);
 }
 assert.match(head,/\.brand\{[^}]*order:0;margin-right:auto/,"Logo must dock top-left");
-assert.match(head,/\.header #updatesButton\{order:1\}/,"Updates button is after top-left brand");
+assert.doesNotMatch(head, /updatesButton/, "Removed header Updates button must stay absent");
 assert.match(head,/\.brand-text strong\{opacity:0;filter:blur\(3px\)/,"Actual header letters must begin hidden");
 assert.match(head,/headerMagiculeShimmer/,"Header lettering needs soft shimmer");
 assert.match(head,/strong\.intro-final-reveal\{opacity:1/,"Only final docking reveals wordmark");
