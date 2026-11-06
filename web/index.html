@@ -975,9 +975,9 @@ const audio = $('audio');
 const wrldIntroMarkup=$('wrldIntro')?.outerHTML||'';
 const MAGICULE_COUNT=300;
 const MAGICULE_PER_LETTER=[75,75,75,75];
-// The last incoming magicules finish settling before the 700ms particle-only hold.
+// Match Android's four-second Magicule Singularity timeline.
 const SINGULARITY={
- travel:1820,hover:3920,transfer:5420,reveal:7080,end:8000
+ travel:920,hover:1900,transfer:2700,reveal:3550,end:4000
 };
 function recoverWrldIntro(overlay){
  if(overlay?.isConnected)overlay.remove();
@@ -1017,7 +1017,7 @@ function startWrldIntro(){
   i,letter:Math.floor(i/75),
   size:i%19===0?1.65+random()*.28:i%7===0?1.05+random()*.23:.60+random()*.43,
   alpha:.62+random()*.36,phase:random()*Math.PI*2,spin:(random()-.5)*2.4,
-  delay:random()*1370,extraTravel:(random()-.5)*220,
+  delay:random()*650,extraTravel:(random()-.5)*110,
   wiggle:.47+random()*1.18,rate:.0022+random()*.0017,
   color:shades[Math.floor(random()*shades.length)],
   edge:Math.floor(random()*4),edgeAt:random(),edgeDistance:60+random()*140,
@@ -1027,7 +1027,7 @@ function startWrldIntro(){
  let stopped=false,frame=0,resizeTimer=0,fallback=0;
  const started=performance.now();
  // Outer overlay is ALWAYS click-through; timeout is only a safety fallback.
- const watchdog=setTimeout(finish,8900);
+ const watchdog=setTimeout(finish,4500);
  function makeSurface(elements,spacing){
   const rects=elements.map(el=>el.getBoundingClientRect());
   const left=Math.min(...rects.map(r=>r.left))-spacing;
@@ -1141,7 +1141,7 @@ function startWrldIntro(){
           y:(Math.cos(time*p.rate*.91+p.phase*1.3)+.22*Math.sin(time*.0034+p.phase))*p.wiggle*.7};
  }
  function arrivalProgress(p,time){
-  return clamp((time-170-p.delay)/(SINGULARITY.travel+p.extraTravel));
+  return clamp((time-85-p.delay)/(SINGULARITY.travel+p.extraTravel));
  }
  function flight(p,time){
   const u=arrivalProgress(p,time);
@@ -1224,7 +1224,7 @@ function startWrldIntro(){
     if(at.progress>.965&&!p.dockCharged){
      p.dockCharged=true;stamp(dock,dock.points[p.i],5.2);
     }
-    opacity=p.alpha*(1-smooth((time-(SINGULARITY.end-315))/300));
+    opacity=p.alpha*(1-smooth((time-(SINGULARITY.end-140))/130));
    }else{
     at=flight(p,time);previous=flight(p,time-27);
     if(at.progress>.955&&!p.centerCharged){
@@ -1236,7 +1236,7 @@ function startWrldIntro(){
   }
   // Android parity: keep the center particle-only; reveal letters after docking.
   if(time>=SINGULARITY.reveal)document.querySelector('.brand h1')?.classList.add('intro-final-reveal');
-  if(time>5750)veil.style.opacity=String(1-smooth((time-5750)/1530));
+  if(time>2900)veil.style.opacity=String(1-smooth((time-2900)/800));
   if(time>=SINGULARITY.end){finish();return}
  }
  function finish(){
@@ -1610,9 +1610,9 @@ function setView(view,playlistId=null){
   wrldStageOverlay=rowOverlay;
   Array.from(rowOverlay.children).forEach((node,index)=>{
    animations.push(node.animate([
-    {transform:'translate3d(0,0,0)',opacity:1},
-    {transform:'translate3d('+(-direction*95)+'px,0,0)',opacity:0}
-   ],{duration:340,delay:Math.min(index,8)*16,easing:'cubic-bezier(.35,0,.25,1)',fill:'both'}));
+    {transform:'translate3d(0,0,0)'},
+    {transform:'translate3d('+(-direction*Math.max(160,stage.clientWidth))+'px,0,0)'}
+   ],{duration:540,delay:0,easing:'cubic-bezier(.35,0,.25,1)',fill:'both'}));
   });
  }
  // Do not animate Settings controls (or leave a gray Settings frame behind).
@@ -1624,14 +1624,14 @@ function setView(view,playlistId=null){
   for(const node of stage.querySelectorAll(selector)){
    const rect=node.getBoundingClientRect();
    if(rect.bottom<=Math.max(bounds.top,stageRect.top)||rect.top>=Math.min(bounds.bottom,stageRect.bottom))continue;
-   const offset=direction*Math.min(145,stage.clientWidth*.23);
-   // fill:backwards hides each fresh row until its own delay begins.
-   // Do not animate a panel wrapper: that caused the 1-second blink.
+   const offset=direction*Math.max(160,stage.clientWidth);
+   // Android uses a full-width horizontal slide, not an opacity blink.
+   // Each row begins 42ms after the previous visible row.
    animations.push(node.animate([
-    {transform:'translate3d('+offset+'px,0,0)',opacity:0,offset:0,easing:'cubic-bezier(.22,.65,.25,1)'},
-    {transform:'translate3d('+(-direction*8)+'px,0,0)',opacity:1,offset:.85},
-    {transform:'translate3d(0,0,0)',opacity:1,offset:1}
-   ],{duration:460,delay:70+Math.min(index++,12)*42,easing:'linear',fill:'both'}));
+    {transform:'translate3d('+offset+'px,0,0)',offset:0,easing:'cubic-bezier(.22,.65,.25,1)'},
+    {transform:'translate3d('+(-direction*9)+'px,0,0)',offset:.83,easing:'cubic-bezier(.2,0,.2,1)'},
+    {transform:'translate3d(0,0,0)',offset:1}
+   ],{duration:540,delay:140+Math.min(index++,12)*42,easing:'linear',fill:'both'}));
    if(index>=16)break;
   }
  }
