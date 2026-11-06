@@ -22,8 +22,8 @@ assert.match(head,/strong\.intro-final-reveal\{opacity:1/,"Only final docking re
 assert.match(js,/const MAGICULE_COUNT=300;/);
 assert.match(js,/const grownSize=p\.size\*\(1\+\.10\*growth\)/,"Particles must grow gradually by 10% during flight");
 assert.match(js,/const MAGICULE_PER_LETTER=\[75,75,75,75\]/);
-assert.match(js,/travel:1820,hover:3920,transfer:5420,reveal:7080,end:8000/);
-assert.equal(5420-3920,1500,"Particles should have an extended living hover");
+assert.match(js,/travel:920,hover:1900,transfer:2700,reveal:3550,end:4000/);
+assert.equal(2700-1900,800,"Particles should have an extended living hover");
 assert.match(js,/mode:'centered-particle-to-left-reveal'/);
 assert.match(js,/const offsetX=width\/2-\(bounds\.minX\+bounds\.maxX\)\/2/,"Cloud must recenter horizontally");
 assert.match(js,/const offsetY=height\/2-\(bounds\.minY\+bounds\.maxY\)\/2/,"Cloud must recenter vertically");
@@ -45,7 +45,7 @@ assert.doesNotMatch(js,/startHeaderMagicules\(/,"Final dock should reveal actual
 assert.doesNotMatch(js,/paintSurface\(|ctx\.drawImage\(surface\.glyph/,"Never draw filled font");
 assert.doesNotMatch(js,/centerFinish|headerFinish|paintSurface/,"Never reveal a solid font in the center");
 assert.match(js,/edge:Math\.floor\(random\(\)\*4\)/);
-assert.match(js,/const watchdog=setTimeout\(\(\)=>finish\('watchdog'\),8700\)/);
+assert.match(js,/const watchdog=setTimeout\(\(\)=>finish\('watchdog'\),4500\)/);
 assert.match(head,/\.wrld-intro,\.wrld-intro \*\{pointer-events:none!important\}/);
 assert.match(js,/document\.addEventListener\('visibilitychange',onVisibility\)/);
 assert.match(js,/dpr=Math\.min\(1\.25/);
