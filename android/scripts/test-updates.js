@@ -49,7 +49,7 @@ assert.match(workflow, /secrets\.WRLD_ANDROID_KEY_ALIAS/);
 assert.match(workflow, /apksigner/);
 assert.match(workflow, /assembleRelease/);
 assert.match(workflow, /android\/signing-cert\.sha256/);
-assert.match(workflow, /android-v0\.1\.20/);
+assert.match(workflow, /android-v0\.1\.21/);
 assert.doesNotMatch(workflow, /cp android\/app\/build\/outputs\/apk\/debug\/app-debug\.apk android\/dist/,
   "NEVER publish ephemeral debug APKs");
 assert.match(service, /wrld-listening/);
