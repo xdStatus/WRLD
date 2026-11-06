@@ -495,26 +495,53 @@ function setView(name,id){
  render();
  refreshTabData(name);
  var width=Math.max(1,rect.width);
- // Ease in gently, accelerate through the middle, and settle softly at the end.
- var duration=460;
- var easing="cubic-bezier(.65,0,.25,1)";
- var outgoing=snapshot.animate([
-  {transform:"translate3d(0,0,0)",opacity:1},
-  {transform:"translate3d("+(-direction*width)+"px,0,0)",opacity:1}
- ],{duration:duration,easing:easing,fill:"forwards"});
- // A subtle 8px overshoot gives the incoming page a soft spring-like settle.
- var incoming=stage.animate([
-  {transform:"translate3d("+(direction*width)+"px,0,0)",opacity:1,offset:0},
-  {transform:"translate3d("+(direction*width*.42)+"px,0,0)",opacity:1,offset:.48},
-  {transform:"translate3d("+(-direction*8)+"px,0,0)",opacity:1,offset:.86},
-  {transform:"translate3d(0,0,0)",opacity:1,offset:1}
- ],{duration:duration+90,easing:"cubic-bezier(.45,0,.25,1)",fill:"forwards"});
+ // Constant-speed movement, with staggered sections like the reference video.
+ // Each section moves at a fixed velocity; only its start time differs.
+ var duration=390;
+ var stagger=48;
+ var animations=[];
+ function slidePart(node,from,to,delay){
+  if(!node||getComputedStyle(node).display==="none")return;
+  animations.push(node.animate([
+   {transform:"translate3d("+from+"px,0,0)"},
+   {transform:"translate3d("+to+"px,0,0)"}
+  ],{duration:duration,delay:delay,easing:"linear",fill:"both"}));
+ }
+ function slideSections(root,outgoing){
+  var toolbar=root.querySelector(".toolbar");
+  var list=root.querySelector("#list");
+  if(toolbar)slidePart(toolbar,outgoing?0:direction*width,outgoing?-direction*width:0,0);
+  if(list){
+   var rows=Array.from(list.children).filter(function(n){return n.nodeType===1});
+   if(rows.length>0&&rows.length<=24){
+    rows.forEach(function(row,i){
+     slidePart(row,outgoing?0:direction*width,outgoing?-direction*width:0,
+      stagger+Math.min(i,8)*16);
+    });
+   }else{
+    slidePart(list,outgoing?0:direction*width,outgoing?-direction*width:0,stagger);
+   }
+  }
+  // Settings and playlist layouts can have different content structures.
+  Array.from(root.children).forEach(function(child,i){
+   if(child===toolbar||child===list)return;
+   slidePart(child,outgoing?0:direction*width,outgoing?-direction*width:0,stagger+i*32);
+  });
+ }
+ slideSections(snapshot,true);
+ slideSections(stage,false);
  var cleanup=function(){
-  outgoing.cancel();incoming.cancel();snapshot.remove();
+  animations.forEach(function(animation){animation.cancel()});
+  snapshot.remove();
   if(window.wrldViewSlideCleanup===cleanup)window.wrldViewSlideCleanup=null;
  };
  window.wrldViewSlideCleanup=cleanup;
- incoming.onfinish=function(){if(sequence===viewChangeSeq)cleanup()};
+ if(animations.length){
+  var last=animations.reduce(function(a,b){
+   return a.effect.getTiming().delay>=b.effect.getTiming().delay?a:b;
+  });
+  last.onfinish=function(){if(sequence===viewChangeSeq)cleanup()};
+ }else cleanup();
 
 }
 function render(){
