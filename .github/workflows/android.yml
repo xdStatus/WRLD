@@ -135,12 +135,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p android/dist
-          cp android/app/build/outputs/apk/release/app-release.apk android/dist/WRLD-Android-v0.1.45.apk
+          cp android/app/build/outputs/apk/release/app-release.apk android/dist/WRLD-Android-v0.1.46.apk
           cd android/dist
-          sha256sum WRLD-Android-v0.1.45.apk > WRLD-Android-v0.1.45.apk.sha256
+          sha256sum WRLD-Android-v0.1.46.apk > WRLD-Android-v0.1.46.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: WRLD-Android-v0.1.45
+          name: WRLD-Android-v0.1.46
           path: android/dist/*
           if-no-files-found: error
       - name: Publish permanently signed Android beta
@@ -150,11 +150,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="android-v0.1.45"
+          TAG="android-v0.1.46"
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "::error::$TAG already exists. Refusing to overwrite an existing signed release."
             exit 1
           fi
-          gh release create "$TAG" android/dist/WRLD-Android-v0.1.45.apk android/dist/WRLD-Android-v0.1.45.apk.sha256 \
-            --target "$GITHUB_SHA" --title "WRLD Android v0.1.45 (permanently signed beta)" \
-            --notes "WRLD Android 0.1.45: Settings gear in top-right header with centered slow rotation, and swapped Playlists and History tabs."
+          gh release create "$TAG" android/dist/WRLD-Android-v0.1.46.apk android/dist/WRLD-Android-v0.1.46.apk.sha256 \
+            --target "$GITHUB_SHA" --title "WRLD Android v0.1.46 (permanently signed beta)" \
+            --notes "WRLD Android 0.1.46: centered Settings gear and no Settings content stagger, preserving animated Settings title."
