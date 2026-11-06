@@ -893,6 +893,48 @@ el("queueGrip").addEventListener("keydown",function(e){
  if(e.key==="ArrowUp"){e.preventDefault();openQueue()}
  if(e.key==="ArrowDown"){e.preventDefault();closeQueue()}
 });
+// The entire now-playing song tile is also a swipe surface.
+// Keep taps inert and preserve the existing long-press playlist gesture.
+var songQueueSwipe=null;
+dragSource.style.touchAction="pan-x";
+dragSource.addEventListener("pointerdown",function(e){
+ if(e.button!==0||!app.player.id)return;
+ songQueueSwipe={id:e.pointerId,y:e.clientY,x:e.clientX,active:false};
+});
+document.addEventListener("pointermove",function(e){
+ var swipe=songQueueSwipe;
+ if(!swipe||swipe.id!==e.pointerId)return;
+ var dy=e.clientY-swipe.y,dx=e.clientX-swipe.x;
+ if(!swipe.active){
+  if(Math.abs(dy)<12||Math.abs(dy)<Math.abs(dx)*1.25)return;
+  if((dy<0&&isQueueOpen())||(dy>0&&!isQueueOpen()))return;
+  if(songDrag&&songDrag.started)return;
+  clearTimeout(songDragTimer);
+  songDrag=null;
+  swipe.active=true;
+  var drawer=el("queueDrawer");
+  drawer.classList.add("is-dragging");
+  drawer.style.visibility="visible";
+  songDragSuppressClick=true;
+ }
+ var height=Math.max(0,Math.min(queueMaxHeight(),(isQueueOpen()?queueMaxHeight():0)-dy));
+ swipe.height=height;
+ el("queueDrawer").style.height=height+"px";
+ e.preventDefault();
+},{passive:false});
+function endSongQueueSwipe(e){
+ var swipe=songQueueSwipe;
+ if(!swipe||swipe.id!==e.pointerId)return;
+ songQueueSwipe=null;
+ if(!swipe.active)return;
+ var drawer=el("queueDrawer");
+ drawer.classList.remove("is-dragging");
+ drawer.style.height="";
+ drawer.style.visibility="";
+ if((swipe.height||0)>queueMaxHeight()*.35)openQueue();else closeQueue();
+}
+document.addEventListener("pointerup",endSongQueueSwipe);
+document.addEventListener("pointercancel",endSongQueueSwipe);
 el("queueList").addEventListener("scroll",function(e){
  if(e.target.scrollTop+e.target.clientHeight>=e.target.scrollHeight-220)appendQueueRows();
 },{passive:true});
