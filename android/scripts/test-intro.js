@@ -21,7 +21,7 @@ assert.match(head,/headerMagiculeShimmer/,"Header lettering needs soft shimmer")
 assert.match(head,/strong\.intro-final-reveal\{opacity:1/,"Only final docking reveals wordmark");
 assert.match(js,/const MAGICULE_COUNT=300;/);
 assert.match(js,/const grownSize=p\.size\*\(1\+\.10\*growth\)/,"Particles must grow gradually by 10% during flight");
-assert.ok(js.includes("letter:Math.floor(i/(MAGICULE_COUNT/4))"),"Particles must be assigned evenly to the four letters");
+assert.match(js,/const MAGICULE_PER_LETTER=\[75,75,75,75\]/);\nassert.ok(js.includes("letter:Math.floor(i/(MAGICULE_COUNT/4))"),"Particles must be assigned evenly to the four letters");
 assert.match(js,/travel:920,hover:1900,transfer:2700,reveal:3550,end:4000/);
 assert.equal(2700-1900,800,"Particles should have an extended living hover");
 assert.match(js,/mode:'centered-particle-to-left-reveal'/);
