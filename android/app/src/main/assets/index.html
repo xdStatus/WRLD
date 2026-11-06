@@ -523,17 +523,17 @@ function setView(name,id){
    return node!==snapshot&&node.nodeType===1&&getComputedStyle(node).display!=="none";
   });
   sections.forEach(function(section,index){
-   // The toolbar stays in place; only song content slides and staggers.
-   // This prevents duplicated headings and sort controls from crossing.
    if(section.classList.contains("toolbar"))return;
    var from=outgoing?0:direction*width;
    var to=outgoing?-direction*width:0;
    if(section.classList.contains("list")){
-    // Stagger each song independently, but only where it is actually visible.
-    // Offscreen rows can travel together without expensive per-row animations.
-    var rows=Array.from(section.children);
+    // Songs in All, Liked, History and individual playlists are direct
+    // children. Playlist collection cards live inside a nested grid.
+    var grid=section.querySelector(".playlist-grid");
+    var rows=grid?Array.from(grid.children):Array.from(section.children);
     var viewportTop=stage.getBoundingClientRect().top;
-    var viewportBottom=Math.min(window.innerHeight,document.querySelector(".dock").getBoundingClientRect().top);
+    var dock=document.querySelector(".dock");
+    var viewportBottom=dock?Math.min(window.innerHeight,dock.getBoundingClientRect().top):window.innerHeight;
     var visibleIndex=0;
     rows.forEach(function(row){
      var rect=row.getBoundingClientRect();
@@ -547,8 +547,24 @@ function setView(name,id){
    }
   });
  }
+ function animateToolbar(){
+  // Only the new toolbar exists. Ease its title and sort controls into
+  // place without duplicating the old header or blinking into visibility.
+  var toolbar=stage.querySelector(".toolbar");
+  if(!toolbar||getComputedStyle(toolbar).display==="none")return;
+  var pieces=[toolbar.querySelector(".toolbar-left"),toolbar.querySelector(".sort-tools")];
+  pieces.forEach(function(node,index){
+   if(!node||getComputedStyle(node).display==="none")return;
+   animations.push(node.animate([
+    {opacity:0,transform:"translate3d("+(direction*22)+"px,8px,0)",offset:0},
+    {opacity:1,transform:"translate3d("+(-direction*3)+"px,-1px,0)",offset:.82},
+    {opacity:1,transform:"translate3d(0,0,0)",offset:1}
+   ],{duration:480,delay:65+index*65,easing:"cubic-bezier(.22,.75,.25,1)",fill:"both"}));
+  });
+ }
  animateSections(snapshot,true);
  animateSections(stage,false);
+ animateToolbar();
  var cleanup=function(){
   animations.forEach(function(animation){animation.cancel()});
   snapshot.remove();
