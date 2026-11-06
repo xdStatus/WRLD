@@ -17,12 +17,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .haze{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 70% 50% at 88% 6%,rgba(255,255,255,.04),transparent 78%),radial-gradient(ellipse 65% 50% at 10% 90%,rgba(255,255,255,.025),transparent)}
 .shell{position:relative;z-index:1;max-width:820px;margin:auto;padding:19px 19px calc(194px + env(safe-area-inset-bottom));min-height:100vh}
 .header{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:15px}
-.header-settings{width:42px;height:42px;display:grid;place-items:center;flex:none;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(255,255,255,.035);color:#c6c6c6;transition:background .2s,border-color .2s,color .2s,transform .2s}
+.header-settings{width:42px;height:42px;display:grid;place-items:center;flex:none;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(255,255,255,.012);color:#c6c6c6;transition:background .2s,border-color .2s,color .2s,transform .2s}
 .header-settings svg{width:21px;height:21px;display:block;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;transform-origin:50% 50%;animation:settingsGearSpin 18s linear infinite}
 @keyframes settingsGearSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.header-settings svg{animation:none}}
 .header-settings:active{transform:scale(.94)}
-.header-settings.active{color:#fff;border-color:rgba(255,255,255,.48);background:rgba(255,255,255,.13)}
+.header-settings.active{color:#fff;border-color:rgba(255,255,255,.32);background:rgba(255,255,255,.055)}
 .brand{display:flex;align-items:center;gap:11px;min-width:0;order:0;margin-right:auto}
 .brand-logo{padding:0;display:flex;gap:0;align-items:center;justify-content:center;height:46px;width:91px;flex:none;white-space:nowrap;color:white;transition:filter .5s var(--ease)}
 
