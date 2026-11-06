@@ -357,7 +357,7 @@ function fmtListening(ms){
  var minutes=Math.floor((seconds%3600)/60);
  return hours+"h "+minutes+"m";
 }
-function cloudConnected(){return app.cloud.source==="cloud" && /^Connected(?:\\b|\\s|\\s*·)/i.test(app.cloud.status)}
+function cloudConnected(){return app.cloud.source==="cloud" && app.cloud.status.startsWith("Connected")}
 function fmt(ms){var seconds=Math.floor(Math.max(0,Number(ms)||0)/1000);return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")}
 var toastTimer;
 function notice(message){var t=el("toast");t.textContent=message; t.classList.add("visible");clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove("visible")},2700)}
