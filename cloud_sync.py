@@ -36,11 +36,14 @@ def _request(method, access_key, body=None):
         headers={
             "Authorization": "Bearer " + access_key,
             "Accept": "application/json",
+            "User-Agent": "WRLD-Player/1.8.38",
             **({"Content-Type": "application/json"} if data is not None else {}),
         },
     )
     try:
         with _https_opener.open(request, timeout=15) as response:
+            if response.geturl() != SYNC_URL:
+                raise CloudSyncError("Unexpected cloud sync redirect")
             status = response.status
             raw = response.read(MAX_RESPONSE + 1)
     except HTTPError as exc:
@@ -48,6 +51,8 @@ def _request(method, access_key, body=None):
         if status == 401:
             raise CloudSyncError("WRLD Cloud access key rejected") from None
         if status != 409:
+            if status == 403:
+                raise CloudSyncError("WRLD Cloud rejected the sync request (HTTP 403). Check Cloudflare security events for /api/sync.") from None
             raise CloudSyncError(f"Cloud sync unavailable (HTTP {status})") from None
         raw = exc.read(MAX_RESPONSE + 1)
     except (URLError, TimeoutError) as exc:
