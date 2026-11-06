@@ -215,8 +215,9 @@ input[type=range]{accent-color:#eee;cursor:pointer}
 .seek-track{position:absolute;left:0;right:0;top:50%;height:4px;transform:translateY(-50%);border-radius:999px;background:rgba(233,233,233,.24);pointer-events:none;transition:height .2s var(--ease),background .2s}
 .seek-fill{position:relative;height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#b6c4ff,#c9d4ff 72%,#fff);transition:width .1s linear}
 .seek-head{position:absolute;right:0;top:50%;height:4px;width:3px;border-radius:99px;background:#fff;transform:translateY(-50%);box-shadow:0 0 3px rgba(255,255,255,.75);isolation:isolate}
-.seek-head::before{content:"";position:absolute;right:0;top:50%;width:112px;height:36px;transform:translateY(-50%) rotate(-9deg);transform-origin:right center;background:radial-gradient(ellipse 85px 12px at 100% 50%,rgba(255,255,255,.82) 0%,rgba(216,225,255,.48) 25%,rgba(181,198,255,.14) 58%,transparent 100%);filter:blur(8px);clip-path:inset(0 0 0 0);pointer-events:none}
-.seek-head::after{content:"";position:absolute;right:0;top:50%;width:54px;height:12px;transform:translateY(-50%) rotate(9deg);transform-origin:right center;background:radial-gradient(ellipse 52px 5px at 100% 50%,rgba(255,255,255,.94),rgba(225,233,255,.4) 42%,transparent 100%);filter:blur(4px);clip-path:inset(0 0 0 0);pointer-events:none}
+.seek-head::before,.seek-head::after{content:"";position:absolute;right:0;top:50%;width:104px;height:16px;transform-origin:100% 50%;background:radial-gradient(ellipse 103px 7px at 100% 50%,rgba(255,255,255,.88) 0%,rgba(216,225,255,.44) 30%,rgba(181,198,255,.13) 65%,transparent 100%);filter:blur(6px);pointer-events:none}
+.seek-head::before{transform:translateY(-50%) rotate(-12deg)}
+.seek-head::after{transform:translateY(-50%) rotate(12deg)}
 .seek-shell.is-scrubbing .seek-track{height:6px;background:rgba(244,244,244,.29)}
 .seek-shell.is-scrubbing .seek-head{box-shadow:0 0 12px 3px rgba(255,255,255,.64),0 0 23px 5px rgba(230,230,230,.2)}
 #seek{position:absolute;inset:0;z-index:2;width:100%;height:100%;min-width:0;margin:0;opacity:0;cursor:pointer;touch-action:none;-webkit-appearance:none;appearance:none}
