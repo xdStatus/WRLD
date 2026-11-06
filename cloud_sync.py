@@ -6,9 +6,10 @@ unless the app explicitly selects its cloud library.
 """
 import json
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.request import Request
+from cloud_backend import _read_token, _https_opener, WORKER_ORIGIN
 
-SYNC_URL = "https://wrld-cloud.zaavangonzaless.workers.dev/api/sync"
+SYNC_URL = WORKER_ORIGIN + "/api/sync"
 MAX_RESPONSE = 2_000_000
 
 
@@ -39,7 +40,7 @@ def _request(method, access_key, body=None):
         },
     )
     try:
-        with urlopen(request, timeout=15) as response:
+        with _https_opener.open(request, timeout=15) as response:
             status = response.status
             raw = response.read(MAX_RESPONSE + 1)
     except HTTPError as exc:
@@ -77,3 +78,11 @@ def save(access_key, revision, collections):
     if not isinstance(collections, dict):
         raise ValueError("Collections must be a dictionary")
     return _request("PUT", access_key, {"revision": revision, "data": collections})
+
+def fetch_saved():
+    """Fetch with the existing DPAPI-protected cloud key."""
+    return fetch(_read_token())
+
+
+def save_saved(revision, collections):
+    return save(_read_token(), revision, collections)
