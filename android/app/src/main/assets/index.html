@@ -509,7 +509,10 @@ function setView(name,id){
    return node!==snapshot&&node.nodeType===1&&getComputedStyle(node).display!=="none";
   });
   sections.forEach(function(section,index){
-   var delay=index===0?0:Math.min(65,35+index*15);
+   // Old content leaves immediately; delaying it briefly exposes old song rows
+   // over the new tab (most noticeable when switching All songs to Liked).
+   // Stagger only the incoming groups, with a restrained 24ms offset.
+   var delay=outgoing?0:(index===0?0:24);
    slidePart(section,outgoing?0:direction*width,outgoing?-direction*width:0,delay);
   });
  }
