@@ -519,11 +519,25 @@ function setView(name,id){
    return node!==snapshot&&node.nodeType===1&&getComputedStyle(node).display!=="none";
   });
   sections.forEach(function(section,index){
-   // Old content leaves immediately; delaying it briefly exposes old song rows
-   // over the new tab (most noticeable when switching All songs to Liked).
-   // The incoming content layers follow the heading with a clear 140ms delay.
-   var delay=outgoing?0:(index===0?0:140);
-   slidePart(section,outgoing?0:direction*width,outgoing?-direction*width:0,delay,outgoing);
+   var from=outgoing?0:direction*width;
+   var to=outgoing?-direction*width:0;
+   if(section.classList.contains("list")){
+    // Stagger each song independently, but only where it is actually visible.
+    // Offscreen rows can travel together without expensive per-row animations.
+    var rows=Array.from(section.children);
+    var viewportTop=stage.getBoundingClientRect().top;
+    var viewportBottom=Math.min(window.innerHeight,document.querySelector(".dock").getBoundingClientRect().top);
+    var visibleIndex=0;
+    rows.forEach(function(row){
+     var rect=row.getBoundingClientRect();
+     var visible=rect.bottom>viewportTop&&rect.top<viewportBottom;
+     var delay=outgoing?0:(visible?140+Math.min(visibleIndex++,12)*42:140);
+     slidePart(row,from,to,delay,outgoing);
+    });
+    if(!rows.length)slidePart(section,from,to,outgoing?0:140,outgoing);
+   }else{
+    slidePart(section,from,to,outgoing?0:(index===0?0:140),outgoing);
+   }
   });
  }
  animateSections(snapshot,true);
