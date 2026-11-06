@@ -47,6 +47,72 @@ class MainActivity : Activity() {
     private var libraryLoading = false
     private var cloudRequestVersion = 0
     private var queueOpened = false
+    private var cloudCollections = JSONObject().put("liked", JSONArray())
+        .put("playlists", JSONArray()).put("history", JSONArray()).put("listeningMs", 0L)
+    private var cloudSyncBusy = false
+
+    private fun refreshCloudCollections() {
+        if (musicSource != "cloud" || cloudSyncBusy) return
+        val token = CloudSecrets.read(this)
+        if (token.isBlank()) return
+        cloudSyncBusy = true
+        executor.execute {
+            try {
+                val snapshot = CloudSync.fetch(token)
+                runOnUiThread {
+                    if (musicSource == "cloud" && CloudSecrets.read(this) == token) {
+                        cloudCollections = CloudCollectionMerge.normalized(snapshot.data)
+                        sendCollections()
+                        sendHistory()
+                    }
+                }
+            } catch (error: Exception) {
+                showError("Cloud sync unavailable: " + (error.message ?: "connection failed"))
+            } finally {
+                runOnUiThread { cloudSyncBusy = false }
+            }
+        }
+    }
+
+    private fun mutateCloudCollections(change: (JSONObject) -> JSONObject) {
+        if (cloudSyncBusy) {
+            showError("Cloud sync busy. Please try again.")
+            return
+        }
+        val token = CloudSecrets.read(this)
+        if (token.isBlank()) {
+            showError("Connect WRLD Cloud first.")
+            return
+        }
+        cloudSyncBusy = true
+        executor.execute {
+            try {
+                var current = CloudSync.fetch(token)
+                var saved: CloudSync.Snapshot? = null
+                for (attempt in 0..2) {
+                    try {
+                        saved = CloudSync.save(token, current.revision,
+                            CloudCollectionMerge.normalized(change(current.data)))
+                        break
+                    } catch (conflict: CloudSync.Conflict) {
+                        current = conflict.current
+                    }
+                }
+                val result = saved ?: throw IllegalStateException("Cloud changed repeatedly")
+                runOnUiThread {
+                    if (musicSource == "cloud" && CloudSecrets.read(this) == token) {
+                        cloudCollections = CloudCollectionMerge.normalized(result.data)
+                        sendCollections()
+                        sendHistory()
+                    }
+                }
+            } catch (error: Exception) {
+                showError("Cloud sync save failed: " + (error.message ?: "connection failed"))
+            } finally {
+                runOnUiThread { cloudSyncBusy = false }
+            }
+        }
+    }
 
     // Preview-only emulator verification: check real WebView animation frames,
     // not just that the process remains alive. Inactive for normal app launches.
@@ -245,11 +311,11 @@ class MainActivity : Activity() {
     }
 
     private fun sendCollections() {
-        sendScript("window.WRLD.receiveCollections(" + collections.read().toString() + ");")
+        sendScript("window.WRLD.receiveCollections(" + (if (musicSource == "cloud") cloudCollections else collections.read()).toString() + ");")
     }
 
     private fun sendHistory() {
-        sendScript("window.WRLD.receiveHistory(" + history.read().toString() + ");")
+        sendScript("window.WRLD.receiveHistory(" + (if (musicSource == "cloud") cloudCollections.optJSONArray("history") ?: JSONArray() else history.read()).toString() + ");")
     }
 
     private fun sendAudioSettings() {
@@ -315,6 +381,7 @@ class MainActivity : Activity() {
                         version != cloudRequestVersion) return@runOnUiThread
                     cloudSongs = scanned
                     sendSongs(scanned)
+                    refreshCloudCollections()
                     sendScript("window.WRLD.receiveCloudStatus(" +
                         JSONObject.quote("Connected · ${scanned.size} songs") + ");")
                 }
@@ -403,6 +470,8 @@ class MainActivity : Activity() {
                 getSharedPreferences("wrld-cloud", MODE_PRIVATE).edit()
                     .putString("source", value).apply()
                 sendCloudConfig()
+                sendCollections()
+                sendHistory()
                 if (value == "cloud") loadCloudLibrary()
                 else if (hasAudioPermission()) {
                     if (localSongs.isNotEmpty()) sendSongs(localSongs)
@@ -419,6 +488,8 @@ class MainActivity : Activity() {
                     getSharedPreferences("wrld-cloud", MODE_PRIVATE).edit()
                         .putString("source", "cloud").apply()
                     sendCloudConfig()
+                    sendCollections()
+                    sendHistory()
                     loadCloudLibrary()
                 } catch (_: Exception) {
                     showError("Could not securely save the access key. It must be at least 32 characters.")
@@ -563,24 +634,72 @@ class MainActivity : Activity() {
         @JavascriptInterface fun setLike(id: String, enabled: Boolean) {
             runOnUiThread {
                 if (songs.none { it.id == id }) return@runOnUiThread
-                collections.like(id, enabled)
-                sendCollections()
+                if (musicSource == "cloud") {
+                    mutateCloudCollections { CloudCollectionMerge.setLike(it, id, enabled) }
+                } else {
+                    collections.like(id, enabled)
+                    sendCollections()
+                }
             }
         }
 
         @JavascriptInterface fun createPlaylist(name: String) {
-            runOnUiThread { collections.create(name); sendCollections() }
+            runOnUiThread {
+                if (musicSource == "cloud") mutateCloudCollections { data ->
+                    val copy = CloudCollectionMerge.normalized(data)
+                    val lists = copy.getJSONArray("playlists")
+                    if (lists.length() < 100 && name.trim().isNotBlank()) {
+                        val next = JSONArray().put(JSONObject()
+                            .put("id", java.util.UUID.randomUUID().toString().take(12))
+                            .put("name", name.trim().take(70)).put("ids", JSONArray()))
+                        for (i in 0 until lists.length()) next.put(lists.get(i))
+                        copy.put("playlists", next)
+                    }
+                    copy
+                } else { collections.create(name); sendCollections() }
+            }
         }
 
         @JavascriptInterface fun deletePlaylist(id: String) {
-            runOnUiThread { collections.delete(id); sendCollections() }
+            runOnUiThread {
+                if (musicSource == "cloud") mutateCloudCollections { data ->
+                    val copy = CloudCollectionMerge.normalized(data)
+                    val old = copy.getJSONArray("playlists")
+                    val next = JSONArray()
+                    for (i in 0 until old.length()) {
+                        val item = old.optJSONObject(i) ?: continue
+                        if (item.optString("id") != id) next.put(item)
+                    }
+                    copy.put("playlists", next)
+                } else { collections.delete(id); sendCollections() }
+            }
         }
 
         @JavascriptInterface fun togglePlaylist(id: String, trackId: String) {
             runOnUiThread {
                 if (songs.none { it.id == trackId }) return@runOnUiThread
-                collections.toggleTrack(id, trackId)
-                sendCollections()
+                if (musicSource == "cloud") mutateCloudCollections { data ->
+                    val copy = CloudCollectionMerge.normalized(data)
+                    val lists = copy.getJSONArray("playlists")
+                    for (i in 0 until lists.length()) {
+                        val item = lists.optJSONObject(i) ?: continue
+                        if (item.optString("id") != id) continue
+                        val old = item.optJSONArray("ids") ?: JSONArray()
+                        val next = JSONArray()
+                        var found = false
+                        for (j in 0 until old.length()) {
+                            val value = old.optString(j)
+                            if (value == trackId) found = true else next.put(value)
+                        }
+                        if (!found && trackId.startsWith("r2_")) next.put(trackId)
+                        item.put("ids", next)
+                        break
+                    }
+                    copy
+                } else {
+                    collections.toggleTrack(id, trackId)
+                    sendCollections()
+                }
             }
         }
 
