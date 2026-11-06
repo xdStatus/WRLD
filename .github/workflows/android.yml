@@ -148,6 +148,7 @@ jobs:
           path: android/dist/*
           if-no-files-found: error
       - name: Publish permanently signed Android beta
+        if: github.event_name == 'workflow_dispatch'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
