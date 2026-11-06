@@ -15,7 +15,7 @@ const fingerprint = read("android/signing-cert.sha256").trim();
 
 assert.match(fingerprint, /^[a-f0-9]{64}$/, "Public certificate fingerprint must be SHA-256");
 assert.match(gradle, /versionName = "0\.1\.18"/);
-assert.match(gradle, /versionCode = 19/);
+assert.match(gradle, /versionCode = 20/);
 assert.match(gradle, /WRLD_KEYSTORE_PATH/);
 assert.match(gradle, /signingConfig = signingConfigs\.getByName\("wrldRelease"\)/);
 
