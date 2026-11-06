@@ -444,9 +444,6 @@ class MainActivity : Activity() {
             .put("playing", player?.isPlaying == true)
             .put("position", (player?.currentPosition ?: 0L).coerceAtLeast(0L))
             .put("duration", if (duration == C.TIME_UNSET) 0L else duration.coerceAtLeast(0L))
-            // Show the user's chosen level, not the temporary fade-automation gain.
-            .put("volume", getSharedPreferences("wrld", MODE_PRIVATE)
-                .getFloat("volume", 0.10f).coerceIn(0f, 1f))
             .put("repeat", when (player?.repeatMode) {
                 Player.REPEAT_MODE_ALL -> "all"
                 Player.REPEAT_MODE_ONE -> "one"
@@ -637,15 +634,6 @@ class MainActivity : Activity() {
                     "one" -> Player.REPEAT_MODE_ONE
                     else -> Player.REPEAT_MODE_OFF
                 }
-                sendPlayerState()
-            }
-        }
-
-        @JavascriptInterface fun setVolume(value: Double) {
-            runOnUiThread {
-                val volume = value.toFloat().coerceIn(0f, 1f)
-                // The service listens for this preference and reapplies fade gain.
-                getSharedPreferences("wrld", MODE_PRIVATE).edit().putFloat("volume", volume).apply()
                 sendPlayerState()
             }
         }
