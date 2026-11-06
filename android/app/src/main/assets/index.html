@@ -193,6 +193,15 @@ body.wrld-intro-running .brand-text strong:not(.intro-final-reveal){opacity:0}
 .queue-remove:active{color:white;background:rgba(255,255,255,.13)}
 .queue-footer{font-size:10px;color:#929292;line-height:1.6;margin-top:12px}
 .queue-empty{font-size:12px;color:#bbb;padding:25px 4px}
+
+.track-art,.current-art{overflow:hidden;position:relative;background:radial-gradient(circle,#171b27,#080a10 78%);padding:0;flex-shrink:0}
+.constellation-svg{width:100%;height:100%;display:block}
+.constellation-motion{transform-origin:50% 50%}
+.constellation-playing .constellation-motion{animation:wrldStarDrift 8s ease-in-out infinite alternate}
+.constellation-playing .constellation-bright{animation:wrldStarTwinkle 3.5s ease-in-out infinite alternate}
+@keyframes wrldStarDrift{from{transform:translate(-1px,1px) rotate(-1deg)}to{transform:translate(1.5px,-1.5px) rotate(1deg)}}
+@keyframes wrldStarTwinkle{from{opacity:.6}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.constellation-playing .constellation-motion,.constellation-playing .constellation-bright{animation:none}}
 .current-art{display:grid;place-items:center;height:38px;width:38px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);font-size:23px;font-style:normal}
 .current-titles{display:flex;flex-direction:column;min-width:0;gap:3px;flex:1}
 .current-titles strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
@@ -517,6 +526,28 @@ function render(){
  }
  appendTracks();
 }
+
+function constellationArtwork(id){
+ var hash=2166136261,key=String(id||'wrld');
+ for(var h=0;h<key.length;h++){hash^=key.charCodeAt(h);hash=Math.imul(hash,16777619)}
+ var seed=hash>>>0;
+ function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}
+ var background='',points=[],lines='',dots='';
+ for(var i=0;i<95;i++){background+='<circle cx="'+(3+random()*94).toFixed(1)+'" cy="'+(3+random()*94).toFixed(1)+'" r="'+(.13+random()*.5).toFixed(2)+'" fill="#f1f5ff" opacity="'+(.12+random()*.38).toFixed(2)+'"/>'}
+ for(var j=0;j<11;j++){var angle=j*Math.PI*2/11+(random()-.5)*.8,rad=12+random()*26;points.push({x:50+Math.cos(angle)*rad,y:50+Math.sin(angle)*rad,r:.8+random()*1.1})}
+ var order=points.map(function(_,i){return i}).sort(function(a,b){return points[a].x-points[b].x});
+ for(var k=1;k<order.length;k++){var a=points[order[k-1]],b=points[order[k]];lines+='<line x1="'+a.x.toFixed(1)+'" y1="'+a.y.toFixed(1)+'" x2="'+b.x.toFixed(1)+'" y2="'+a.y.toFixed(1)+'" stroke="#c7d5ef" stroke-opacity=".43" stroke-width=".42"/>'}
+ for(var n=0;n<points.length;n++){var p=points[n];dots+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+(p.r*2.5).toFixed(1)+'" fill="#dce8ff" opacity=".13"/><circle class="'+(n%3===0?'constellation-bright':'')+'" cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+p.r.toFixed(2)+'" fill="#f5f8ff"/>'}
+ return '<svg class="constellation-svg" viewBox="0 0 100 100" aria-hidden="true"><g>'+background+'</g><g class="constellation-motion">'+lines+dots+'</g></svg>';
+}
+function updateConstellationPlayback(){
+ var playing=!!(app.player.id&&app.player.playing)&&!document.hidden;
+ document.querySelectorAll('.track').forEach(function(row){var art=row.querySelector('.track-art');if(art)art.classList.toggle('constellation-playing',playing&&row.dataset.song===app.player.id)});
+ var art=document.querySelector('.current-art');
+ if(art){if(art.dataset.song!==app.player.id){art.dataset.song=app.player.id;art.innerHTML=constellationArtwork(app.player.id)}art.classList.toggle('constellation-playing',playing)}
+}
+document.addEventListener('visibilitychange',updateConstellationPlayback);
+
 function appendTracks(){
  // Infinite scrolling belongs only to song-list views. Settings and
  // Playlists share #list but must never acquire leftover song rows.
@@ -528,10 +559,11 @@ function appendTracks(){
   var s=app.visible[i],row=document.createElement("div");
   row.className="track"+(app.player.id===s.id?" is-current":"");
   row.dataset.song=s.id;
-  row.innerHTML='<div class="track-art">✦</div><div class="track-main"><span class="track-title">'+esc(s.title)+'</span><span class="track-sub">'+esc(s.artist)+'</span></div><span class="track-length">'+(s.duration>0?fmt(s.duration):"—")+'</span><button class="icon-btn'+(app.liked.has(s.id)?" liked":"")+'" data-like="'+esc(s.id)+'" aria-label="Like song">'+heart+'</button><button class="icon-btn plus" data-menu="'+esc(s.id)+'" aria-label="Add song to playlist">+</button>';
+  row.innerHTML='<div class="track-art">'+constellationArtwork(s.id)+'</div><div class="track-main"><span class="track-title">'+esc(s.title)+'</span><span class="track-sub">'+esc(s.artist)+'</span></div><span class="track-length">'+(s.duration>0?fmt(s.duration):"—")+'</span><button class="icon-btn'+(app.liked.has(s.id)?" liked":"")+'" data-like="'+esc(s.id)+'" aria-label="Like song">'+heart+'</button><button class="icon-btn plus" data-menu="'+esc(s.id)+'" aria-label="Add song to playlist">+</button>';
   fragment.appendChild(row);
  }
  el("list").appendChild(fragment); app.displayed=end;
+ updateConstellationPlayback();
 }
 window.addEventListener("scroll",function(){
  if(viewChangeTimer!==null)return;
@@ -694,6 +726,7 @@ function paintVolume(raw){
  el("volumeLabel").textContent=Math.round(value)+"%";
 }
 function renderNow(){
+ updateConstellationPlayback();
  var song=app.map.get(app.player.id);
  el("currentTitle").textContent=song?song.title:"Select a song";
  el("currentArtist").textContent=song?song.artist:"Your music stays on your phone";
