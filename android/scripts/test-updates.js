@@ -14,9 +14,9 @@ const workflow = read(".github/workflows/android.yml");
 const fingerprint = read("android/signing-cert.sha256").trim();
 
 assert.match(fingerprint, /^[a-f0-9]{64}$/, "Public certificate fingerprint must be SHA-256");
-const versionName = gradle.match(/versionName\\s*=\\s*"([^"]+)"/)?.[1];
-const versionCode = Number(gradle.match(/versionCode\\s*=\\s*(\\d+)/)?.[1]);
-assert.match(versionName || "", /^\\d+\\.\\d+\\.\\d+$/, "Gradle must declare a semantic version");
+const versionName = gradle.match(/versionName\s*=\s*"([^"]+)"/)?.[1];
+const versionCode = Number(gradle.match(/versionCode\s*=\s*(\d+)/)?.[1]);
+assert.match(versionName || "", /^\d+\.\d+\.\d+$/, "Gradle must declare a semantic version");
 assert.ok(Number.isInteger(versionCode) && versionCode > 0, "Gradle must declare a valid versionCode");
 assert.match(gradle, /WRLD_KEYSTORE_PATH/);
 assert.match(gradle, /signingConfig = signingConfigs\.getByName\("wrldRelease"\)/);
