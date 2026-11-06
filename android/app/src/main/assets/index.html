@@ -172,6 +172,8 @@ body.wrld-intro-running .brand-text strong:not(.intro-final-reveal){opacity:0}
 .queue-grip:focus-visible .queue-grip-bar{outline:1px solid white;outline-offset:4px}
 .queue-drawer{height:0;overflow:hidden;visibility:hidden;pointer-events:none;transition:height .48s cubic-bezier(.22,.9,.24,1),visibility .48s}
 .queue-drawer.open{height:min(49vh,470px);visibility:visible;pointer-events:auto}
+.queue-drawer.is-dragging{transition:none;visibility:visible;pointer-events:auto}
+.queue-grip{touch-action:none;user-select:none}
 .queue-drawer-inner{height:min(49vh,470px);min-height:0;display:flex;flex-direction:column;overflow:hidden;border-top:1px solid rgba(255,255,255,.11);padding:10px 1px 13px}
 .queue-drawer .sheet-head{flex:none}
 .queue-drawer .queue-meta{flex:none}
@@ -853,23 +855,43 @@ dragSource.addEventListener("click",function(event){
  if(songDragSuppressClick){event.stopImmediatePropagation();event.preventDefault();songDragSuppressClick=false}
 },true);
 
-el("openQueueButton").addEventListener("click",toggleQueue);
+// Queue opens via the draggable grip, not by tapping the now-playing song.
 el("closeQueue").addEventListener("click",closeQueue);
-// Tap the grip, or pull it up/down; both control the same attached drawer.
-var gripStartY=null;
-el("queueGrip").addEventListener("pointerdown",function(e){gripStartY=e.clientY});
-el("queueGrip").addEventListener("pointerup",function(e){
- if(gripStartY===null)return;
- var dy=e.clientY-gripStartY;
- gripStartY=null;
- if(dy < -26)openQueue();
- else if(dy > 26)closeQueue();
- else toggleQueue();
+// Drag the handle to resize the queue in real time; release to snap open/closed.
+var queueDrag=null;
+function queueMaxHeight(){return Math.min(window.innerHeight*.49,470)}
+el("queueGrip").addEventListener("pointerdown",function(e){
+ if(e.button!==0)return;
+ var drawer=el("queueDrawer");
+ queueDrag={id:e.pointerId,y:e.clientY,start:isQueueOpen()?queueMaxHeight():0,height:isQueueOpen()?queueMaxHeight():0};
+ drawer.classList.add("is-dragging");
+ drawer.style.height=queueDrag.start+"px";
+ el("queueGrip").setPointerCapture(e.pointerId);
+ e.preventDefault();
 });
-el("queueGrip").addEventListener("pointercancel",function(){gripStartY=null});
-el("queueGrip").addEventListener("click",function(e){
- // Keyboard and accessibility activation doesn't produce pointerup.
- if(e.detail===0)toggleQueue();
+el("queueGrip").addEventListener("pointermove",function(e){
+ if(!queueDrag||queueDrag.id!==e.pointerId)return;
+ var drawer=el("queueDrawer");
+ queueDrag.height=Math.max(0,Math.min(queueMaxHeight(),queueDrag.start+queueDrag.y-e.clientY));
+ drawer.style.height=queueDrag.height+"px";
+ drawer.style.visibility="visible";
+});
+function finishQueueDrag(e,cancel){
+ if(!queueDrag||queueDrag.id!==e.pointerId)return;
+ var drag=queueDrag;queueDrag=null;
+ var drawer=el("queueDrawer");
+ drawer.classList.remove("is-dragging");
+ drawer.style.height="";
+ drawer.style.visibility="";
+ if(cancel)return;
+ var open=drag.height>queueMaxHeight()*.35;
+ if(open)openQueue();else closeQueue();
+}
+el("queueGrip").addEventListener("pointerup",function(e){finishQueueDrag(e,false)});
+el("queueGrip").addEventListener("pointercancel",function(e){finishQueueDrag(e,true)});
+el("queueGrip").addEventListener("keydown",function(e){
+ if(e.key==="ArrowUp"){e.preventDefault();openQueue()}
+ if(e.key==="ArrowDown"){e.preventDefault();closeQueue()}
 });
 el("queueList").addEventListener("scroll",function(e){
  if(e.target.scrollTop+e.target.clientHeight>=e.target.scrollHeight-220)appendQueueRows();
