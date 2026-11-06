@@ -700,7 +700,7 @@ function paintSeek(value){
  var position=Math.max(0,Math.min(1000,Number(value)||0));
  var percent=position/10;
  el("seekFill").style.width=percent+"%";
- el("seekFill").style.setProperty("--line-growth",String(position/1000));
+ el("seekFill").style.setProperty("--line-growth",String(Math.min(1,position/750)));
  el("scrubTooltip").style.left="clamp(21px, "+percent+"%, calc(100% - 21px))";
  el("scrubTooltip").textContent=fmt(position/1000*app.player.duration);
 }
