@@ -392,6 +392,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/collections':
             with lock:
                 return self.json_out(200, read_collections())
+        if path == '/api/cloud/collections':
+            try:
+                from cloud_sync import fetch_saved
+                return self.json_out(200, fetch_saved()['data'])
+            except Exception as exc:
+                return self.json_out(502, {'error': str(exc)})
         if path.startswith('/media/'):
             return self.stream_track(path.rsplit('/', 1)[-1])
         if path.startswith('/api/art/'):
@@ -423,6 +429,14 @@ class Handler(BaseHTTPRequestHandler):
             payload = json.loads(self.rfile.read(n) or b'{}') if n else {}
         except (ValueError, json.JSONDecodeError):
             return self.json_out(400, {'error': 'Invalid request'})
+        if path == '/api/cloud/collection-action':
+            try:
+                from cloud_collections import change
+                return self.json_out(200, change(payload))
+            except ValueError as exc:
+                return self.json_out(400, {'error': str(exc)})
+            except Exception as exc:
+                return self.json_out(502, {'error': str(exc)})
         if path == '/api/collection-action':
             try:
                 return self.json_out(200, collection_action(payload))
