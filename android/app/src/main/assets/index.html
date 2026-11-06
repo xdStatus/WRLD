@@ -489,10 +489,9 @@ function setView(name,id){
  snapshot.className="view-slide-snapshot";
  snapshot.setAttribute("aria-hidden","true");
  snapshot.inert=true;
- // Keep the toolbar in a single fixed layer during transitions: animating both
- // copies makes the heading and sort controls collide and clip together.
+ // Keep the outgoing toolbar in the inert snapshot so its title and sort
+ // can lift away before the incoming toolbar drops into the same space.
  var snapshotToolbar=snapshot.querySelector(".toolbar");
- if(snapshotToolbar)snapshotToolbar.remove();
  render();
  // History arrives asynchronously and re-renders its rows. Wait until the
  // navigation settles so the response cannot replace mid-animation nodes.
@@ -553,18 +552,24 @@ function setView(name,id){
   });
  }
  function animateToolbar(){
-  // Keep the live header visible and anchored. A small vertical spring
-  // avoids the flash caused by animating opacity from zero on each tab.
-  var toolbar=stage.querySelector(".toolbar");
-  if(!toolbar||getComputedStyle(toolbar).display==="none")return;
-  [toolbar.querySelector(".toolbar-left"),toolbar.querySelector(".sort-tools")].forEach(function(node,index){
-   if(!node||getComputedStyle(node).display==="none")return;
-   animations.push(node.animate([
-    {transform:"translate3d(0,10px,0)",offset:0,easing:"cubic-bezier(.22,.7,.25,1)"},
-    {transform:"translate3d(0,-2px,0)",offset:.78,easing:"ease-out"},
-    {transform:"translate3d(0,0,0)",offset:1}
-   ],{duration:430,delay:index*55,easing:"linear",fill:"both"}));
-  });
+  var incoming=stage.querySelector(".toolbar");
+  var outgoing=snapshotToolbar;
+  // The old header rises and clears the area first. The new title and sort
+  // descend together afterwards; animating the whole toolbar avoids clipping
+  // its controls against each other or flashing intermediate text.
+  if(outgoing&&getComputedStyle(outgoing).display!=="none"){
+   animations.push(outgoing.animate([
+    {transform:"translate3d(0,0,0)",opacity:1},
+    {transform:"translate3d(0,-34px,0)",opacity:0}
+   ],{duration:210,easing:"cubic-bezier(.45,0,.75,.45)",fill:"both"}));
+  }
+  if(incoming&&getComputedStyle(incoming).display!=="none"){
+   animations.push(incoming.animate([
+    {transform:"translate3d(0,-30px,0)",opacity:0,offset:0},
+    {transform:"translate3d(0,3px,0)",opacity:1,offset:.84},
+    {transform:"translate3d(0,0,0)",opacity:1,offset:1}
+   ],{duration:390,delay:210,easing:"cubic-bezier(.2,.8,.25,1)",fill:"both"}));
+  }
  }
  animateSections(snapshot,true);
  animateSections(stage,false);
