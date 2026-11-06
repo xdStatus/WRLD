@@ -26,7 +26,6 @@ class PlaybackService : MediaSessionService() {
     private var activePlayer: ExoPlayer? = null
     private lateinit var audioStore: AudioSettingsStore
     private var audioSettings = AudioSettings()
-    private var baseVolume = 0.10f
     private lateinit var cloudHttpFactory: DefaultHttpDataSource.Factory
     private val cloudPrefs by lazy { getSharedPreferences("wrld-cloud", MODE_PRIVATE) }
     private val cloudListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
@@ -82,9 +81,6 @@ class PlaybackService : MediaSessionService() {
     }
 
     private val preferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
-        if (key == "volume") {
-            baseVolume = prefs.getFloat("volume", 0.10f).coerceIn(0f, 1f)
-        }
         if (key == "fadeIn" || key == "fadeOut" ||
             key == "gapless" || key == "fadeDurationMs") {
             audioSettings = audioStore.read()
@@ -98,7 +94,6 @@ class PlaybackService : MediaSessionService() {
         listeningMs = listeningPrefs.getLong("totalMs", 0L).coerceAtLeast(0L)
         audioStore = AudioSettingsStore(applicationContext)
         audioSettings = audioStore.read()
-        baseVolume = audioStore.prefs.getFloat("volume", 0.10f).coerceIn(0f, 1f)
 
         cloudHttpFactory = DefaultHttpDataSource.Factory()
             .setAllowCrossProtocolRedirects(false)
@@ -114,7 +109,7 @@ class PlaybackService : MediaSessionService() {
             )
             setHandleAudioBecomingNoisy(true)
             setPauseAtEndOfMediaItems(!audioSettings.gapless)
-            volume = baseVolume
+            volume = 1f
         }
         activePlayer = player
         audioStore.prefs.registerOnSharedPreferenceChangeListener(preferenceListener)
@@ -179,7 +174,7 @@ class PlaybackService : MediaSessionService() {
                 duration > 0L && duration - position < fadeLength)
                 gain = minOf(gain, (duration - position).coerceAtLeast(0L).toFloat() / fadeLength)
         }
-        player.volume = (baseVolume * gain).coerceIn(0f, 1f)
+        player.volume = gain.coerceIn(0f, 1f)
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
