@@ -113,6 +113,7 @@ class MainActivity : Activity() {
                     sendCollections()
                     sendHistory()
                     sendAudioSettings()
+                    sendListeningTime()
                     sendScript("window.WRLD.receiveAppVersion(" +
                         JSONObject.quote(appVersion()) + ");")
                     sendCloudConfig()
@@ -380,7 +381,17 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun sendListeningTime() {
+        val totalMs = getSharedPreferences("wrld-listening", MODE_PRIVATE)
+            .getLong("totalMs", 0L).coerceAtLeast(0L)
+        sendScript("window.WRLD.receiveListeningTime(" + totalMs + ");")
+    }
+
     inner class NativeBridge {
+        @JavascriptInterface fun requestListeningTime() {
+            runOnUiThread { sendListeningTime() }
+        }
+
         @JavascriptInterface fun requestCloudConfig() {
             runOnUiThread { sendCloudConfig() }
         }
