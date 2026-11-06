@@ -67,7 +67,8 @@ body.wrld-intro-running .brand-text strong:not(.intro-final-reveal){opacity:0}
 /* Only composite the view for the short tab transition, not while idle. */
 .content-stage{position:relative;opacity:1;transform:none}
 .content-stage.view-changing,.content-stage.view-entering{opacity:1;transform:none}
-.view-slide-snapshot{position:absolute;z-index:2;pointer-events:none;overflow:hidden;contain:paint}
+.view-slide-snapshot{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;contain:layout paint;max-width:100%}
+.content-stage.is-sliding{overflow:hidden;isolation:isolate}
 @media(prefers-reduced-motion:reduce){.view-slide-snapshot{display:none}}
 .shuffle-all-row{display:flex;align-items:center;gap:12px;margin:0 0 17px}
 .shuffle-all{display:flex;align-items:center;justify-content:center;gap:10px;flex:none;min-height:42px;padding:0 16px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.095);color:#f6f6f6;border-radius:12px;font-size:12px;font-weight:620;letter-spacing:.025em;transition:transform .18s,background .18s,border-color .18s}
@@ -480,25 +481,21 @@ function setView(name,id){
   render();refreshTabData(name);
   return;
  }
- var parent=stage.parentElement;
- var rect=stage.getBoundingClientRect();
- var parentRect=parent.getBoundingClientRect();
+ // Snapshot only the changing content, never the background, navigation or player.
+ var width=Math.max(1,stage.clientWidth);
  var snapshot=stage.cloneNode(true);
  snapshot.removeAttribute("id");
+ snapshot.querySelectorAll("[id]").forEach(function(node){node.removeAttribute("id")});
  snapshot.className="view-slide-snapshot";
- snapshot.style.left=(rect.left-parentRect.left+parent.scrollLeft)+"px";
- snapshot.style.top=(rect.top-parentRect.top+parent.scrollTop)+"px";
- snapshot.style.width=rect.width+"px";
- snapshot.style.height=rect.height+"px";
- parent.style.position="relative";
- parent.appendChild(snapshot);
+ snapshot.setAttribute("aria-hidden","true");
+ snapshot.inert=true;
  render();
  refreshTabData(name);
- var width=Math.max(1,rect.width);
- // Constant-speed movement, with staggered sections like the reference video.
- // Each section moves at a fixed velocity; only its start time differs.
- var duration=390;
- var stagger=48;
+ stage.classList.add("is-sliding");
+ stage.appendChild(snapshot);
+ // Each section has a modest offset, but moves at the same constant speed.
+ // Animate whole content groups rather than individual song rows to prevent jitter.
+ var duration=365;
  var animations=[];
  function slidePart(node,from,to,delay){
   if(!node||getComputedStyle(node).display==="none")return;
@@ -507,32 +504,21 @@ function setView(name,id){
    {transform:"translate3d("+to+"px,0,0)"}
   ],{duration:duration,delay:delay,easing:"linear",fill:"both"}));
  }
- function slideSections(root,outgoing){
-  var toolbar=root.querySelector(".toolbar");
-  var list=root.querySelector("#list");
-  if(toolbar)slidePart(toolbar,outgoing?0:direction*width,outgoing?-direction*width:0,0);
-  if(list){
-   var rows=Array.from(list.children).filter(function(n){return n.nodeType===1});
-   if(rows.length>0&&rows.length<=24){
-    rows.forEach(function(row,i){
-     slidePart(row,outgoing?0:direction*width,outgoing?-direction*width:0,
-      stagger+Math.min(i,8)*16);
-    });
-   }else{
-    slidePart(list,outgoing?0:direction*width,outgoing?-direction*width:0,stagger);
-   }
-  }
-  // Settings and playlist layouts can have different content structures.
-  Array.from(root.children).forEach(function(child,i){
-   if(child===toolbar||child===list)return;
-   slidePart(child,outgoing?0:direction*width,outgoing?-direction*width:0,stagger+i*32);
+ function animateSections(root,outgoing){
+  var sections=Array.from(root.children).filter(function(node){
+   return node!==snapshot&&node.nodeType===1&&getComputedStyle(node).display!=="none";
+  });
+  sections.forEach(function(section,index){
+   var delay=index===0?0:Math.min(65,35+index*15);
+   slidePart(section,outgoing?0:direction*width,outgoing?-direction*width:0,delay);
   });
  }
- slideSections(snapshot,true);
- slideSections(stage,false);
+ animateSections(snapshot,true);
+ animateSections(stage,false);
  var cleanup=function(){
   animations.forEach(function(animation){animation.cancel()});
   snapshot.remove();
+  stage.classList.remove("is-sliding");
   if(window.wrldViewSlideCleanup===cleanup)window.wrldViewSlideCleanup=null;
  };
  window.wrldViewSlideCleanup=cleanup;
