@@ -494,7 +494,9 @@ function setView(name,id){
  var snapshotToolbar=snapshot.querySelector(".toolbar");
  if(snapshotToolbar)snapshotToolbar.remove();
  render();
- refreshTabData(name);
+ // History arrives asynchronously and re-renders its rows. Wait until the
+ // navigation settles so the response cannot replace mid-animation nodes.
+ if(name!=="history")refreshTabData(name);
  stage.classList.add("is-sliding");
  stage.appendChild(snapshot);
  // Each section has a modest offset, but moves at the same constant speed.
@@ -530,7 +532,10 @@ function setView(name,id){
     // Songs in All, Liked, History and individual playlists are direct
     // children. Playlist collection cards live inside a nested grid.
     var grid=section.querySelector(".playlist-grid");
-    var rows=grid?Array.from(grid.children):Array.from(section.children);
+    var settings=section.querySelector(".settings-page");
+    // Animate Settings headings and panels individually, rather than sliding
+    // the entire Settings page as one block.
+    var rows=settings?Array.from(settings.children):(grid?Array.from(grid.children):Array.from(section.children));
     var viewportTop=stage.getBoundingClientRect().top;
     var dock=document.querySelector(".dock");
     var viewportBottom=dock?Math.min(window.innerHeight,dock.getBoundingClientRect().top):window.innerHeight;
@@ -548,18 +553,17 @@ function setView(name,id){
   });
  }
  function animateToolbar(){
-  // Only the new toolbar exists. Ease its title and sort controls into
-  // place without duplicating the old header or blinking into visibility.
+  // Keep the live header visible and anchored. A small vertical spring
+  // avoids the flash caused by animating opacity from zero on each tab.
   var toolbar=stage.querySelector(".toolbar");
   if(!toolbar||getComputedStyle(toolbar).display==="none")return;
-  var pieces=[toolbar.querySelector(".toolbar-left"),toolbar.querySelector(".sort-tools")];
-  pieces.forEach(function(node,index){
+  [toolbar.querySelector(".toolbar-left"),toolbar.querySelector(".sort-tools")].forEach(function(node,index){
    if(!node||getComputedStyle(node).display==="none")return;
    animations.push(node.animate([
-    {opacity:0,transform:"translate3d("+(direction*22)+"px,8px,0)",offset:0},
-    {opacity:1,transform:"translate3d("+(-direction*3)+"px,-1px,0)",offset:.82},
-    {opacity:1,transform:"translate3d(0,0,0)",offset:1}
-   ],{duration:480,delay:65+index*65,easing:"cubic-bezier(.22,.75,.25,1)",fill:"both"}));
+    {transform:"translate3d(0,10px,0)",offset:0,easing:"cubic-bezier(.22,.7,.25,1)"},
+    {transform:"translate3d(0,-2px,0)",offset:.78,easing:"ease-out"},
+    {transform:"translate3d(0,0,0)",offset:1}
+   ],{duration:430,delay:index*55,easing:"linear",fill:"both"}));
   });
  }
  animateSections(snapshot,true);
@@ -569,6 +573,7 @@ function setView(name,id){
   animations.forEach(function(animation){animation.cancel()});
   snapshot.remove();
   stage.classList.remove("is-sliding");
+  if(sequence===viewChangeSeq&&name==="history")refreshTabData("history");
   if(window.wrldViewSlideCleanup===cleanup)window.wrldViewSlideCleanup=null;
  };
  window.wrldViewSlideCleanup=cleanup;
@@ -1132,7 +1137,22 @@ window.WRLD={
  receiveCollections:function(data){app.liked=new Set((data.liked||[]).map(String));app.playlists=Array.isArray(data.playlists)?data.playlists.map(function(p){return {id:String(p.id),name:String(p.name),ids:(p.ids||[]).map(String)}}):[];render();renderNow()},
  receiveHistory:function(data){
   app.history=Array.isArray(data)?data.slice(0,50).map(String):[];
-  if(app.view==="history")render();
+  if(app.view==="history"){
+   // The history response replaces #list. Never interrupt an active slide.
+   if(el("viewStage").classList.contains("is-sliding"))return;
+   render();
+   if(!reduceMotion){
+    Array.from(el("list").querySelectorAll(".track")).slice(0,14).forEach(function(row,i){
+     var rect=row.getBoundingClientRect();
+     if(rect.top>=window.innerHeight)return;
+     row.animate([
+      {transform:"translate3d(28px,0,0)",opacity:.65},
+      {transform:"translate3d(-3px,0,0)",opacity:1,offset:.82},
+      {transform:"translate3d(0,0,0)",opacity:1}
+     ],{duration:480,delay:i*42,easing:"cubic-bezier(.22,.7,.25,1)"});
+    });
+   }
+  }
  },
  receiveQueue:function(data){
   queueItems=data&&Array.isArray(data.items)?data.items:[];
