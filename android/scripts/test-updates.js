@@ -14,7 +14,7 @@ const workflow = read(".github/workflows/android.yml");
 const fingerprint = read("android/signing-cert.sha256").trim();
 
 assert.match(fingerprint, /^[a-f0-9]{64}$/, "Public certificate fingerprint must be SHA-256");
-assert.match(gradle, /versionName = "0\.1\.20"/);
+assert.match(gradle, /versionName = "0\.1\.21"/);
 assert.match(gradle, /versionCode = 22/);
 assert.match(gradle, /WRLD_KEYSTORE_PATH/);
 assert.match(gradle, /signingConfig = signingConfigs\.getByName\("wrldRelease"\)/);
