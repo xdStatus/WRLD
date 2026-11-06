@@ -489,6 +489,10 @@ function setView(name,id){
  snapshot.className="view-slide-snapshot";
  snapshot.setAttribute("aria-hidden","true");
  snapshot.inert=true;
+ // Keep the toolbar in a single fixed layer during transitions: animating both
+ // copies makes the heading and sort controls collide and clip together.
+ var snapshotToolbar=snapshot.querySelector(".toolbar");
+ if(snapshotToolbar)snapshotToolbar.remove();
  render();
  refreshTabData(name);
  stage.classList.add("is-sliding");
@@ -519,6 +523,9 @@ function setView(name,id){
    return node!==snapshot&&node.nodeType===1&&getComputedStyle(node).display!=="none";
   });
   sections.forEach(function(section,index){
+   // The toolbar stays in place; only song content slides and staggers.
+   // This prevents duplicated headings and sort controls from crossing.
+   if(section.classList.contains("toolbar"))return;
    var from=outgoing?0:direction*width;
    var to=outgoing?-direction*width:0;
    if(section.classList.contains("list")){
