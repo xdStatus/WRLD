@@ -22,6 +22,7 @@ assert.match(head,/strong\.intro-final-reveal\{opacity:1/,"Only final docking re
 assert.match(js,/const MAGICULE_COUNT=300;/);
 assert.match(js,/const grownSize=p\.size\*\(1\+\.10\*growth\)/,"Particles must grow gradually by 10% during flight");
 assert.match(js,/const MAGICULE_PER_LETTER=\[75,75,75,75\]/);
+assert.match(js,/cx\/=candidates\.length;cy\/=candidates\.length/,"Glyph particle distribution must start at the centroid");
 assert.ok(js.includes("letter:Math.floor(i/(MAGICULE_COUNT/4))"),"Particles must be assigned evenly to the four letters");
 assert.match(js,/travel:920,hover:1900,transfer:2700,reveal:3550,end:4000/);
 assert.equal(2700-1900,800,"Particles should have an extended living hover");
@@ -35,7 +36,7 @@ assert.match(js,/const headerLetters=Array\.from\(document\.querySelectorAll\('\
 assert.match(js,/const glyph=create\(\)/,"Font used only to sample particle positions");
 assert.match(js,/const image=g\.getImageData/,"Samples actual WRLD shapes");
 assert.match(js,/const gatherFreedom=\(1-smooth\(\(u-\.25\)\/\.75\)\)/,"Particles must gradually settle while gathering");
-assert.match(js,/const settle=\.06\+\.94\*gatherFreedom/,"Formed WRLD must retain only a tiny shimmer");
+assert.match(js,/const settle=\.035\+\.965\*gatherFreedom/,"Formed WRLD must retain only a tiny shimmer");
 assert.match(js,/const arrival=smooth\(\(u-\.35\)\/\.65\)/,"Independent motion begins during arrival");
 assert.match(js,/drift\.x\*\(2\.0\*settle\)\*arrival/,"Particles move independently without a whole-logo wave");
 assert.doesNotMatch(js,/const breathe=smooth|const ripple=Math\.sin|const aliveX=dx\*breath/,"The completed logo should not sway or ripple");
