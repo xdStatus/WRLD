@@ -684,7 +684,7 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 @keyframes wrldConstellationDrift{from{transform:translate(-1px,1px) rotate(-1deg)}to{transform:translate(1.5px,-1.5px) rotate(1deg)}}
 @keyframes wrldConstellationTwinkle{from{opacity:.6}to{opacity:1}}
 .visualizer-wrap{background:radial-gradient(circle at 50% 45%,rgba(28,36,57,.5),rgba(4,7,13,.82) 80%);border-radius:15px}
-#visualizer{position:absolute;inset:36px 18px 38px;display:grid;place-items:center;min-height:0;overflow:hidden}
+#visualizer{position:absolute;inset:36px 18px 38px;width:auto;height:auto;display:grid;place-items:center;min-height:0;overflow:hidden}
 #visualizer .constellation-svg{width:min(85%,310px);height:100%;object-fit:contain}
 .visualizer-head,.visualizer-footer{z-index:2}
 .library-stage{position:relative;isolation:isolate}
@@ -1507,7 +1507,7 @@ function setView(view,playlistId=null){
   bodySnapshot=oldBody.cloneNode(true);
   bodySnapshot.removeAttribute('id');
   bodySnapshot.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
-  bodySnapshot.className='wrld-content-snapshot';
+  bodySnapshot.classList.add('wrld-content-snapshot');
   bodySnapshot.setAttribute('aria-hidden','true');
   bodySnapshot.inert=true;
  }
@@ -1516,7 +1516,7 @@ function setView(view,playlistId=null){
   headerSnapshot=oldHead.cloneNode(true);
   headerSnapshot.removeAttribute('id');
   headerSnapshot.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
-  headerSnapshot.className='wrld-header-snapshot';
+  headerSnapshot.classList.add('wrld-header-snapshot');
   headerSnapshot.style.height=oldRect.height+'px';
   headerSnapshot.setAttribute('aria-hidden','true');
   headerSnapshot.inert=true;
@@ -2411,7 +2411,7 @@ function initStarfield(){
  if(!ctx){toast('Animated stars could not initialize');return}
  const random=(min,max)=>min+Math.random()*(max-min);
  const delay=()=>random(3000,8000);
- const STAR_FPS=34; // limit canvas load while keeping the drift visibly fluid
+ const STAR_FPS=25; // Android-style low-power twinkling at 25 FPS
  let width=1,height=1,dpr=1,stars=[],meteors=[],giantComets=[],lastPaint=0,nextMeteor=0,starsDrawn=0,lastCometTime=0,cometCount=0;
  let spriteSmall=null,spriteLarge=null,twinkleCount=0;
 
@@ -2447,7 +2447,7 @@ function initStarfield(){
        x:random(0,width),y:random(0,height),
        r:bright?random(.95,1.65):random(.30,1.00),
        base:random(.23,.83),
-       speed:18+z*104,
+       speed:1.5+z*4.5,
        phase:random(0,Math.PI*2),
        frequency:random(.8,2.35),
        twinkler,bright,
@@ -2547,8 +2547,8 @@ function initStarfield(){
    }
    ctx.globalAlpha=1;
    twinkleCount=brightNow;
-   if(!nextMeteor)nextMeteor=t+delay();
-   if(t>=nextMeteor){spawnMeteor();nextMeteor=t+delay()}
+   // Android-matched quiet sky: no automatic shooting meteors.
+   // Keep the Windows logo's manually summoned comet Easter egg.
    meteors=meteors.filter(m=>drawMeteor(m,dt));
    giantComets=giantComets.filter(c=>drawGiantComet(c,dt));
    starsDrawn++;
