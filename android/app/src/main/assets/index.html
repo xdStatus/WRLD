@@ -1153,7 +1153,7 @@ function startWrldIntro(explicitPreview){
   size:i%19===0?1.65+random()*.28:i%7===0?1.05+random()*.23:.60+random()*.43,
   alpha:.62+random()*.36,phase:random()*Math.PI*2,spin:(random()-.5)*2.4,
   delay:random()*650,extraTravel:(random()-.5)*110,
-  wiggle:.30+random()*.42,rate:.0022+random()*.0017,
+  wiggle:.20+random()*.25,rate:.0022+random()*.0017,
   color:shades[Math.floor(random()*shades.length)],
   edge:Math.floor(random()*4),edgeAt:random(),edgeDistance:60+random()*140,
   
@@ -1210,7 +1210,16 @@ function startWrldIntro(explicitPreview){
    }
    // Exactly 75 targets per letter, selected by max-min distance across each glyph.\n   // Keep the settled drift subpixel so the evenly spaced targets stay separated.
    // Farthest-point sampling avoids clusters and makes the word emerge everywhere.
-   let index=Math.floor(random()*candidates.length);
+   // Start near the glyph centroid, then distribute targets by maximum separation.
+   // This avoids the random first-point bias that made some letters look clumped.
+   let cx=0,cy=0;
+   for(const q of candidates){cx+=q.x;cy+=q.y}
+   cx/=candidates.length;cy/=candidates.length;
+   let index=0,nearest=Infinity;
+   for(let k=0;k<candidates.length;k++){
+    const q=candidates[k],d=(q.x-cx)**2+(q.y-cy)**2;
+    if(d<nearest){nearest=d;index=k}
+   }
    const distances=new Float32Array(candidates.length);distances.fill(Infinity);
    for(let j=0;j<n;j++){
     const sample=candidates[index];
@@ -1278,7 +1287,7 @@ function startWrldIntro(explicitPreview){
   // once the particles reach their positions in the WRLD silhouette.
   const drift=living(p,time);
   const gatherFreedom=(1-smooth((u-.25)/.75));
-  const settle=.06+.94*gatherFreedom;
+  const settle=.035+.965*gatherFreedom;
   const arrival=smooth((u-.35)/.65);
   return {x:cubic(from.x,c.c1.x,c.c2.x,to.x,q)+drift.x*(2.0*settle)*arrival,
           y:cubic(from.y,c.c1.y,c.c2.y,to.y,q)+drift.y*(2.0*settle)*arrival,
