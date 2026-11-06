@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
-    android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#111111" android:pathData="M0,0h108v108h-108z"/>
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="5"
-        android:strokeLineCap="round" android:strokeLineJoin="round"
-        android:fillColor="@android:color/transparent"
-        android:pathData="M25,38a11,11 0,1 1,0 22a11,11 0,1 1,0 -22 M35,56l-14,19 M54,38a11,11 0,1 1,0 22a11,11 0,1 1,0 -22 M64,56l-14,19 M83,38a11,11 0,1 1,0 22a11,11 0,1 1,0 -22 M93,56l-14,19"/>
+    android:viewportWidth="120" android:viewportHeight="120">
+    <path android:fillColor="#050505" android:pathData="M0,0h120v120h-120z"/>
+    <path android:fillColor="@android:color/transparent" android:strokeColor="#C9CDFF"
+        android:strokeWidth="1.35" android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M60,103 Q57,86 60,67 Q61,51 60,38 M60,67 Q48,53 36,49 L22,37 L12,39 M58,62 Q42,61 32,73 L17,75 M62,62 Q78,49 86,47 L105,36 M61,67 Q75,67 87,74 L107,73 M59,52 L46,35 L35,24 L22,21 M62,49 L76,33 L90,24 L103,27 M60,38 L60,15 M59,81 L45,91 L28,97 L16,92 M62,81 L78,91 L96,96 L107,90 M60,91 L60,110 M36,49 L42,40 L46,35 M86,47 L78,40 L76,33 M32,73 L29,83 L17,86 M87,74 L93,83 L107,85"/>
+    <path android:fillColor="@android:color/transparent" android:strokeColor="#60658F"
+        android:strokeWidth="0.65" android:strokeLineCap="round"
+        android:pathData="M13,67 Q7,38 30,18 M90,18 Q116,39 108,67 M30,104 Q60,119 90,104"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M60,62a4,4 0,1 0,0 8a4,4 0,1 0,0 -8 M60,12a3,3 0,1 0,0 6a3,3 0,1 0,0 -6 M35,21a3,3 0,1 0,0 6a3,3 0,1 0,0 -6 M90,21a3,3 0,1 0,0 6a3,3 0,1 0,0 -6 M12,37a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M105,34a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M16,73a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M107,71a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M16,90a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M107,88a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M60,108a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M36,47a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M86,45a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M46,33a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M76,31a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M28,95a2,2 0,1 0,0 4a2,2 0,1 0,0 -4 M96,94a2,2 0,1 0,0 4a2,2 0,1 0,0 -4"/>
 </vector>
