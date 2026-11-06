@@ -98,13 +98,27 @@ def check_update():
     if not repo:
         return {'configured': False, 'repository': '', 'version': APP_VERSION, 'available': False,
                 'message': 'Set a public GitHub release repository to enable updates.'}
-    info = _json(f'https://api.github.com/repos/{repo}/releases/latest')
-    latest = str(info.get('tag_name', ''))
-    version = _version(latest)
+    # This repository also publishes Android releases (android-vX.Y.Z).
+    # GitHub's /releases/latest endpoint can point at Android, so inspect
+    # recent releases and select only complete Windows release artifacts.
+    releases = _json(f'https://api.github.com/repos/{repo}/releases?per_page=100')
+    if not isinstance(releases, list):
+        raise ValueError('Could not read GitHub releases.')
+    candidates = []
+    for info in releases:
+        if not isinstance(info, dict) or info.get('draft') or info.get('prerelease'):
+            continue
+        tag = str(info.get('tag_name', ''))
+        if not VERSION_RE.fullmatch(tag):
+            continue
+        assets = {a.get('name'): a for a in info.get('assets', []) if isinstance(a, dict)}
+        if 'WRLD.exe' not in assets or 'WRLD.exe.sha256' not in assets:
+            continue
+        candidates.append((_version(tag), tag))
+    if not candidates:
+        raise ValueError('No Windows WRLD release with WRLD.exe and checksum was found.')
+    version, latest = max(candidates)
     available = version > _version(APP_VERSION)
-    assets = {a.get('name'): a for a in info.get('assets', []) if isinstance(a, dict)}
-    if available and ('WRLD.exe' not in assets or 'WRLD.exe.sha256' not in assets):
-        raise ValueError('Latest release is missing WRLD.exe or WRLD.exe.sha256.')
     return {'configured': True, 'repository': repo, 'version': APP_VERSION,
             'latest': '.'.join(map(str, version)), 'tag': latest,
             'available': available,
