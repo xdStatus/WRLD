@@ -27,7 +27,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .brand-text strong{font-size:16px;letter-spacing:.31em;font-weight:670}
 .brand-text small{color:#a3a3a3;letter-spacing:.15em;font-size:9px;text-transform:uppercase}
 /* 350-magicule desktop Singularity port, responsive and click-through on Android. */
-.wrld-intro{position:fixed;inset:0;z-index:100;isolation:isolate;overflow:hidden;pointer-events:none!important;color:#fff;animation:magiculeOverlaySafetyHide 9s steps(1,end) forwards}
+.wrld-intro{position:fixed;inset:0;z-index:100;isolation:isolate;overflow:hidden;pointer-events:none!important;color:#fff;animation:magiculeOverlaySafetyHide 4.5s steps(1,end) forwards}
 .wrld-intro,.wrld-intro *{pointer-events:none!important}
 @keyframes magiculeOverlaySafetyHide{0%,99%{visibility:visible}100%{visibility:hidden}}
 .intro-veil{position:absolute;inset:0;opacity:1;background:#050505;will-change:opacity}
@@ -1104,7 +1104,7 @@ const MAGICULE_COUNT=300;
 const MAGICULE_PER_LETTER=[75,75,75,75];
 // The last incoming magicules finish settling before the 700ms particle-only hold.
 const SINGULARITY={
- travel:1820,hover:3920,transfer:5420,reveal:7080,end:8000
+ travel:920,hover:1900,transfer:2700,reveal:3550,end:4000
 };
 function recoverWrldIntro(overlay){
  if(overlay?.isConnected)overlay.remove();
@@ -1157,7 +1157,7 @@ function startWrldIntro(explicitPreview){
   i,letter:Math.floor(i/75),
   size:i%19===0?1.65+random()*.28:i%7===0?1.05+random()*.23:.60+random()*.43,
   alpha:.62+random()*.36,phase:random()*Math.PI*2,spin:(random()-.5)*2.4,
-  delay:random()*1370,extraTravel:(random()-.5)*220,
+  delay:random()*650,extraTravel:(random()-.5)*110,
   wiggle:.47+random()*1.18,rate:.0022+random()*.0017,
   color:shades[Math.floor(random()*shades.length)],
   edge:Math.floor(random()*4),edgeAt:random(),edgeDistance:60+random()*140,
@@ -1169,7 +1169,7 @@ function startWrldIntro(explicitPreview){
  window.__wrldIntroStartedAt=started;
  // Outer overlay is ALWAYS click-through; timeout is only a safety fallback.
  stopCurrentWrldIntro=()=>finish('replay-restarted');
- const watchdog=setTimeout(()=>finish('watchdog'),8700);
+ const watchdog=setTimeout(()=>finish('watchdog'),4500);
  function makeSurface(elements,spacing){
   const rects=elements.map(el=>el.getBoundingClientRect());
   const left=Math.min(...rects.map(r=>r.left))-spacing;
@@ -1273,7 +1273,7 @@ function startWrldIntro(explicitPreview){
           y:(Math.cos(time*p.rate*.91+p.phase*1.3)+.22*Math.sin(time*.0034+p.phase))*p.wiggle*.7};
  }
  function arrivalProgress(p,time){
-  return clamp((time-170-p.delay)/(SINGULARITY.travel+p.extraTravel));
+  return clamp((time-85-p.delay)/(SINGULARITY.travel+p.extraTravel));
  }
  function flight(p,time){
   const u=arrivalProgress(p,time);
@@ -1291,7 +1291,7 @@ function startWrldIntro(explicitPreview){
  }
  function transfer(p,time){
   const start=SINGULARITY.transfer+p.delay*.19;
-  const u=clamp((time-start)/1330),q=smooth(u);
+  const u=clamp((time-start)/660),q=smooth(u);
   // Leave from the particle's actual final living position, preventing
   // a visible snap when the formation begins moving to the top-left.
   const from=flight(p,SINGULARITY.transfer),to=dock.points[p.i];
@@ -1334,7 +1334,7 @@ function startWrldIntro(explicitPreview){
   for(const p of magicules){
    const at=moving?transfer(p,time):flight(p,time);
    const prev=moving?transfer(p,time-32):flight(p,time-27);
-   const opacity=moving?p.alpha*(1-smooth((time-(SINGULARITY.end-260))/245)):p.alpha*(.85+.15*smooth(time/800));
+   const opacity=moving?p.alpha*(1-smooth((time-(SINGULARITY.end-140))/130)):p.alpha*(.85+.15*smooth(time/800));
    drawMagicule(p,at,prev,time,opacity);
   }
   // The center stays entirely particle-only. Actual letters appear ONLY
@@ -1342,7 +1342,7 @@ function startWrldIntro(explicitPreview){
   if(time>=SINGULARITY.reveal&&!headerWord.classList.contains('intro-final-reveal')){
    headerWord.classList.add('intro-final-reveal');
   }
-  if(time>5750)veil.style.opacity=String(1-smooth((time-5750)/1530));
+  if(time>2900)veil.style.opacity=String(1-smooth((time-2900)/800));
   window.__wrldIntroFrameCount++;
   if(time>=SINGULARITY.end){finish('completed');return}
  }
