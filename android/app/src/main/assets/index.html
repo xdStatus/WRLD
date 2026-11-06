@@ -66,7 +66,8 @@ body.wrld-intro-running .brand-text strong:not(.intro-final-reveal){opacity:0}
 .tab-indicator{position:absolute;left:0;bottom:0;height:2px;width:0;transform:translate3d(0,0,0);border-radius:3px;background:#f4f4f4;box-shadow:0 0 12px rgba(255,255,255,.25);pointer-events:none;transition:transform .4s cubic-bezier(.2,.88,.22,1),width .4s cubic-bezier(.2,.88,.22,1)}
 /* Only composite the view for the short tab transition, not while idle. */
 .content-stage{transition:opacity .33s cubic-bezier(.22,1,.36,1),transform .38s cubic-bezier(.22,1,.36,1)}
-.content-stage.view-changing{opacity:0;transform:translate3d(0,9px,0) scale(.994);pointer-events:none}
+.content-stage.view-changing{opacity:0;transform:translate3d(calc(var(--view-direction,1) * -36px),0,0);pointer-events:none}
+.content-stage.view-entering{opacity:0;transform:translate3d(calc(var(--view-direction,1) * 36px),0,0);transition:none}
 .content-stage.view-changing *{pointer-events:none}
 .shuffle-all-row{display:flex;align-items:center;gap:12px;margin:0 0 17px}
 .shuffle-all{display:flex;align-items:center;justify-content:center;gap:10px;flex:none;min-height:42px;padding:0 16px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.095);color:#f6f6f6;border-radius:12px;font-size:12px;font-weight:620;letter-spacing:.025em;transition:transform .18s,background .18s,border-color .18s}
@@ -454,6 +455,11 @@ function refreshTabData(name){
 }
 function setView(name,id){
  var targetId=id||"";
+ var previousView=app.view;
+ var order=["all","liked","history","playlists","settings"];
+ var previousIndex=order.indexOf(previousView==="playlist"?"playlists":previousView);
+ var nextIndex=order.indexOf(name==="playlist"?"playlists":name);
+ var direction=previousIndex<0||nextIndex<0?1:Math.sign(nextIndex-previousIndex)||1;
  var changed=app.view!==name||(name==="playlist"&&app.playlistId!==targetId);
  if(!changed){render();moveTabIndicator(false);return}
  app.view=name;
@@ -469,19 +475,26 @@ function setView(name,id){
  if(viewChangeTimer!==null){clearTimeout(viewChangeTimer);viewChangeTimer=null}
  var stage=el("viewStage");
  if(reduceMotion){
-  stage.classList.remove("view-changing");
+  stage.classList.remove("view-changing","view-entering");
   render();refreshTabData(name);
   return;
  }
+ stage.style.setProperty("--view-direction",String(direction));
+ stage.classList.remove("view-entering");
  stage.classList.add("view-changing");
  viewChangeTimer=setTimeout(function(){
   if(sequence!==viewChangeSeq)return;
   viewChangeTimer=null;
+  stage.classList.remove("view-changing");
+  stage.classList.add("view-entering");
   render();
   refreshTabData(name);
-  // Separate the new DOM paint from the entry transition.
+  // Start the incoming page offscreen, then animate it toward the center.
   requestAnimationFrame(function(){
-   if(sequence===viewChangeSeq)stage.classList.remove("view-changing");
+   if(sequence!==viewChangeSeq)return;
+   requestAnimationFrame(function(){
+    if(sequence===viewChangeSeq)stage.classList.remove("view-entering");
+   });
   });
  },115);
 }
