@@ -542,7 +542,7 @@ function setView(name,id){
     rows.forEach(function(row){
      var rect=row.getBoundingClientRect();
      var visible=rect.bottom>viewportTop&&rect.top<viewportBottom;
-     var delay=outgoing?0:(visible?140+Math.min(visibleIndex++,12)*42:140);
+     var delay=outgoing?0:(visible?140+Math.min(visibleIndex++,12)*(settings?85:42):140);
      slidePart(row,from,to,delay,outgoing);
     });
     if(!rows.length)slidePart(section,from,to,outgoing?0:140,outgoing);
@@ -583,8 +583,11 @@ function setView(name,id){
  };
  window.wrldViewSlideCleanup=cleanup;
  if(animations.length){
+  // Wait for the entire toolbar drop AND every staggered row to finish.
+  // Comparing only delays previously cancelled the 1.2s toolbar early.
   var last=animations.reduce(function(a,b){
-   return a.effect.getTiming().delay>=b.effect.getTiming().delay?a:b;
+   var ta=a.effect.getTiming(),tb=b.effect.getTiming();
+   return ta.delay+ta.duration>=tb.delay+tb.duration?a:b;
   });
   last.onfinish=function(){if(sequence===viewChangeSeq)cleanup()};
  }else cleanup();
@@ -594,8 +597,14 @@ function render(){
  var isSettings=app.view==="settings";
  document.querySelector(".search-wrap").style.display=isSettings?"none":"flex";
  document.querySelector(".shuffle-all-row").style.display=isSettings?"none":"flex";
- document.querySelector(".toolbar").style.display=isSettings?"none":"flex";
- if(isSettings){renderSettings();return}
+ document.querySelector(".toolbar").style.display="flex";
+ if(isSettings){
+  el("sectionTitle").textContent="Settings";
+  el("sectionSubtitle").textContent="Personalize your WRLD experience";
+  el("sortGroup").style.display="none";
+  renderSettings();
+  return;
+ }
  el("likedCount").textContent=app.liked.size?" "+app.liked.size:"";
  var title="All songs",sub="",isLists=app.view==="playlists";
  if(app.view==="liked")title="Liked songs";
