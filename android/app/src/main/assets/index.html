@@ -502,10 +502,13 @@ function setView(name,id){
   {transform:"translate3d(0,0,0)",opacity:1},
   {transform:"translate3d("+(-direction*width)+"px,0,0)",opacity:1}
  ],{duration:duration,easing:easing,fill:"forwards"});
+ // A subtle 8px overshoot gives the incoming page a soft spring-like settle.
  var incoming=stage.animate([
-  {transform:"translate3d("+(direction*width)+"px,0,0)",opacity:1},
-  {transform:"translate3d(0,0,0)",opacity:1}
- ],{duration:duration,easing:easing,fill:"forwards"});
+  {transform:"translate3d("+(direction*width)+"px,0,0)",opacity:1,offset:0},
+  {transform:"translate3d("+(direction*width*.42)+"px,0,0)",opacity:1,offset:.48},
+  {transform:"translate3d("+(-direction*8)+"px,0,0)",opacity:1,offset:.86},
+  {transform:"translate3d(0,0,0)",opacity:1,offset:1}
+ ],{duration:duration+90,easing:"cubic-bezier(.45,0,.25,1)",fill:"forwards"});
  var cleanup=function(){
   outgoing.cancel();incoming.cancel();snapshot.remove();
   if(window.wrldViewSlideCleanup===cleanup)window.wrldViewSlideCleanup=null;
