@@ -157,4 +157,4 @@ jobs:
           fi
           gh release create "$TAG" android/dist/WRLD-Android-v0.1.23.apk android/dist/WRLD-Android-v0.1.23.apk.sha256 \
             --target "$GITHUB_SHA" --title "WRLD Android v0.1.23 (permanently signed beta)" \
-            --notes "WRLD Android 0.1.23: Starry song constellations, a soft comet-style progress glow, phone-controlled media volume, background update notifications, and a four-second intro. Includes playlist drag-and-drop."
+            --notes "WRLD Android 0.1.23: Starry song constellations, a soft comet-style progress glow, phone-controlled media volume, background update notifications, an on-demand notification test in Settings, and a four-second intro. Includes playlist drag-and-drop."
