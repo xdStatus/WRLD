@@ -1192,20 +1192,14 @@ function startWrldIntro(explicitPreview){
   const u=arrivalProgress(p,time);
   const q=Math.pow(u,1.75);
   const from=origins[p.i],to=center.points[p.i],c=controls[p.i];
-  const drift=living(p,time),rest=smooth((u-.77)/.23);
-  // Start moving as the dots settle; after formation, ripple through WRLD
-  // rather than translating the entire logo or letting it freeze in place.
-  const breathe=smooth((time-(SINGULARITY.hover-360))/480);
-  const aliveTime=Math.max(0,time-SINGULARITY.hover);
-  const softness=smooth(aliveTime/370);
-  const dx=to.x-width*.5,dy=to.y-height*.5;
-  const breath=.031*Math.sin(aliveTime*.0045)*softness;
-  const ripple=Math.sin(aliveTime*.0077-to.x*.039+p.phase*.28);
-  const shimmer=Math.cos(aliveTime*.0058+to.x*.022+p.phase);
-  const aliveX=dx*breath+1.65*ripple*softness;
-  const aliveY=dy*breath+2.05*shimmer*softness;
-  return {x:cubic(from.x,c.c1.x,c.c2.x,to.x,q)+drift.x*rest*breathe*2.2+aliveX,
-          y:cubic(from.y,c.c1.y,c.c2.y,to.y,q)+drift.y*rest*breathe*2.2+aliveY,
+  // Independent movement throughout gathering, settling to a small shimmer
+  // once the particles reach their positions in the WRLD silhouette.
+  const drift=living(p,time);
+  const gatherFreedom=(1-smooth((u-.25)/.75));
+  const settle=.18+.82*gatherFreedom;
+  const arrival=smooth((u-.35)/.65);
+  return {x:cubic(from.x,c.c1.x,c.c2.x,to.x,q)+drift.x*(3.8*settle)*arrival,
+          y:cubic(from.y,c.c1.y,c.c2.y,to.y,q)+drift.y*(3.8*settle)*arrival,
           progress:u};
  }
  function transfer(p,time){
