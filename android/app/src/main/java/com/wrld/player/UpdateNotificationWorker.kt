@@ -11,6 +11,9 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.workDataOf
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
@@ -27,7 +30,8 @@ class UpdateNotificationWorker(context: Context, params: WorkerParameters) :
             val update = AndroidUpdateChecker.check(version)
             if (update.state != "available" || update.downloadUrl.isNullOrBlank()) return Result.success()
             val prefs = context.getSharedPreferences("wrld-update-alerts", Context.MODE_PRIVATE)
-            if (prefs.getString("last-notified-version", "") == update.latest) return Result.success()
+            if (!inputData.getBoolean("manual-test", false) &&
+                prefs.getString("last-notified-version", "") == update.latest) return Result.success()
             if (Build.VERSION.SDK_INT >= 33 &&
                 context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
                 return Result.success()
@@ -56,6 +60,16 @@ class UpdateNotificationWorker(context: Context, params: WorkerParameters) :
     }
 
     companion object {
+        fun checkNow(context: Context) {
+            val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+            val request = OneTimeWorkRequestBuilder<UpdateNotificationWorker>()
+                .setConstraints(constraints)
+                .setInputData(workDataOf("manual-test" to true))
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                "wrld-android-update-manual-test", ExistingWorkPolicy.REPLACE, request)
+        }
+
         fun schedule(context: Context) {
             val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
             val request = PeriodicWorkRequestBuilder<UpdateNotificationWorker>(12, TimeUnit.HOURS)
