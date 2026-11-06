@@ -1805,6 +1805,7 @@ function updateDesktopListening(){
  if(side)side.textContent=formatDesktopListening(desktopListeningSeconds);
  try{localStorage.setItem('wrld-listening-seconds-v1',String(desktopListeningSeconds))}catch{}
 }
+$('nowListeningTime').textContent=formatDesktopListening(desktopListeningSeconds);
 audio.addEventListener('timeupdate',updateDesktopListening);
 audio.addEventListener('seeking',()=>{desktopListeningTrack='';desktopListeningPosition=audio.currentTime||0});
 audio.addEventListener('pause',updateDesktopListening);
