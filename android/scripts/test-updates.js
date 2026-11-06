@@ -14,8 +14,8 @@ const workflow = read(".github/workflows/android.yml");
 const fingerprint = read("android/signing-cert.sha256").trim();
 
 assert.match(fingerprint, /^[a-f0-9]{64}$/, "Public certificate fingerprint must be SHA-256");
-assert.match(gradle, /versionName = "0\.1\.19"/);
-assert.match(gradle, /versionCode = 20/);
+assert.match(gradle, /versionName = "0\.1\.20"/);
+assert.match(gradle, /versionCode = 21/);
 assert.match(gradle, /WRLD_KEYSTORE_PATH/);
 assert.match(gradle, /signingConfig = signingConfigs\.getByName\("wrldRelease"\)/);
 
@@ -49,7 +49,7 @@ assert.match(workflow, /secrets\.WRLD_ANDROID_KEY_ALIAS/);
 assert.match(workflow, /apksigner/);
 assert.match(workflow, /assembleRelease/);
 assert.match(workflow, /android\/signing-cert\.sha256/);
-assert.match(workflow, /android-v0\.1\.19/);
+assert.match(workflow, /android-v0\.1\.20/);
 assert.doesNotMatch(workflow, /cp android\/app\/build\/outputs\/apk\/debug\/app-debug\.apk android\/dist/,
   "NEVER publish ephemeral debug APKs");
 assert.match(service, /wrld-listening/);
