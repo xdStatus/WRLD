@@ -710,6 +710,15 @@ class MainActivity : Activity() {
             }
         }
 
+        @JavascriptInterface fun testUpdateNotification() {
+            UpdateNotificationWorker.checkNow(applicationContext)
+            runOnUiThread {
+                Toast.makeText(this@MainActivity,
+                    "Checking for a newer WRLD release. A notification appears if one is available.",
+                    Toast.LENGTH_LONG).show()
+            }
+        }
+
         @JavascriptInterface fun checkForUpdates() {
             // The WebView itself is restricted to offline assets. Android performs
             // this public HTTPS request outside WebView on the existing executor.
