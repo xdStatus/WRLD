@@ -1967,6 +1967,7 @@ $('trackMenu').addEventListener('click',async e=>{
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#trackMenu,[data-more]'))closeTrackMenu()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeTrackMenu()});
 fetchCollections();
+if(state.cloudSource==='cloud')fetchCloudHistory();
 
 // The ColorOS-like seek track is a real HTML audio slider with a delicate illuminated head.
 // The white fill advances smoothly between native "timeupdate" events.
