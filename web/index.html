@@ -1031,7 +1031,7 @@ body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
       <div>
         <h3 class="now-title" id="nowTitle">Nothing playing yet</h3>
         <p class="now-sub" id="nowArtist">Pick a song from your library</p>
-        <div class="now-playing-note"><span class="live-line"></span><span id="nowPlayingNote">Ready when you are</span></div>
+        
       </div>
       <div class="side-divider-faint" aria-hidden="true"></div>
       <div class="side-hint"<kbd>Space</kbd> play / pause &nbsp; · &nbsp; <kbd>←</kbd> <kbd>→</kbd> seek</div>
@@ -2584,7 +2584,6 @@ function updateVisualizerLabels(){
  $('visualizerWrap').classList.toggle('is-playing',playing);
  $('vizStatus').classList.toggle('is-playing',playing);
  $('vizStatusText').textContent=wrldAudioAnalysisError?'UNAVAILABLE':playing?'PLAYING':t?'PAUSED':'READY';
- $('nowPlayingNote').textContent=wrldAudioAnalysisError?'Audio visualizer unavailable':playing?'Following the sound in real time':t?'Paused':'Ready when you are';
  updateDesktopConstellations();
 }
 function initAudioVisualizer(){
