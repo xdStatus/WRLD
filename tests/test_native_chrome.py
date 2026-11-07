@@ -66,9 +66,10 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('body:not(.wrld-settings-open) .side{flex-shrink:0}', HTML)
 
     def test_player_space_reserved_in_both_modes(self):
-        self.assertIn('--wrld-player-reserve:170px;', HTML)
-        self.assertIn('--wrld-player-reserve:232px;', HTML)
+        self.assertIn('--wrld-player-reserve:200px;', HTML)
+        self.assertIn('--wrld-player-reserve:264px;', HTML)
         self.assertIn('padding-bottom:var(--wrld-player-reserve)!important;', HTML)
+        self.assertIn('margin-top:0;margin-bottom:12px;', HTML)
         self.assertIn('height:auto!important;min-height:0;flex:1 1 auto;', HTML)
         self.assertIn('bottom:var(--wrld-player-reserve)!important;', HTML)
         self.assertIn('body:not(.wrld-settings-open) .main{', HTML)
