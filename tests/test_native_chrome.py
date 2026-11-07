@@ -31,6 +31,16 @@ class NativeChromeContractTests(unittest.TestCase):
         for action in ('minimize', 'maximize', 'close'):
             self.assertIn("'" + action + "'", NATIVE)
 
+    def test_audio_visualizer_expands_into_right_panel(self):
+        self.assertIn('def set_visualizer_expanded(self, expanded):', NATIVE)
+        self.assertIn('win.resize(680 if expanded else 340, 1080)', NATIVE)
+        self.assertIn('id="visualizerExpandTab"', MARKUP)
+        self.assertIn('id="reactivePanel"', MARKUP)
+        self.assertEqual(MARKUP.count('id="visualizerWrap"'), 1)
+        self.assertIn('body.wrld-reactive-expanded .wrld-reactive-panel{display:flex', HTML)
+        self.assertIn("api.set_visualizer_expanded(expanded)", HTML)
+        self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
+
     def test_settings_owns_full_workspace(self):
         self.assertIn("document.body.classList.toggle('wrld-settings-open',view==='settings')", HTML)
         self.assertIn('body.wrld-settings-open #playerDock{display:none!important}', HTML)
