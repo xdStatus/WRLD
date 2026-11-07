@@ -749,6 +749,14 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 .visualizer-footer .visualizer-caption{margin-left:auto;white-space:nowrap}
 
 
+/* Reliable drag surface for frameless Windows: a dedicated direct-hit strip.
+   Interactive header controls remain outside this surface. */
+.topbar{flex-wrap:wrap}
+.topbar .window-drag-strip{display:block;flex:0 0 100%;width:100%;height:17px;order:-10;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none}
+.topbar .window-drag-strip:active{cursor:grabbing}
+body.native-shell .brand h1.pywebview-drag-region .header-letter{pointer-events:none}
+@media(max-width:620px){.topbar .window-drag-strip{height:19px}}
+
 /* Compact portrait layout: geometry only. Original WRLD colors, fonts, controls,
    stars, visualizers, audio logic and animations are intentionally unchanged. */
 @media (max-width:620px){
@@ -819,6 +827,7 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 <div class="space-haze" aria-hidden="true"></div>
 <div class="app">
   <header class="topbar glass pywebview-drag-region">
+    <div class="window-drag-strip pywebview-drag-region" title="Drag WRLD window" aria-label="Drag window from here"></div>
     <div class="brand">
       <button class="brand-badge" id="logoCometBtn" type="button" title="Summon a comet" aria-label="Summon a comet"><span class="brand-magicule" aria-hidden="true"></span></button>
       <div>
