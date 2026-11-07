@@ -1,7 +1,8 @@
 name: Build and publish WRLD for Windows
 
 # Push source and bump app_version.py: GitHub does the rest.
-# Windows v1.8.36: Android-matched 300-particle intro and header reveal.
+# Windows v1.8.41: four-second intro parity and staggered tab transitions.
+# Revalidate intro regression gates before publishing the original v1.8.41 tag.
 # No local Windows build, tag push, or manual Release creation required.
 on:
   push:
