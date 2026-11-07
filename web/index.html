@@ -1531,20 +1531,30 @@ function positionDesktopTabScroll(view){
  const listScroller=$('listWrap');
  const playlistScroller=$('playlistGrid');
  const settingsScroller=$('settingsPanel');
- // Cancel any still-running alphabet jump before repositioning the new view.
+ const list=$('songList');
+ // Stop an old alphabet animation and reset scroll synchronously.
  cancelAlphabetJump();
  if(listScroller)listScroller.scrollTop=0;
  if(playlistScroller)playlistScroller.scrollTop=0;
  if(settingsScroller)settingsScroller.scrollTop=0;
- if(view==='settings'||view==='playlists'||!state.currentId)return;
- const rows=$('songList')?.children;
- const selected=rows?Array.from(rows).find(row=>row.dataset.id===state.currentId):null;
- if(!selected||!listScroller)return;
- const bounds=listScroller.getBoundingClientRect();
- const songBounds=selected.getBoundingClientRect();
- const songCenter=songBounds.top-bounds.top+listScroller.scrollTop+songBounds.height/2;
- const target=songCenter-listScroller.clientHeight/2;
- listScroller.scrollTop=Math.max(0,Math.min(target,listScroller.scrollHeight-listScroller.clientHeight));
+ // The previous tab may have needed extra top spacing to center its song.
+ // Reset that spacing when entering any other view.
+ list.style.paddingTop='0px';
+ if(view==='settings'||view==='playlists'||!state.currentId||!listScroller)return;
+ const selected=Array.from(list.children).find(row=>row.dataset.id===state.currentId);
+ if(!selected)return;
+ // Without padding, the first/last few tracks cannot reach the middle:
+ // the browser clamps scrollTop at the top or bottom of the list.
+ const halfRoom=Math.max(0,(listScroller.clientHeight-selected.getBoundingClientRect().height)/2);
+ list.style.paddingTop=halfRoom+'px';
+ const existingBottom=parseFloat(list.style.paddingBottom)||0;
+ list.style.paddingBottom=Math.max(existingBottom,halfRoom)+'px';
+ // Measure after applying the centering space; use the scroll viewport's
+ // actual geometry, not the page/window height or a guessed row index.
+ const viewport=listScroller.getBoundingClientRect();
+ const song=selected.getBoundingClientRect();
+ const destination=listScroller.scrollTop+(song.top+song.height/2)-(viewport.top+viewport.height/2);
+ listScroller.scrollTop=Math.max(0,Math.min(destination,listScroller.scrollHeight-listScroller.clientHeight));
 }
 function setView(view,playlistId=null){
  const nextPlaylist=view==='playlist'?playlistId:null;
@@ -1773,6 +1783,8 @@ function applyFilter(){
   const settingsView=state.view==='settings',gridView=state.view==='playlists';
   $('sortControl').classList.toggle('hidden',settingsView||state.view==='history'||state.view==='playlist'||gridView);
   const list=$('songList');
+  // A fresh render invalidates any centering spacer from the previous view.
+  list.style.paddingTop='0px';
   $('libraryTitle').textContent=settingsView?'Settings':state.view==='history'?'Recently Played':state.view==='liked'?'Liked Songs':gridView?'Your Playlists':state.view==='playlist'?(playlist?.name||'Playlist'):'Library';
   $('folderText').textContent=settingsView?'Playback and general preferences':state.view==='history'?'Up to 50 recent songs':state.folder?'Folder: '+state.folder:'Choose a folder to begin';
   $('playlistGrid').classList.toggle('hidden',!gridView);
