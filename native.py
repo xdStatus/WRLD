@@ -138,6 +138,15 @@ class NativeAPI:
         threading.Timer(0.9, close_after).start()
         return result
 
+    def set_visualizer_expanded(self, expanded):
+        """Resize the native desktop window, keeping the left music column anchored."""
+        import webview
+        if not webview.windows:
+            return False
+        win = webview.windows[0]
+        win.resize(680 if expanded else 340, 1080)
+        return True
+
     def window_action(self, action):
         import webview
         if not webview.windows: return False
