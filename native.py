@@ -184,11 +184,12 @@ def run_desktop() -> None:
         else:
             available_width = ctypes.windll.user32.GetSystemMetrics(0)
             available_height = ctypes.windll.user32.GetSystemMetrics(1)
-        window_width = min(1480, max(640, available_width - 60))
-        window_height = min(910, max(480, available_height - 60))
+        # Compact portrait window matching the requested narrow desktop footprint.
+        window_width = min(340, max(320, available_width - 20))
+        window_height = min(800, max(480, available_height - 20))
         webview.create_window(
             'WRLD', address, js_api=NativeAPI(), width=window_width, height=window_height,
-            min_size=(640, 480), resizable=True, frameless=True,
+            min_size=(320, 480), resizable=True, frameless=True,
             easy_drag=False, shadow=True,
             background_color='#050505', text_select=False, zoomable=False,
         )
