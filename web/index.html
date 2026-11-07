@@ -829,14 +829,14 @@ body.wrld-settings-open #settingsPanel.hidden{display:none!important}
 
 
 /* Expandable audio-reactive extension: only geometry, no WRLD theme changes. */
-.visualizer-expand-tab{position:fixed;z-index:30;top:50%;left:315px;transform:translateY(-50%);width:25px;height:78px;padding:0;display:grid;place-items:center;border:1px solid rgba(255,255,255,.24);border-right:0;border-radius:12px 0 0 12px;background:rgba(24,24,24,.92);color:#eee;font-size:25px;line-height:1;box-shadow:0 2px 14px rgba(0,0,0,.28)}
+.visualizer-expand-tab{position:fixed;z-index:30;top:50%;left:375px;transform:translateY(-50%);width:25px;height:78px;padding:0;display:grid;place-items:center;border:1px solid rgba(255,255,255,.24);border-right:0;border-radius:12px 0 0 12px;background:rgba(24,24,24,.92);color:#eee;font-size:25px;line-height:1;box-shadow:0 2px 14px rgba(0,0,0,.28)}
 .visualizer-expand-tab:hover{background:rgba(40,40,40,.98);border-color:rgba(255,255,255,.5)}
 .visualizer-expand-tab span{display:block;transition:transform .22s ease}
 body.wrld-reactive-expanded .visualizer-expand-tab span{transform:rotate(180deg)}
-.wrld-reactive-panel{display:none;position:fixed;left:340px;top:0;bottom:0;width:340px;z-index:2;padding:18px 12px 18px 16px;overflow:hidden;border-left:1px solid rgba(255,255,255,.16)}
+.wrld-reactive-panel{display:none;position:fixed;left:400px;top:0;bottom:0;width:400px;z-index:2;padding:18px 12px 18px 16px;overflow:hidden;border-left:1px solid rgba(255,255,255,.16)}
 body.wrld-reactive-expanded .wrld-reactive-panel{display:flex;flex-direction:column}
 .wrld-reactive-panel .visualizer-wrap{display:block;flex:1 1 auto;width:100%;height:100%;min-height:0;max-height:none}
-body.wrld-reactive-expanded .app{width:340px;min-width:340px;max-width:340px;margin-left:0;margin-right:0}
+body.wrld-reactive-expanded .app{width:400px;min-width:400px;max-width:400px;margin-left:0;margin-right:0}
 body.wrld-settings-open .visualizer-expand-tab,body.wrld-settings-open .wrld-reactive-panel{display:none!important}
 body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
 @media(prefers-reduced-motion:reduce){.visualizer-expand-tab span{transition:none}}
@@ -2827,7 +2827,7 @@ $('installUpdate').addEventListener('click',async()=>{
   try{const result=await nativeUI().install_update();updateStatus(result.message||'Update ready. Restarting...')}
   catch(e){updateStatus('Installation failed: '+String(e));btn.disabled=false}
 });
-// The slim player remains 340px wide; the optional right panel only hosts audio-reactive visuals.
+// The slim player remains 400px wide; the optional 400px right panel only hosts audio-reactive visuals.
 const reactiveTab=$('visualizerExpandTab');
 let reactiveResizeBusy=false;
 reactiveTab.addEventListener('click',async()=>{
