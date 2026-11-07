@@ -33,7 +33,7 @@ class NativeChromeContractTests(unittest.TestCase):
 
     def test_audio_visualizer_expands_into_right_panel(self):
         self.assertIn('def set_visualizer_expanded(self, expanded):', NATIVE)
-        self.assertIn('win.resize(680 if expanded else 340, 1080)', NATIVE)
+        self.assertIn('win.resize(800 if expanded else 400, 1080)', NATIVE)
         self.assertIn('id="visualizerExpandTab"', MARKUP)
         self.assertIn('id="reactivePanel"', MARKUP)
         self.assertEqual(MARKUP.count('id="visualizerWrap"'), 1)
