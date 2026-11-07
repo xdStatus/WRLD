@@ -58,6 +58,13 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn("api.set_visualizer_expanded(expanded)", HTML)
         self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
 
+    def test_now_playing_title_stays_with_heading(self):
+        self.assertIn('class="now-playing-section"', MARKUP)
+        self.assertIn('class="now-track-details"', MARKUP)
+        self.assertIn('class="now-title" id="nowTitle"', MARKUP)
+        self.assertIn('.now-playing-section{display:flex;flex-direction:column;flex:0 0 auto;', HTML)
+        self.assertIn('body:not(.wrld-settings-open) .side{flex-shrink:0}', HTML)
+
     def test_player_space_reserved_in_both_modes(self):
         self.assertIn('--wrld-player-reserve:170px;', HTML)
         self.assertIn('--wrld-player-reserve:232px;', HTML)
