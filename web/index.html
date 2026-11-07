@@ -2127,6 +2127,19 @@ async function fetchCollections(){
     applyFilter();updateNowLike();
   }catch(error){toast(error.message||'Could not load playlists')}
 }
+// Liking a song in All Songs should not rebuild the entire list. Replacing
+// its DOM rows shifts scroll anchoring and drops focus from the clicked heart.
+function updateVisibleLikeButtons(){
+ for(const button of $('songList').querySelectorAll('[data-like]')){
+  const id=button.dataset.like;
+  const liked=state.liked.has(id);
+  button.classList.toggle('is-liked',liked);
+  button.setAttribute('aria-pressed',String(liked));
+  button.setAttribute('aria-label',(liked?'Unlike ':'Like ')+(trackById(id)?.title||'song'));
+  button.title=liked?'Remove from Liked Songs':'Like song';
+ }
+ updateCollectionNav();
+}
 async function changeCollection(action,payload={}){
   try{
     const source=state.cloudSource;
@@ -2135,7 +2148,11 @@ async function changeCollection(action,payload={}){
     state.liked=new Set(data.liked||[]);
     state.playlists=Array.isArray(data.playlists)?data.playlists:[];
     if(state.view==='playlist'&&!activePlaylist()){state.view='playlists';state.activePlaylist=null}
-    applyFilter();updateNowLike();
+    // Preserve exactly the same scroll offset, rows and keyboard focus when
+    // a heart is toggled on All Songs; only the like controls change.
+    if(action==='like'&&state.view==='all')updateVisibleLikeButtons();
+    else applyFilter();
+    updateNowLike();
     return data;
   }catch(error){toast(error.message||'Could not save collection');return null}
 }
