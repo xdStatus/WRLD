@@ -1525,6 +1525,27 @@ function moveCollectionIndicator(initial=false){
  if(initial)requestAnimationFrame(()=>{indicator.style.transition=''});
  nav.scrollTo({left:Math.max(0,tab.offsetLeft+tab.offsetWidth/2-nav.clientWidth/2),behavior:reducedMotion?'auto':'smooth'});
 }
+// Tab navigation starts at the beginning unless the current song exists in
+// the destination view; then center that song before the row animations run.
+function positionDesktopTabScroll(view){
+ const listScroller=$('listWrap');
+ const playlistScroller=$('playlistGrid');
+ const settingsScroller=$('settingsPanel');
+ // Cancel any still-running alphabet jump before repositioning the new view.
+ cancelAlphabetJump();
+ if(listScroller)listScroller.scrollTop=0;
+ if(playlistScroller)playlistScroller.scrollTop=0;
+ if(settingsScroller)settingsScroller.scrollTop=0;
+ if(view==='settings'||view==='playlists'||!state.currentId)return;
+ const rows=$('songList')?.children;
+ const selected=rows?Array.from(rows).find(row=>row.dataset.id===state.currentId):null;
+ if(!selected||!listScroller)return;
+ const bounds=listScroller.getBoundingClientRect();
+ const songBounds=selected.getBoundingClientRect();
+ const songCenter=songBounds.top-bounds.top+listScroller.scrollTop+songBounds.height/2;
+ const target=songCenter-listScroller.clientHeight/2;
+ listScroller.scrollTop=Math.max(0,Math.min(target,listScroller.scrollHeight-listScroller.clientHeight));
+}
 function setView(view,playlistId=null){
  const nextPlaylist=view==='playlist'?playlistId:null;
  const previous=state.view;
@@ -1586,6 +1607,7 @@ function setView(view,playlistId=null){
  updateCollectionNav();
  moveCollectionIndicator();
  applyFilter();
+ if(changed)positionDesktopTabScroll(view);
  if(!changed||reducedMotion||!stage.animate)return;
  const sequence=viewTransitionSequence;
  const before=tabOrder.indexOf(previous==='playlist'?'playlists':previous);
