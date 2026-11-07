@@ -880,12 +880,32 @@ body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-left{grid-column:1;grid-row:1 / 3}
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .center{grid-column:2;grid-row:1 / 3}
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right{grid-column:3;grid-row:1 / 3;width:100%;max-width:none}
-body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:198px}
+body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:245px}
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
- min-height:172px;padding:18px 20px;
+ min-height:215px;padding:23px 22px;
 }
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right .volume-value{display:block}
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right .volume-label{display:none}
+/* Keep the original 400px music column pinned to the left at every
+   intermediate frame size. Auto-centering caused the collapse jump. */
+body:not(.wrld-settings-open) .app{
+ width:400px!important;min-width:400px!important;max-width:400px!important;
+ margin-left:0!important;margin-right:0!important;
+}
+/* Use the available portrait height for additional songs rather than
+   allowing the dock to sit high in the document flow. */
+body:not(.wrld-settings-open) .library{
+ height:clamp(430px,calc(100vh - 490px),620px);
+}
+body:not(.wrld-settings-open) #playerDock{
+ position:fixed;z-index:6;left:12px;right:12px;bottom:5px;
+ width:auto;max-width:none;margin:0;
+}
+body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
+ min-height:215px;padding:23px 22px;
+}
+body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:245px}
+
 body.wrld-settings-open .visualizer-expand-tab,body.wrld-settings-open .wrld-reactive-panel{display:none!important}
 body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
 @media(prefers-reduced-motion:reduce){.visualizer-expand-tab,.visualizer-expand-tab span,.wrld-reactive-panel,body:not(.wrld-settings-open) .app{transition:none!important}}
