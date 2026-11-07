@@ -749,30 +749,60 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 .visualizer-footer .visualizer-caption{margin-left:auto;white-space:nowrap}
 
 
-/* Tall stacked Windows layout (all window sizes). Keep original WRLD theme unchanged. */
-@media (min-width:0px){
+/* Compact portrait layout: geometry only. Original WRLD colors, fonts, controls,
+   stars, visualizers, audio logic and animations are intentionally unchanged. */
+@media (max-width:620px){
   html,body{height:auto;min-height:100%}
   body{overflow-y:auto;overflow-x:hidden}
-  .app{height:auto;min-height:100vh;max-width:980px;grid-template-rows:auto auto auto;gap:12px;padding-bottom:20px}
-  .topbar{height:auto;min-height:82px;flex-wrap:wrap;gap:12px;padding-block:14px}
-  .search{order:3;flex-basis:100%;max-width:none}
-  .main{display:flex;flex-direction:column;gap:18px;min-height:0;padding:12px 0;overflow:visible}
-  .library{flex:none;width:100%;height:clamp(440px,56vh,680px);min-height:0;overflow:hidden}
-  .library-stage{min-height:0;flex:1}
-  .library-list-layout{min-height:0;flex:1}
-  .library-nav{overflow-x:auto;flex:none}
-  .side{display:flex!important;width:100%;max-width:none;align-self:stretch;justify-self:stretch;margin:0;min-height:0}
-  .visualizer-wrap{min-height:220px;height:clamp(220px,30vh,350px)}
-  .player.glass{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px 14px;margin-bottom:0}
+  .app{height:auto;min-height:100vh;max-width:none;display:flex;flex-direction:column;gap:12px;padding:0 12px 16px}
+  .topbar{height:auto;min-height:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 0 10px;flex:none}
+  .brand{min-width:0;flex:1}
+  .brand h1{font-size:15px}
+  .header-settings{margin-left:auto;flex:none;width:34px;height:34px}
+  .window-chrome{margin-left:0;flex:none;gap:0}
+  .window-chrome button{width:25px}
+  .search{order:5;flex:1 0 100%;height:35px;max-width:none;margin-top:2px}
+  .main{display:flex;flex-direction:column;gap:14px;padding:0;min-height:0;overflow:visible}
+  .library{flex:none;width:100%;height:350px;min-height:0;min-width:0;overflow:hidden}
+  .library-nav{flex:none;min-height:39px;gap:12px;margin-bottom:11px;padding-bottom:6px;overflow-x:auto;white-space:nowrap}
+  .library-nav .collection-tab{flex:none;font-size:10px}
+  .library-nav .shuffle-all-btn,.library-nav .new-playlist{flex:none}
+  .library-stage{flex:1;min-height:0}
+  .library-head{padding-bottom:10px;gap:8px;align-items:flex-start}
+  .library-head h2{font-size:19px}
+  .library-head p{font-size:10px;white-space:normal}
+  .meta{display:flex;min-width:0;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+  .sort-control select{min-width:92px;max-width:105px}
+  .library-list-layout{flex:1;min-height:0}
+  .alphabet-rail{flex:0 0 14px;margin-right:4px}
+  .alphabet-letter{width:14px;font-size:8px}
+  .song{min-height:58px;grid-template-columns:20px minmax(0,1fr) 33px 25px 25px;gap:4px;padding:6px 2px}
+  .song-art{width:31px;height:31px}
+  .song-title{font-size:11px}
+  .song-sub{font-size:9px}
+  .song-format{font-size:9px}
+  .side{display:flex!important;width:100%;max-width:none;min-width:0;align-self:stretch;justify-self:stretch;margin:0;gap:10px}
+  .now-playing-top{padding-bottom:8px}
+  .visualizer-wrap{height:165px;min-height:165px}
+  .now-title{font-size:19px}
+  .side-hint{display:none}
+  .player.glass{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 8px;padding:10px;margin:0 0 8px;min-width:0}
+  .player .mini-art{width:35px;height:35px}
   .player .player-left{grid-column:1;grid-row:1}
-  .player .player-right{grid-column:2;grid-row:1;width:min(28vw,180px)}
-  .player .center{grid-column:1/-1;grid-row:2}
-  .player .timeline{grid-template-columns:41px minmax(0,1fr) 41px}
+  .player .player-right{grid-column:2;grid-row:1;width:98px;gap:3px}
+  .player .player-right .volume-label,.player .player-right .volume-value{display:none}
+  .player .center{grid-column:1/-1;grid-row:2;min-width:0;gap:5px}
+  .player .timeline{grid-template-columns:33px minmax(0,1fr) 33px;gap:5px}
+  .player .controls{gap:12px}
+  .player .circle{width:30px;height:31px}
+  .player .circle.play-main{width:39px;height:39px}
   .queue-drawer{max-width:100%}
 }
-@media (max-width:480px){
-  .library{height:clamp(380px,49vh,540px)}
-  .player .player-right{width:95px}
+@media(max-width:370px){
+  .library-nav{gap:9px}
+  .song{grid-template-columns:17px minmax(0,1fr) 29px 22px 22px;gap:3px}
+  .library-head h2{font-size:18px}
+  .player .controls{gap:8px}
 }
 
 </style>
