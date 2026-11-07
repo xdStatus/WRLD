@@ -200,6 +200,9 @@ def run_desktop() -> None:
             # creates the actual window; this is separate from the CSS layout.
             # Do this only at launch, so manual resizing stays under user control.
             window.resize(window_width, window_height)
+            # Anchor the window at the primary display's top-left on launch.
+            # Users may freely drag it to another position afterward.
+            window.move(0, 0)
         # Use the built-in Windows WebView2 renderer — no browser process window.
         # Keep UI preferences such as repeat mode and volume between launches.
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
