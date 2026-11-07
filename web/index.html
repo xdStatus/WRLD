@@ -759,7 +759,7 @@ body.native-shell .brand h1.pywebview-drag-region .header-letter{pointer-events:
 
 /* Compact portrait layout: geometry only. Original WRLD colors, fonts, controls,
    stars, visualizers, audio logic and animations are intentionally unchanged. */
-@media (max-width:620px){
+@media (max-width:900px){
   html,body{height:auto;min-height:100%}
   body{overflow-y:auto;overflow-x:hidden}
   .app{height:auto;min-height:100vh;max-width:none;display:flex;flex-direction:column;gap:12px;padding:0 12px 16px}
@@ -827,6 +827,20 @@ body.wrld-settings-open .library-head{flex:none}
 body.wrld-settings-open #settingsPanel{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:32px}
 body.wrld-settings-open #settingsPanel.hidden{display:none!important}
 
+
+/* Expandable audio-reactive extension: only geometry, no WRLD theme changes. */
+.visualizer-expand-tab{position:fixed;z-index:30;top:50%;left:315px;transform:translateY(-50%);width:25px;height:78px;padding:0;display:grid;place-items:center;border:1px solid rgba(255,255,255,.24);border-right:0;border-radius:12px 0 0 12px;background:rgba(24,24,24,.92);color:#eee;font-size:25px;line-height:1;box-shadow:0 2px 14px rgba(0,0,0,.28)}
+.visualizer-expand-tab:hover{background:rgba(40,40,40,.98);border-color:rgba(255,255,255,.5)}
+.visualizer-expand-tab span{display:block;transition:transform .22s ease}
+body.wrld-reactive-expanded .visualizer-expand-tab span{transform:rotate(180deg)}
+.wrld-reactive-panel{display:none;position:fixed;left:340px;top:0;bottom:0;width:340px;z-index:2;padding:18px 12px 18px 16px;overflow:hidden;border-left:1px solid rgba(255,255,255,.16)}
+body.wrld-reactive-expanded .wrld-reactive-panel{display:flex;flex-direction:column}
+.wrld-reactive-panel .visualizer-wrap{display:block;flex:1 1 auto;width:100%;height:100%;min-height:0;max-height:none}
+body.wrld-reactive-expanded .app{width:340px;min-width:340px;max-width:340px;margin-left:0;margin-right:0}
+body.wrld-settings-open .visualizer-expand-tab,body.wrld-settings-open .wrld-reactive-panel{display:none!important}
+body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
+@media(prefers-reduced-motion:reduce){.visualizer-expand-tab span{transition:none}}
+
 </style>
 </head>
 <body>
@@ -839,6 +853,19 @@ body.wrld-settings-open #settingsPanel.hidden{display:none!important}
 </div>
 <canvas id="starfield" aria-hidden="true"></canvas>
 <div class="space-haze" aria-hidden="true"></div>
+<button id="visualizerExpandTab" class="visualizer-expand-tab" type="button" aria-label="Expand audio reactive visualizer" aria-expanded="false" aria-controls="reactivePanel" title="Expand audio reactive"><span aria-hidden="true">›</span></button>
+<aside id="reactivePanel" class="wrld-reactive-panel" aria-label="Audio reactive visualizer" aria-hidden="true">
+      <div class="visualizer-wrap" id="visualizerWrap">
+        <div class="visualizer-head">
+          <span class="visualizer-kicker" id="visualizerKicker">AUDIO REACTIVE</span>
+          <span class="viz-status" id="vizStatus"><span class="viz-indicator"></span><span id="vizStatusText">READY</span></span>
+        </div>
+        <canvas id="visualizer" role="img" aria-label="Live audio spectrum reacting to the current song"></canvas>
+        <div class="visualizer-footer">
+          <div class="viz-modes" role="group" aria-label="Visualizer style"><button type="button" class="viz-mode" id="vizBars" aria-pressed="true">Spectrum</button><button type="button" class="viz-mode" id="vizWave" aria-pressed="false">Waveform</button></div><span class="visualizer-caption" id="visualizerCaption">LIVE SIGNAL</span>
+        </div>
+      </div>
+</aside>
 <div class="app">
   <header class="topbar glass pywebview-drag-region">
     <div class="window-drag-strip pywebview-drag-region" title="Drag WRLD window" aria-label="Drag window from here"></div>
@@ -931,16 +958,7 @@ body.wrld-settings-open #settingsPanel.hidden{display:none!important}
 
     <aside class="side glass">
       <div class="now-playing-top"><div class="now-badge">Now Playing</div><div class="now-listening"><span>TOTAL LISTENING TIME</span><strong id="nowListeningTime">0 min</strong></div></div>
-      <div class="visualizer-wrap" id="visualizerWrap">
-        <div class="visualizer-head">
-          <span class="visualizer-kicker" id="visualizerKicker">AUDIO REACTIVE</span>
-          <span class="viz-status" id="vizStatus"><span class="viz-indicator"></span><span id="vizStatusText">READY</span></span>
-        </div>
-        <canvas id="visualizer" role="img" aria-label="Live audio spectrum reacting to the current song"></canvas>
-        <div class="visualizer-footer">
-          <div class="viz-modes" role="group" aria-label="Visualizer style"><button type="button" class="viz-mode" id="vizBars" aria-pressed="true">Spectrum</button><button type="button" class="viz-mode" id="vizWave" aria-pressed="false">Waveform</button></div><span class="visualizer-caption" id="visualizerCaption">LIVE SIGNAL</span>
-        </div>
-      </div>
+
       <div>
         <h3 class="now-title" id="nowTitle">Nothing playing yet</h3>
         <p class="now-sub" id="nowArtist">Pick a song from your library</p>
@@ -2808,6 +2826,33 @@ $('installUpdate').addEventListener('click',async()=>{
   const btn=$('installUpdate');btn.disabled=true;updateStatus('Downloading and verifying update. WRLD will restart when ready...');
   try{const result=await nativeUI().install_update();updateStatus(result.message||'Update ready. Restarting...')}
   catch(e){updateStatus('Installation failed: '+String(e));btn.disabled=false}
+});
+// The slim player remains 340px wide; the optional right panel only hosts audio-reactive visuals.
+const reactiveTab=$('visualizerExpandTab');
+let reactiveResizeBusy=false;
+reactiveTab.addEventListener('click',async()=>{
+ if(reactiveResizeBusy)return;
+ const expanded=!document.body.classList.contains('wrld-reactive-expanded');
+ const api=nativeUI();
+ reactiveResizeBusy=true;
+ reactiveTab.disabled=true;
+ try{
+  if(api?.set_visualizer_expanded){
+   const resized=await api.set_visualizer_expanded(expanded);
+   if(!resized)throw new Error('Window resize unavailable');
+  }
+  document.body.classList.toggle('wrld-reactive-expanded',expanded);
+  reactiveTab.setAttribute('aria-expanded',String(expanded));
+  reactiveTab.setAttribute('aria-label',expanded?'Collapse audio reactive visualizer':'Expand audio reactive visualizer');
+  reactiveTab.title=expanded?'Collapse audio reactive':'Expand audio reactive';
+  $('reactivePanel').setAttribute('aria-hidden',String(!expanded));
+  window.dispatchEvent(new Event('resize'));
+ }catch(error){
+  console.error('Could not change WRLD window width',error);
+ }finally{
+  reactiveResizeBusy=false;
+  reactiveTab.disabled=false;
+ }
 });
 function connectNativeChrome(){
   const api=nativeUI();
