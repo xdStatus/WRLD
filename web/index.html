@@ -938,6 +938,15 @@ body:not(.wrld-settings-open) #playerDock .queue-grip{
  }
 }
 
+/* Now Playing heading, song title and artist belong to one compact
+   section above the dock, never a separate flex item that can collide. */
+.now-playing-section{display:flex;flex-direction:column;flex:0 0 auto;min-width:0;gap:11px}
+.now-playing-section .now-playing-top{flex:0 0 auto}
+.now-track-details{min-width:0;padding:0 1px 2px;overflow-wrap:anywhere}
+.now-track-details .now-title{margin:0;line-height:1.25}
+.now-track-details .now-sub{margin-top:5px}
+body:not(.wrld-settings-open) .side{flex-shrink:0}
+
 /* Reserve real vertical space for the dock in BOTH window modes.
    This keeps tracks and Now Playing above it rather than behind fixed controls. */
 @media(max-width:900px){
@@ -1092,14 +1101,13 @@ body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
     </div>
 
     <aside class="side glass">
-      <div class="now-playing-top"><div class="now-badge">Now Playing</div><div class="now-listening"><span>TOTAL LISTENING TIME</span><strong id="nowListeningTime">0 min</strong></div></div>
-
-      <div>
-        <h3 class="now-title" id="nowTitle">Nothing playing yet</h3>
-        <p class="now-sub" id="nowArtist">Pick a song from your library</p>
-        
+      <div class="now-playing-section">
+        <div class="now-playing-top"><div class="now-badge">Now Playing</div><div class="now-listening"><span>TOTAL LISTENING TIME</span><strong id="nowListeningTime">0 min</strong></div></div>
+        <div class="now-track-details">
+          <h3 class="now-title" id="nowTitle">Nothing playing yet</h3>
+          <p class="now-sub" id="nowArtist">Pick a song from your library</p>
+        </div>
       </div>
-      <div class="side-divider-faint" aria-hidden="true"></div>
       <div class="side-hint"<kbd>Space</kbd> play / pause &nbsp; · &nbsp; <kbd>←</kbd> <kbd>→</kbd> seek</div>
     </aside>
   </section>
