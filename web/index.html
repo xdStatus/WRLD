@@ -813,6 +813,20 @@ body.native-shell .brand h1.pywebview-drag-region .header-letter{pointer-events:
   .player .controls{gap:8px}
 }
 
+
+/* Settings takes the full workspace without changing WRLD's visual theme. */
+body.wrld-settings-open{overflow:hidden}
+body.wrld-settings-open .app{height:100vh;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);gap:0}
+body.wrld-settings-open .main{display:flex;flex-direction:column;min-height:0;overflow:hidden;padding-top:12px;padding-bottom:12px}
+body.wrld-settings-open .library{display:flex;flex-direction:column;flex:1 1 auto;height:auto!important;min-height:0;width:100%;max-width:none}
+body.wrld-settings-open .library-nav,
+body.wrld-settings-open .side,
+body.wrld-settings-open #playerDock{display:none!important}
+body.wrld-settings-open .library-stage{display:flex;flex-direction:column;flex:1;min-height:0}
+body.wrld-settings-open .library-head{flex:none}
+body.wrld-settings-open #settingsPanel{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:32px}
+body.wrld-settings-open #settingsPanel.hidden{display:none!important}
+
 </style>
 </head>
 <body>
@@ -1678,6 +1692,7 @@ function setView(view,playlistId=null){
   headerSnapshot.inert=true;
  }
  state.view=view;state.activePlaylist=nextPlaylist;
+ document.body.classList.toggle('wrld-settings-open',view==='settings');
  state.query=$('search').value;
  closeTrackMenu();
  updateCollectionNav();
@@ -2241,7 +2256,14 @@ async function changeLike(id,enabled){
 }
 $('nowLikeBtn').addEventListener('click',()=>{if(state.currentId)changeLike(state.currentId,!state.liked.has(state.currentId))});
 document.querySelectorAll('.collection-tab').forEach(tab=>tab.addEventListener('click',()=>setView(tab.dataset.view)));
-$('settingsGear').addEventListener('click',()=>setView('settings'));
+let musicViewBeforeSettings='all';
+$('settingsGear').addEventListener('click',()=>{
+ if(state.view==='settings')setView(musicViewBeforeSettings);
+ else{
+  musicViewBeforeSettings=state.view==='playlist'?'playlists':state.view;
+  setView('settings');
+ }
+});
 $('backPlaylistsBtn').addEventListener('click',()=>setView('playlists'));
 $('playlistGrid').addEventListener('click',e=>{
   if(e.target.closest('#createPlaylistCard'))return openPlaylistDialog('create');
