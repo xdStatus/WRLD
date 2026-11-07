@@ -848,14 +848,28 @@ body.wrld-settings-open #settingsPanel.hidden{display:none!important}
 .visualizer-expand-tab{position:fixed;z-index:30;top:50%;left:375px;transform:translateY(-50%);width:25px;height:78px;padding:0;display:grid;place-items:center;border:1px solid rgba(255,255,255,.24);border-right:0;border-radius:12px 0 0 12px;background:rgba(24,24,24,.92);color:#eee;font-size:25px;line-height:1;box-shadow:0 2px 14px rgba(0,0,0,.28);transition:left .33s cubic-bezier(.4,0,.2,1),background .2s}
 .visualizer-expand-tab:hover{background:rgba(40,40,40,.98);border-color:rgba(255,255,255,.5)}
 .visualizer-expand-tab span{display:block;transition:transform .33s cubic-bezier(.4,0,.2,1)}
-body.wrld-reactive-expanded .visualizer-expand-tab{left:455px}
+body.wrld-reactive-expanded .visualizer-expand-tab{left:375px}
 body.wrld-reactive-expanded .visualizer-expand-tab span{transform:rotate(180deg)}
-.wrld-reactive-panel{display:flex;flex-direction:column;position:fixed;left:480px;top:0;bottom:0;width:320px;z-index:2;padding:18px 12px 18px 16px;overflow:hidden;border-left:1px solid rgba(255,255,255,.16);opacity:0;visibility:hidden;pointer-events:none;transform:translateX(28px);transition:opacity .28s ease,transform .33s cubic-bezier(.4,0,.2,1),visibility 0s linear .33s}
+.wrld-reactive-panel{display:flex;flex-direction:column;position:fixed;left:400px;top:0;bottom:0;width:400px;z-index:2;padding:18px 12px 18px 16px;overflow:hidden;border-left:1px solid rgba(255,255,255,.16);opacity:0;visibility:hidden;pointer-events:none;transform:translateX(34px);transition:opacity .28s ease,transform .33s cubic-bezier(.4,0,.2,1),visibility 0s linear .33s}
 body.wrld-reactive-expanded .wrld-reactive-panel{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0);transition-delay:0s}
 .wrld-reactive-panel .visualizer-wrap{display:block;flex:1 1 auto;width:100%;height:100%;min-height:0;max-height:none}
-body.wrld-reactive-expanded .app{width:480px;min-width:480px;max-width:480px;margin-left:0;margin-right:0}
+body.wrld-reactive-expanded .app{width:400px;min-width:400px;max-width:400px;margin-left:0;margin-right:0}
 body:not(.wrld-reactive-expanded) .app{max-width:400px}
-body:not(.wrld-settings-open) .app{transition:width .33s cubic-bezier(.4,0,.2,1)}
+body:not(.wrld-settings-open) .app{transition:none}
+/* Keep the entire library and header at 400px; only the bottom track player
+   shares the full 800px window while expanded. */
+body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
+ position:fixed;z-index:6;left:12px;right:12px;bottom:12px;width:auto;
+ max-width:none;margin:0;
+ grid-template-columns:minmax(0,180px) minmax(0,1fr) minmax(95px,140px);
+ gap:8px 12px;
+}
+body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-left{grid-column:1;grid-row:1 / 3}
+body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .center{grid-column:2;grid-row:1 / 3}
+body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right{grid-column:3;grid-row:1 / 3;width:100%;max-width:none}
+body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:148px}
+body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right .volume-value{display:block}
+body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right .volume-label{display:none}
 body.wrld-settings-open .visualizer-expand-tab,body.wrld-settings-open .wrld-reactive-panel{display:none!important}
 body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
 @media(prefers-reduced-motion:reduce){.visualizer-expand-tab,.visualizer-expand-tab span,.wrld-reactive-panel,body:not(.wrld-settings-open) .app{transition:none!important}}
@@ -2846,7 +2860,7 @@ $('installUpdate').addEventListener('click',async()=>{
   try{const result=await nativeUI().install_update();updateStatus(result.message||'Update ready. Restarting...')}
   catch(e){updateStatus('Installation failed: '+String(e));btn.disabled=false}
 });
-// The slim player stays 400px wide; expansion allocates 480px to music and 320px to Audio Reactive.
+// The left column stays 400px; the right 400px holds Audio Reactive, while the bottom player stretches across both.
 const reactiveTab=$('visualizerExpandTab');
 let reactiveResizeBusy=false;
 reactiveTab.addEventListener('click',async()=>{
