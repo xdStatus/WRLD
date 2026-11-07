@@ -58,6 +58,12 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn("api.set_visualizer_expanded(expanded)", HTML)
         self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
 
+    def test_integrated_player_dock(self):
+        self.assertIn('body:not(.wrld-settings-open) #playerDock.player.glass{', HTML)
+        self.assertIn('border:0!important;border-top:1px solid rgba(255,255,255,.16)!important;', HTML)
+        self.assertIn('border-radius:14px 14px 0 0!important;', HTML)
+        self.assertIn('left:0;right:0;bottom:0;', HTML)
+
     def test_settings_owns_full_workspace(self):
         self.assertIn("document.body.classList.toggle('wrld-settings-open',view==='settings')", HTML)
         self.assertIn('body.wrld-settings-open #playerDock{display:none!important}', HTML)
