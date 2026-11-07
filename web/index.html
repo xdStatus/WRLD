@@ -906,6 +906,38 @@ body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
 }
 body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:245px}
 
+/* WRLD integrated playback dock: remove the floating rounded-card frame.
+   One quiet top boundary, a soft fade into the existing starfield, and no
+   thick side/bottom borders. Does not change player functionality. */
+body:not(.wrld-settings-open) #playerDock.player.glass{
+ left:0;right:0;bottom:0;
+ margin:0!important;
+ border:0!important;border-top:1px solid rgba(255,255,255,.16)!important;
+ border-radius:14px 14px 0 0!important;
+ background:linear-gradient(180deg,rgba(29,29,29,.84) 0%,rgba(17,17,17,.94) 44%,rgba(7,7,7,.98) 100%)!important;
+ box-shadow:0 -14px 34px rgba(0,0,0,.21),inset 0 1px 0 rgba(255,255,255,.035)!important;
+ backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+body:not(.wrld-settings-open) #playerDock.player.glass.is-playing{
+ border-top-color:rgba(255,255,255,.25)!important;
+ box-shadow:0 -14px 34px rgba(0,0,0,.23),inset 0 1px 0 rgba(255,255,255,.07)!important;
+}
+body:not(.wrld-settings-open) #playerDock .mini-art{
+ border-color:rgba(255,255,255,.11);
+ background:rgba(255,255,255,.04);
+}
+body:not(.wrld-settings-open) #playerDock .queue-grip{
+ opacity:.65;
+}
+@media(max-width:900px){
+ body:not(.wrld-settings-open) #playerDock.player.glass{
+  padding-left:15px;padding-right:15px;
+ }
+ body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock.player.glass{
+  padding-left:24px;padding-right:24px;
+ }
+}
+
 body.wrld-settings-open .visualizer-expand-tab,body.wrld-settings-open .wrld-reactive-panel{display:none!important}
 body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
 @media(prefers-reduced-motion:reduce){.visualizer-expand-tab,.visualizer-expand-tab span,.wrld-reactive-panel,body:not(.wrld-settings-open) .app{transition:none!important}}
