@@ -187,16 +187,23 @@ def run_desktop() -> None:
         # Compact portrait window matching the requested narrow desktop footprint.
         window_width = min(340, max(320, available_width - 20))
         window_height = min(800, max(480, available_height - 20))
-        webview.create_window(
+        window = webview.create_window(
             'WRLD', address, js_api=NativeAPI(), width=window_width, height=window_height,
             min_size=(320, 480), resizable=True, frameless=True,
             easy_drag=False, shadow=True,
             background_color='#050505', text_select=False, zoomable=False,
         )
+
+        def enforce_portrait_window():
+            # Apply the requested native frame dimensions after WinForms/WebView2
+            # creates the actual window; this is separate from the CSS layout.
+            # Do this only at launch, so manual resizing stays under user control.
+            window.resize(window_width, window_height)
         # Use the built-in Windows WebView2 renderer — no browser process window.
         # Keep UI preferences such as repeat mode and volume between launches.
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         webview.start(
+            enforce_portrait_window,
             gui='edgechromium',
             private_mode=False,
             storage_path=str(CONFIG_DIR / 'webview-profile'),
