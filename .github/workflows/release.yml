@@ -138,4 +138,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows ${tag}: Adds a tall portrait window layout with vertically stacked library, Now Playing visualizer and playback controls. Preserves the original WRLD theme, music playback, cloud sync and existing landscape layout."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows ${tag}: Opens in a compact 340px-wide portrait window and adapts the existing library, Now Playing visualizer and playback controls to fit. Preserves the original WRLD theme, music playback, cloud sync and existing landscape layout."
