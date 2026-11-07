@@ -58,6 +58,14 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn("api.set_visualizer_expanded(expanded)", HTML)
         self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
 
+    def test_player_space_reserved_in_both_modes(self):
+        self.assertIn('--wrld-player-reserve:170px;', HTML)
+        self.assertIn('--wrld-player-reserve:232px;', HTML)
+        self.assertIn('padding-bottom:var(--wrld-player-reserve)!important;', HTML)
+        self.assertIn('height:auto!important;min-height:0;flex:1 1 auto;', HTML)
+        self.assertIn('bottom:var(--wrld-player-reserve)!important;', HTML)
+        self.assertIn('body:not(.wrld-settings-open) .main{', HTML)
+
     def test_integrated_player_dock(self):
         self.assertIn('body:not(.wrld-settings-open) #playerDock.player.glass{', HTML)
         self.assertIn('border:0!important;border-top:1px solid rgba(255,255,255,.16)!important;', HTML)
