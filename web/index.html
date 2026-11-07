@@ -938,6 +938,40 @@ body:not(.wrld-settings-open) #playerDock .queue-grip{
  }
 }
 
+/* Reserve real vertical space for the dock in BOTH window modes.
+   This keeps tracks and Now Playing above it rather than behind fixed controls. */
+@media(max-width:900px){
+ body:not(.wrld-settings-open){
+  --wrld-player-reserve:170px;
+ }
+ body.wrld-reactive-expanded:not(.wrld-settings-open){
+  --wrld-player-reserve:232px;
+ }
+ body:not(.wrld-settings-open) .app{
+  height:100vh!important;min-height:0!important;
+  padding-bottom:var(--wrld-player-reserve)!important;
+  display:flex;flex-direction:column;overflow:hidden;
+ }
+ body:not(.wrld-settings-open) .topbar{flex:0 0 auto}
+ body:not(.wrld-settings-open) .main{
+  flex:1 1 auto;min-height:0;overflow:hidden;
+  display:flex;flex-direction:column;gap:10px;
+ }
+ body:not(.wrld-settings-open) .library{
+  height:auto!important;min-height:0;flex:1 1 auto;
+  overflow:hidden;
+ }
+ body:not(.wrld-settings-open) .library-stage{min-height:0}
+ body:not(.wrld-settings-open) .side{
+  flex:0 0 auto;min-height:0;margin-top:0;
+ }
+ body:not(.wrld-settings-open) #playerDock.player.glass{
+  bottom:0;max-height:calc(100vh - 70px);
+ }
+ body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{
+  bottom:var(--wrld-player-reserve)!important;
+ }
+}
 body.wrld-settings-open .visualizer-expand-tab,body.wrld-settings-open .wrld-reactive-panel{display:none!important}
 body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
 @media(prefers-reduced-motion:reduce){.visualizer-expand-tab,.visualizer-expand-tab span,.wrld-reactive-panel,body:not(.wrld-settings-open) .app{transition:none!important}}
