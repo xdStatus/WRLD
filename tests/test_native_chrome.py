@@ -31,6 +31,13 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('win.maximize()', NATIVE)
         self.assertIn('win.restore()', NATIVE)
 
+    def test_settings_owns_full_workspace(self):
+        self.assertIn("document.body.classList.toggle('wrld-settings-open',view==='settings')", HTML)
+        self.assertIn('body.wrld-settings-open #playerDock{display:none!important}', HTML)
+        self.assertIn('body.wrld-settings-open .side,', HTML)
+        self.assertIn('body.wrld-settings-open #settingsPanel{display:flex', HTML)
+        self.assertIn("if(state.view==='settings')setView(musicViewBeforeSettings)", HTML)
+
     def test_about_replay_uses_original_intro(self):
         self.assertIn('id="replayIntro"', MARKUP)
         self.assertIn('Preview Magicule Singularity', MARKUP)
