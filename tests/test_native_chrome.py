@@ -21,15 +21,15 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('topbar glass pywebview-drag-region', drag_attributes)
         self.assertIn('pywebview-drag-region', drag_attributes)
         self.assertNotIn('class="app pywebview-drag-region"', MARKUP)
-        self.assertNotIn('native-shell .window-chrome{display:none!important}', HTML)
+        self.assertNotIn('id="windowChrome"', MARKUP)
 
-    def test_frameless_window_controls(self):
-        for element_id in ('winMin', 'winMax', 'winClose'):
-            self.assertIn('id="' + element_id + '"', MARKUP)
+    def test_frameless_window_controls_hidden(self):
+        for element_id in ('winMin', 'winMax', 'winClose', 'windowChrome'):
+            self.assertNotIn('id="' + element_id + '"', MARKUP)
+        self.assertIn("document.body.classList.add('native-shell')", HTML)
+        self.assertIn("if(e.key==='F11')", HTML)
         for action in ('minimize', 'maximize', 'close'):
             self.assertIn("'" + action + "'", NATIVE)
-        self.assertIn('win.maximize()', NATIVE)
-        self.assertIn('win.restore()', NATIVE)
 
     def test_settings_owns_full_workspace(self):
         self.assertIn("document.body.classList.toggle('wrld-settings-open',view==='settings')", HTML)
