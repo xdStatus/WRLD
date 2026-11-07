@@ -139,12 +139,23 @@ class NativeAPI:
         return result
 
     def set_visualizer_expanded(self, expanded):
-        """Resize the native desktop window, keeping the left music column anchored."""
+        """Smoothly extend the native frame while leaving its top-left anchor fixed."""
+        import time
         import webview
         if not webview.windows:
             return False
         win = webview.windows[0]
-        win.resize(800 if expanded else 400, 1080)
+        target = 800 if expanded else 400
+        start = 400 if expanded else 800
+        steps = 20
+        for step in range(1, steps + 1):
+            progress = step / steps
+            # Ease in/out without changing music playback or the window origin.
+            eased = progress * progress * (3 - 2 * progress)
+            width = round(start + (target - start) * eased)
+            win.resize(width, 1080)
+            if step < steps:
+                time.sleep(0.016)
         return True
 
     def window_action(self, action):
