@@ -963,11 +963,12 @@ body:not(.wrld-settings-open) .side{flex-shrink:0}
 /* Reserve real vertical space for the dock in BOTH window modes.
    This keeps tracks and Now Playing above it rather than behind fixed controls. */
 @media(max-width:900px){
+ /* Reserve the full dock height plus breathing room above it. */
  body:not(.wrld-settings-open){
-  --wrld-player-reserve:170px;
+  --wrld-player-reserve:200px;
  }
  body.wrld-reactive-expanded:not(.wrld-settings-open){
-  --wrld-player-reserve:232px;
+  --wrld-player-reserve:264px;
  }
  body:not(.wrld-settings-open) .app{
   height:100vh!important;min-height:0!important;
@@ -985,7 +986,7 @@ body:not(.wrld-settings-open) .side{flex-shrink:0}
  }
  body:not(.wrld-settings-open) .library-stage{min-height:0}
  body:not(.wrld-settings-open) .side{
-  flex:0 0 auto;min-height:0;margin-top:0;
+  flex:0 0 auto;min-height:0;margin-top:0;margin-bottom:12px;
  }
  body:not(.wrld-settings-open) #playerDock.player.glass{
   bottom:0;max-height:calc(100vh - 70px);
