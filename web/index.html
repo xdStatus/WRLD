@@ -742,13 +742,9 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 @media(prefers-reduced-motion:reduce){#visualizerWrap.constellation-playing .constellation-motion,#visualizerWrap.constellation-playing .constellation-bright{animation:none!important}}
 
 
-/* Return the original live audio visualizer, with constellations as an option. */
+/* Now Playing: use only the restored audio-reactive spectrum and waveform. */
 .visualizer-wrap #visualizer{position:absolute;inset:38px 8px 43px;width:calc(100% - 16px);height:calc(100% - 81px);display:block;pointer-events:none;z-index:1}
-.visualizer-wrap #constellationView{position:absolute;inset:36px 18px 38px;z-index:1;display:grid;place-items:center;min-height:0;overflow:hidden;pointer-events:none}
-.visualizer-wrap #constellationView[hidden],.visualizer-wrap:not(.is-constellation) #constellationView{display:none!important}
-.visualizer-wrap.is-constellation #visualizer{display:none}
-.visualizer-wrap #constellationView .constellation-svg{width:min(85%,310px);height:100%;object-fit:contain}
-.visualizer-footer .viz-modes{display:flex;gap:13px;align-items:center;flex-wrap:wrap}
+.visualizer-footer .viz-modes{display:flex;gap:17px;align-items:center}
 .visualizer-footer .viz-mode{font-size:10px}
 .visualizer-footer .visualizer-caption{margin-left:auto;white-space:nowrap}
 
@@ -865,9 +861,8 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
           <span class="viz-status" id="vizStatus"><span class="viz-indicator"></span><span id="vizStatusText">READY</span></span>
         </div>
         <canvas id="visualizer" role="img" aria-label="Live audio spectrum reacting to the current song"></canvas>
-        <div id="constellationView" role="img" aria-label="Animated constellation for the selected song" hidden></div>
         <div class="visualizer-footer">
-          <div class="viz-modes" role="group" aria-label="Visualizer style"><button type="button" class="viz-mode" id="vizBars" aria-pressed="true">Spectrum</button><button type="button" class="viz-mode" id="vizWave" aria-pressed="false">Waveform</button><button type="button" class="viz-mode" id="vizStars" aria-pressed="false">Constellation</button></div><span class="visualizer-caption" id="visualizerCaption">LIVE SIGNAL</span>
+          <div class="viz-modes" role="group" aria-label="Visualizer style"><button type="button" class="viz-mode" id="vizBars" aria-pressed="true">Spectrum</button><button type="button" class="viz-mode" id="vizWave" aria-pressed="false">Waveform</button></div><span class="visualizer-caption" id="visualizerCaption">LIVE SIGNAL</span>
         </div>
       </div>
       <div>
@@ -1382,12 +1377,6 @@ function updateDesktopConstellations(){
  const playing=!!state.currentId&&!audio.paused&&!document.hidden;
  document.querySelectorAll('.song-art').forEach(art=>art.classList.toggle('constellation-playing',playing&&art.dataset.trackId===state.currentId));
  $('miniArt').classList.toggle('constellation-playing',playing);
- $('visualizerWrap').classList.toggle('constellation-playing',playing);
- const now=$('constellationView');
- if(now&&now.dataset.trackId!==String(state.currentId||'')){
-  now.dataset.trackId=String(state.currentId||'');
-  now.innerHTML=constellationArtwork(state.currentId||'wrld');
- }
 }
 document.addEventListener('visibilitychange',updateDesktopConstellations);
 function setArt(node,track){
@@ -2341,11 +2330,11 @@ document.addEventListener('keydown',e=>{
 let wrldAudioCtx=null,wrldAnalyser=null,wrldFrequency=null,wrldWaveSamples=null;
 let wrldVisualizerMode='spectrum',wrldVizFrames=0,wrldLastPeak=0,wrldAudioAnalysisError=false;
 let wrldDisplayMode='spectrum';
-try{const saved=localStorage.getItem('wrld-visual-mode-v1');
- if(['spectrum','waveform','constellation'].includes(saved))wrldDisplayMode=saved;
- else if(localStorage.getItem('wrld-viz-mode-v8')==='waveform')wrldDisplayMode='waveform';
+try{
+ const saved=localStorage.getItem('wrld-visual-mode-v1');
+ if(saved==='waveform'||(!saved&&localStorage.getItem('wrld-viz-mode-v8')==='waveform'))wrldDisplayMode='waveform';
 }catch{}
-wrldVisualizerMode=wrldDisplayMode==='waveform'?'waveform':'spectrum';
+wrldVisualizerMode=wrldDisplayMode;
 function ensureAudioAnalysis(){
   try{
     const AC=window.AudioContext||window.webkitAudioContext;
@@ -2372,8 +2361,8 @@ function updateVisualizerLabels(){
  const t=currentTrack(),playing=!!t&&!audio.paused;
  $('visualizerWrap').classList.toggle('is-playing',playing);
  $('vizStatus').classList.toggle('is-playing',playing);
- $('vizStatusText').textContent=wrldAudioAnalysisError&&wrldDisplayMode!=='constellation'?'UNAVAILABLE':playing?'PLAYING':t?'PAUSED':'READY';
- $('nowPlayingNote').textContent=wrldDisplayMode==='constellation'?(playing?'Your constellation is alive':t?'Constellation paused':'Ready when you are'):(wrldAudioAnalysisError?'Audio visualizer unavailable':playing?'Following the sound in real time':t?'Paused':'Ready when you are');
+ $('vizStatusText').textContent=wrldAudioAnalysisError?'UNAVAILABLE':playing?'PLAYING':t?'PAUSED':'READY';
+ $('nowPlayingNote').textContent=wrldAudioAnalysisError?'Audio visualizer unavailable':playing?'Following the sound in real time':t?'Paused':'Ready when you are';
  updateDesktopConstellations();
 }
 function initAudioVisualizer(){
@@ -2381,19 +2370,15 @@ function initAudioVisualizer(){
   if(!ctx)return;
   let width=0,height=0,dpr=1,lastTime=0,shade=null;
   const barCount=51,levels=new Float32Array(barCount),ySmoothed=new Float32Array(barCount);
-  const modes={spectrum:$('vizBars'),waveform:$('vizWave'),constellation:$('vizStars')};
+  const modes={spectrum:$('vizBars'),waveform:$('vizWave')};
   function setMode(mode){
     if(!modes[mode])mode='spectrum';
     wrldDisplayMode=mode;
-    if(mode!=='constellation')wrldVisualizerMode=mode;
+    wrldVisualizerMode=mode;
     for(const [name,button] of Object.entries(modes))button.setAttribute('aria-pressed',String(name===mode));
-    $('visualizerWrap').classList.toggle('is-constellation',mode==='constellation');
-    $('constellationView').hidden=mode!=='constellation';
-    $('visualizerKicker').textContent=mode==='constellation'?'YOUR CONSTELLATION':'AUDIO REACTIVE';
-    $('visualizerCaption').textContent=mode==='constellation'?'WRLD SKY':'LIVE SIGNAL';
     canvas.setAttribute('aria-label',mode==='waveform'?'Live music waveform':'Live music frequency spectrum');
     try{localStorage.setItem('wrld-visual-mode-v1',mode)}catch{}
-    if(mode!=='constellation'&&!audio.paused)ensureAudioAnalysis();
+    if(!audio.paused)ensureAudioAnalysis();
     updateVisualizerLabels();
   }
   for(const [name,button] of Object.entries(modes))button.addEventListener('click',()=>setMode(name));
@@ -2467,7 +2452,7 @@ function initAudioVisualizer(){
   }
   function frame(time){
     requestAnimationFrame(frame);
-    if(document.hidden||wrldDisplayMode==='constellation'||width<2||height<2)return;
+    if(document.hidden||width<2||height<2)return;
     const playing=!!state.currentId&&!audio.paused&&!!wrldAnalyser&&wrldAudioCtx?.state==='running';
     // ~30 fps during playback; 4 fps on idle. Both modes follow the real signal.
     const interval=playing?33:250;
