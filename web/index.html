@@ -947,6 +947,19 @@ body:not(.wrld-settings-open) #playerDock .queue-grip{
 .now-track-details .now-sub{margin-top:5px}
 body:not(.wrld-settings-open) .side{flex-shrink:0}
 
+/* Bring the title UP directly under the Now Playing label, inside
+   the same top row as listening time rather than below its divider. */
+.now-playing-section{gap:0}
+.now-playing-top{align-items:flex-start}
+.now-heading-and-track{display:flex;flex-direction:column;min-width:0;flex:1 1 auto;gap:8px}
+.now-heading-and-track .now-track-details{padding:0;min-width:0}
+.now-heading-and-track .now-title{font-size:17px;line-height:1.2}
+.now-heading-and-track .now-sub{font-size:11px;line-height:1.25;margin-top:3px}
+.now-playing-top .now-listening{flex:0 0 auto}
+@media(max-width:900px){
+ body:not(.wrld-settings-open) .side{gap:0!important}
+ body:not(.wrld-settings-open) .now-playing-top{padding-bottom:10px}
+}
 /* Reserve real vertical space for the dock in BOTH window modes.
    This keeps tracks and Now Playing above it rather than behind fixed controls. */
 @media(max-width:900px){
@@ -1102,10 +1115,15 @@ body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
 
     <aside class="side glass">
       <div class="now-playing-section">
-        <div class="now-playing-top"><div class="now-badge">Now Playing</div><div class="now-listening"><span>TOTAL LISTENING TIME</span><strong id="nowListeningTime">0 min</strong></div></div>
-        <div class="now-track-details">
-          <h3 class="now-title" id="nowTitle">Nothing playing yet</h3>
-          <p class="now-sub" id="nowArtist">Pick a song from your library</p>
+        <div class="now-playing-top">
+          <div class="now-heading-and-track">
+            <div class="now-badge">Now Playing</div>
+            <div class="now-track-details">
+              <h3 class="now-title" id="nowTitle">Nothing playing yet</h3>
+              <p class="now-sub" id="nowArtist">Pick a song from your library</p>
+            </div>
+          </div>
+          <div class="now-listening"><span>TOTAL LISTENING TIME</span><strong id="nowListeningTime">0 min</strong></div>
         </div>
       </div>
       <div class="side-hint"<kbd>Space</kbd> play / pause &nbsp; · &nbsp; <kbd>←</kbd> <kbd>→</kbd> seek</div>
