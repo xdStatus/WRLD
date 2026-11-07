@@ -843,6 +843,19 @@ body.wrld-settings-open #settingsPanel{display:flex;flex-direction:column;flex:1
 body.wrld-settings-open #settingsPanel.hidden{display:none!important}
 
 
+/* One continuous 800px night sky is painted from launch, then revealed.
+   Do not rescale or recreate its stars as the native window widens. */
+#starfield{left:0;right:auto;width:800px!important;height:100vh!important}
+.space-haze{left:0;right:auto;width:800px;height:100vh}
+@media(max-width:900px){
+  /* About 20% more height and space for the collapsed mini player. */
+  body:not(.wrld-settings-open) #playerDock{
+    min-height:156px;padding:14px 13px;
+  }
+  body:not(.wrld-settings-open) #playerDock .player .mini-art{width:40px;height:40px}
+  body:not(.wrld-settings-open) #playerDock .play-main{width:44px;height:44px}
+}
+
 /* Expandable audio-reactive drawer, sharing the expanded width with the player.
    Preserve WRLD's existing monochrome surfaces and visualizer rendering. */
 .visualizer-expand-tab{position:fixed;z-index:30;top:50%;left:375px;transform:translateY(-50%);width:25px;height:78px;padding:0;display:grid;place-items:center;border:1px solid rgba(255,255,255,.24);border-right:0;border-radius:12px 0 0 12px;background:rgba(24,24,24,.92);color:#eee;font-size:25px;line-height:1;box-shadow:0 2px 14px rgba(0,0,0,.28);transition:left .33s cubic-bezier(.4,0,.2,1),background .2s}
@@ -867,7 +880,10 @@ body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-left{grid-column:1;grid-row:1 / 3}
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .center{grid-column:2;grid-row:1 / 3}
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right{grid-column:3;grid-row:1 / 3;width:100%;max-width:none}
-body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:148px}
+body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:198px}
+body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
+ min-height:172px;padding:18px 20px;
+}
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right .volume-value{display:block}
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right .volume-label{display:none}
 body.wrld-settings-open .visualizer-expand-tab,body.wrld-settings-open .wrld-reactive-panel{display:none!important}
@@ -2700,28 +2716,37 @@ function initStarfield(){
  spriteLarge=createStarSprite(16);
 
  function resize(){
-   width=Math.max(1,window.innerWidth);height=Math.max(1,window.innerHeight);
-   // Avoid huge full-screen pixel buffers on high-DPI laptops.
-   dpr=Math.min(1.45,Math.max(1,window.devicePixelRatio||1));
+   // The backdrop always occupies the complete 800px expanded world, even
+   // when the native frame initially reveals only its leftmost 400px.
+   // A change in window width must not reseed or redraw the star positions.
+   const sceneWidth=800;
+   const sceneHeight=Math.max(1,window.innerHeight);
+   const nextDpr=Math.min(1.45,Math.max(1,window.devicePixelRatio||1));
+   if(stars.length&&width===sceneWidth&&height===sceneHeight&&dpr===nextDpr)return;
+   width=sceneWidth;height=sceneHeight;dpr=nextDpr;
    canvas.width=Math.floor(width*dpr);canvas.height=Math.floor(height*dpr);
    ctx.setTransform(dpr,0,0,dpr,0,0);
    const count=Math.max(270,Math.min(635,Math.round(width*height/3200)));
-   stars=Array.from({length:count},()=>{
-     const z=random(0,1);
-     const bright=z>.83;
-     const twinkler=Math.random()<.35;
-     return {
-       x:random(0,width),y:random(0,height),
-       r:bright?random(.95,1.65):random(.30,1.00),
-       base:random(.23,.83),
-       speed:1.5+z*4.5,
-       phase:random(0,Math.PI*2),
-       frequency:random(.8,2.35),
-       twinkler,bright,
-       glint:bright&&Math.random()<.40
-     };
-   });
-   meteors=[];lastPaint=0;
+   // Only seed the sky at launch or on an actual display-height/DPR change.
+   // Preserve the current stars when the scene's pixel buffer needs rebuilding.
+   if(!stars.length){
+     stars=Array.from({length:count},()=>{
+       const z=random(0,1);
+       const bright=z>.83;
+       const twinkler=Math.random()<.35;
+       return {
+         x:random(0,width),y:random(0,height),
+         r:bright?random(.95,1.65):random(.30,1.00),
+         base:random(.23,.83),
+         speed:1.5+z*4.5,
+         phase:random(0,Math.PI*2),
+         frequency:random(.8,2.35),
+         twinkler,bright,
+         glint:bright&&Math.random()<.40
+       };
+     });
+   }
+   lastPaint=0;
  }
  function spawnMeteor(){
    const vx=-random(480,690),vy=random(35,80);
