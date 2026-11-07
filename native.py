@@ -147,7 +147,7 @@ class NativeAPI:
         win = webview.windows[0]
         target = 800 if expanded else 400
         start = 400 if expanded else 800
-        steps = 20
+        steps = 12
         for step in range(1, steps + 1):
             progress = step / steps
             # Ease in/out without changing music playback or the window origin.
