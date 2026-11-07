@@ -814,6 +814,21 @@ body.native-shell .brand h1.pywebview-drag-region .header-letter{pointer-events:
 }
 
 
+/* Keep all song actions inside the 400px music column, with right-side breathing room. */
+@media(max-width:900px){
+  .library-list-layout,.library-list-layout .list-wrap,.song-list{min-width:0;max-width:100%}
+  .library-list-layout .list-wrap{overflow-x:hidden;overflow-y:auto}
+  .song-list .song{
+    width:100%;min-width:0;max-width:100%;
+    grid-template-columns:34px minmax(0,1fr) 34px 24px 24px;
+    column-gap:5px;padding-left:3px;padding-right:16px;
+  }
+  .song-list .song-art{width:32px;height:32px}
+  .song-list .song-info{min-width:0;overflow:hidden}
+  .song-list .song-format{min-width:0;width:34px;font-size:9px}
+  .song-list .song-tool{width:24px;height:28px;min-width:0;padding:0}
+}
+
 /* Settings takes the full workspace without changing WRLD's visual theme. */
 body.wrld-settings-open{overflow:hidden}
 body.wrld-settings-open .app{height:100vh;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);gap:0}
