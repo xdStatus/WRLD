@@ -144,7 +144,7 @@ class NativeAPI:
         if not webview.windows:
             return False
         win = webview.windows[0]
-        win.resize(680 if expanded else 340, 1080)
+        win.resize(800 if expanded else 400, 1080)
         return True
 
     def window_action(self, action):
@@ -193,13 +193,13 @@ def run_desktop() -> None:
         else:
             available_width = ctypes.windll.user32.GetSystemMetrics(0)
             available_height = ctypes.windll.user32.GetSystemMetrics(1)
-        # Narrow portrait window sized for a 2560x1080 display.
+        # Portrait window sized for a 2560x1080 display (400px slim, 800px expanded).
         # Use the full requested 1080px height, not the taskbar-reduced work area.
-        window_width = min(340, max(320, available_width - 20))
+        window_width = min(400, max(400, available_width - 20))
         window_height = 1080
         window = webview.create_window(
             'WRLD', address, js_api=NativeAPI(), width=window_width, height=window_height,
-            min_size=(320, 480), resizable=True, frameless=True,
+            min_size=(400, 480), resizable=True, frameless=True,
             easy_drag=False, shadow=True,
             background_color='#050505', text_select=False, zoomable=False,
         )
