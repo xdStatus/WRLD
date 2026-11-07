@@ -33,11 +33,15 @@ class NativeChromeContractTests(unittest.TestCase):
 
     def test_audio_visualizer_expands_into_right_panel(self):
         self.assertIn('def set_visualizer_expanded(self, expanded):', NATIVE)
-        self.assertIn('win.resize(800 if expanded else 400, 1080)', NATIVE)
+        self.assertIn('target = 800 if expanded else 400', NATIVE)
+        self.assertIn('win.resize(width, 1080)', NATIVE)
+        self.assertIn('time.sleep(0.016)', NATIVE)
         self.assertIn('id="visualizerExpandTab"', MARKUP)
         self.assertIn('id="reactivePanel"', MARKUP)
         self.assertEqual(MARKUP.count('id="visualizerWrap"'), 1)
-        self.assertIn('body.wrld-reactive-expanded .wrld-reactive-panel{display:flex', HTML)
+        self.assertIn('body.wrld-reactive-expanded .wrld-reactive-panel{opacity:1', HTML)
+        self.assertIn('left:480px;top:0;bottom:0;width:320px', HTML)
+        self.assertIn('body.wrld-reactive-expanded .app{width:480px', HTML)
         self.assertIn("api.set_visualizer_expanded(expanded)", HTML)
         self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
 
