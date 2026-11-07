@@ -749,15 +749,15 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 .visualizer-footer .visualizer-caption{margin-left:auto;white-space:nowrap}
 
 
-/* Portrait layout only. The existing WRLD visual theme and component styles remain unchanged. */
-@media (max-width:1000px) and (orientation:portrait){
+/* Tall stacked Windows layout (all window sizes). Keep original WRLD theme unchanged. */
+@media (min-width:0px){
   html,body{height:auto;min-height:100%}
   body{overflow-y:auto;overflow-x:hidden}
-  .app{height:auto;min-height:100vh;max-width:820px;grid-template-rows:auto auto auto;gap:12px;padding-bottom:20px}
+  .app{height:auto;min-height:100vh;max-width:980px;grid-template-rows:auto auto auto;gap:12px;padding-bottom:20px}
   .topbar{height:auto;min-height:82px;flex-wrap:wrap;gap:12px;padding-block:14px}
   .search{order:3;flex-basis:100%;max-width:none}
   .main{display:flex;flex-direction:column;gap:18px;min-height:0;padding:12px 0;overflow:visible}
-  .library{flex:none;width:100%;height:clamp(410px,52vh,660px);min-height:0;overflow:hidden}
+  .library{flex:none;width:100%;height:clamp(440px,56vh,680px);min-height:0;overflow:hidden}
   .library-stage{min-height:0;flex:1}
   .library-list-layout{min-height:0;flex:1}
   .library-nav{overflow-x:auto;flex:none}
@@ -770,7 +770,7 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
   .player .timeline{grid-template-columns:41px minmax(0,1fr) 41px}
   .queue-drawer{max-width:100%}
 }
-@media (max-width:480px) and (orientation:portrait){
+@media (max-width:480px){
   .library{height:clamp(380px,49vh,540px)}
   .player .player-right{width:95px}
 }
