@@ -138,4 +138,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows v1.8.38: Fix Cloudflare 403 errors on Windows sync requests by matching the cloud music client's User-Agent. Includes cloud likes, playlists, and history synchronization."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows $tag: Adds a tall portrait window layout with vertically stacked library, Now Playing visualizer and playback controls. Preserves the original WRLD theme, music playback, cloud sync and existing landscape layout."
