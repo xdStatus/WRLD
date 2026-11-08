@@ -79,6 +79,14 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('setPlayerWide(false);', HTML)
         self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
 
+    def test_monochrome_audio_reactive_and_tab_switches(self):
+        self.assertIn('rgba(27,27,27,.55),rgba(5,5,5,.84)', HTML)
+        self.assertIn('.wrld-outgoing-row.song{background:#121212;display:grid}', HTML)
+        self.assertIn('.wrld-outgoing-row.playlist-card{background:#121212}', HTML)
+        self.assertIn('background:radial-gradient(circle,#191919,#080808 80%)', HTML)
+        self.assertNotIn('rgba(28,36,57,.5)', HTML)
+        self.assertNotIn('.wrld-outgoing-row.song{background:#11131a', HTML)
+
     def test_now_playing_title_stays_with_heading(self):
         self.assertIn('class="now-playing-section"', MARKUP)
         self.assertIn('class="now-track-details"', MARKUP)
