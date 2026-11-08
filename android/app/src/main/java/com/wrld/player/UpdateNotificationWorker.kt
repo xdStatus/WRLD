@@ -60,6 +60,39 @@ class UpdateNotificationWorker(context: Context, params: WorkerParameters) :
     }
 
     companion object {
+        /**
+         * A real local test alert, independent of release availability/network.
+         * It never claims that an update is available.
+         */
+        fun showTestNotification(context: Context): Boolean {
+            if (Build.VERSION.SDK_INT >= 33 &&
+                context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+                return false
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (!manager.areNotificationsEnabled()) return false
+            val channel = "wrld-app-updates"
+            if (Build.VERSION.SDK_INT >= 26) {
+                manager.createNotificationChannel(
+                    NotificationChannel(channel, "WRLD app updates", NotificationManager.IMPORTANCE_DEFAULT)
+                )
+                if (manager.getNotificationChannel(channel)?.importance == NotificationManager.IMPORTANCE_NONE)
+                    return false
+            }
+            val intent = Intent(context, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            val pending = PendingIntent.getActivity(context, 1, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val notification = NotificationCompat.Builder(context, channel)
+                .setSmallIcon(R.drawable.ic_wrld)
+                .setContentTitle("WRLD notifications are working")
+                .setContentText("This is a test. New Android releases will notify you automatically.")
+                .setContentIntent(pending)
+                .setAutoCancel(true)
+                .build()
+            manager.notify(21022, notification)
+            return true
+        }
+
         fun checkNow(context: Context) {
             val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
             val request = OneTimeWorkRequestBuilder<UpdateNotificationWorker>()
