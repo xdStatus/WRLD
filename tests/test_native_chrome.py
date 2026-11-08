@@ -69,7 +69,8 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('await new Promise(resolve=>setTimeout(resolve,750));', HTML)
         self.assertIn('clip-path:none;transition:none;', HTML)
         self.assertIn('clearTimeout(reactiveRevealTimer);', HTML)
-        self.assertIn("api.set_visualizer_expanded(expanded)", HTML)
+        self.assertIn('api.set_visualizer_expanded(true)', HTML)
+        self.assertIn('api.set_visualizer_expanded(false)', HTML)
         self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
 
     def test_now_playing_title_stays_with_heading(self):
