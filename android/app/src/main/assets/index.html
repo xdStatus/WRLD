@@ -727,10 +727,9 @@ function renderSettings(){
   '<div class="settings-panel"><button class="settings-action" data-rescan-library="1"><span>Rescan music library<small>Refresh songs indexed on your phone</small></span><span aria-hidden="true">↻</span></button></div>'+
   '<div class="settings-heading">Updates</div>'+
   '<div class="settings-panel">'+
-   '<button class="settings-action" type="button" data-check-updates="1"><span>Check for Android updates<small>'+esc(app.updates.message)+'</small></span><span aria-hidden="true">↻</span></button>'+
-   '<button class="settings-action" type="button" data-test-update-notification="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>Test update notification now<small>Sends a test notification immediately, even if WRLD is up to date.</small></span><span aria-hidden="true">◌</span></button>'+
-
-   (app.updates.state==="available"?'<button class="settings-action" type="button" data-download-update="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>Download Android v'+esc(app.updates.latest)+'<small>Opens the official GitHub APK in your browser. Android confirms installation.</small></span><span aria-hidden="true">↗</span></button>':'')+
+   '<button class="settings-action" id="checkAndroidUpdates" type="button" data-check-updates="1"><span>Check for Android updates<small>'+esc(app.updates.message)+'</small></span><span aria-hidden="true">↻</span></button>'+
+   (app.updates.state==="available"?'<button class="settings-action" type="button" data-download-update="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>Download Android v'+esc(app.updates.latest)+'<small>Opens the verified Android APK in your browser. Android confirms installation.</small></span><span aria-hidden="true">↗</span></button>':'')+
+   '<button class="settings-action" type="button" data-test-update-notification="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>Test update notification now<small>Sends a test notification even when WRLD is up to date.</small></span><span aria-hidden="true">◌</span></button>'+
    '<div class="cloud-help">With the permanent signing certificate, future updates install over WRLD without clearing its data. An older temporary-key beta may require one initial migration.</div>'+
   '</div>'+
   '<div class="settings-heading">Launch animation</div>'+
@@ -741,8 +740,7 @@ function renderSettings(){
   '<div class="settings-panel"><div class="settings-about"><div class="settings-about-title">WRLD</div>'+
    '<div class="settings-about-version">Android v'+esc(app.version)+' (beta)</div>'+ 
    '<div class="settings-about-listening">Total listening time: <strong id="totalListeningTime">'+fmtListening(app.listeningMs)+'</strong></div>'+
-   '<div class="settings-about-desc">Local and private WRLD Cloud playback powered by Android Media3. Cloud music streams from your private Cloudflare R2 library over HTTPS. Your playback preferences stay on this device.</div></div>'+
-   '<button class="settings-action" data-open-updates="1" style="border-top:1px solid rgba(255,255,255,.09)"><span>GitHub Releases<small>View the latest Android updates</small></span><span aria-hidden="true">↗</span></button></div>'+
+   '<div class="settings-about-desc">Local and private WRLD Cloud playback powered by Android Media3. Cloud music streams from your private Cloudflare R2 library over HTTPS. Your playback preferences stay on this device.</div></div></div>'+
   '</div>';
  el("list").innerHTML=out;
 }
@@ -878,7 +876,7 @@ function openTrackMenu(id){
 }
 function createDialog(){showSheet("New playlist",'<p>Name your collection.</p><input id="newPlaylistName" maxlength="70" placeholder="Playlist name" autocomplete="off"><button class="sheet-primary" id="confirmPlaylist">Create playlist</button>');setTimeout(function(){el("newPlaylistName")&&el("newPlaylistName").focus()},100)}
 el("list").addEventListener("click",function(event){
- var b=event.target.closest("[data-like],[data-menu],[data-create],[data-open],[data-delete],[data-back],[data-song],[data-rescan-library],[data-open-updates],[data-check-updates],[data-test-update-notification],[data-download-update],[data-replay-intro],[data-music-source],[data-save-cloud]");
+ var b=event.target.closest("[data-like],[data-menu],[data-create],[data-open],[data-delete],[data-back],[data-song],[data-rescan-library],[data-check-updates],[data-test-update-notification],[data-download-update],[data-replay-intro],[data-music-source],[data-save-cloud]");
  if(!b)return;
  if(b.dataset.musicSource){call("setMusicSource",b.dataset.musicSource);return}
  if(b.dataset.saveCloud!==undefined){
@@ -896,7 +894,6 @@ el("list").addEventListener("click",function(event){
  if(b.dataset.checkUpdates){call("checkForUpdates");return}
  if(b.dataset.testUpdateNotification){call("testUpdateNotification");return}
  if(b.dataset.downloadUpdate){call("downloadUpdate");return}
- if(b.dataset.openUpdates){call("openUpdates");return}
  if(b.dataset.like){call("setLike",b.dataset.like,!app.liked.has(b.dataset.like));return}
  if(b.dataset.menu){openTrackMenu(b.dataset.menu);return}
  if(b.dataset.create){createDialog();return}
@@ -1143,6 +1140,19 @@ el("seek").addEventListener("change",function(e){
 el("seek").addEventListener("pointercancel",function(){seekDragging=false;el("seekShell").classList.remove("is-scrubbing");renderNow()});
 el("seek").addEventListener("blur",function(){seekDragging=false;el("seekShell").classList.remove("is-scrubbing")});
 window.WRLD={
+ openUpdateSettings:function(){
+  // Notification taps open the actual Updates controls, not a web release page.
+  setView("settings");
+  call("checkForUpdates");
+  function scrollToUpdates(){
+   if(app.view!=="settings")return;
+   var button=el("checkAndroidUpdates");
+   if(button)button.scrollIntoView({block:"center",behavior:"auto"});
+  }
+  requestAnimationFrame(scrollToUpdates);
+  setTimeout(scrollToUpdates,120);
+  setTimeout(scrollToUpdates,650);
+ },
  receiveAppVersion:function(version){
   app.version=String(version||app.version);
   if(app.view==="settings")renderSettings();
