@@ -181,6 +181,24 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn("if(queueOpen)renderQueue();", HTML)
         self.assertIn("drawer.inert=!queueOpen;", HTML)
 
+    def test_offscreen_constellation_artwork_is_reclaimed(self):
+        self.assertIn('function observeSongArtwork(){', HTML)
+        self.assertIn('new IntersectionObserver(entries=>{', HTML)
+        self.assertIn("rootMargin:'350px 0px 350px 0px'", HTML)
+        self.assertIn('else if(art.firstElementChild)art.replaceChildren();', HTML)
+        self.assertIn('    observeSongArtwork();', HTML)
+        self.assertIn('art.innerHTML=constellationArtwork(art.dataset.trackId', HTML)
+        self.assertNotIn('${constellationArtwork(t.id)}</div>', HTML)
+
+    def test_offscreen_visual_effects_pause_without_quality_loss(self):
+        self.assertIn("document.body.classList.contains('wrld-reactive-expanded')", HTML)
+        self.assertIn("window.dispatchEvent(new Event('wrld-reactive-visibility'))", HTML)
+        self.assertIn('if(visualizerFrame)cancelAnimationFrame(visualizerFrame);', HTML)
+        self.assertIn('if(starFrame)cancelAnimationFrame(starFrame);', HTML)
+        self.assertIn('canvas.width=1;canvas.height=1;', HTML)
+        self.assertIn('const frameMs=1000/(document.hasFocus()?STAR_FPS:5);', HTML)
+        self.assertIn('const interval=!document.hasFocus()?250:playing?33:250;', HTML)
+
     def test_integrated_player_dock(self):
         self.assertIn('body:not(.wrld-settings-open) #playerDock.player.glass{', HTML)
         self.assertIn('border:0!important;border-top:1px solid rgba(255,255,255,.16)!important;', HTML)
