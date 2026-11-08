@@ -116,6 +116,14 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('bottom:var(--wrld-player-reserve)!important;', HTML)
         self.assertIn('body:not(.wrld-settings-open) .main{', HTML)
 
+    def test_white_progress_bars_and_clear_player_dock(self):
+        self.assertIn('background:radial-gradient(circle at 50% 45%,rgba(27,27,27,.22),rgba(5,5,5,.46) 80%)!important;', HTML)
+        self.assertIn('background:linear-gradient(90deg,#ededed,#fff 72%,#fff);', HTML)
+        self.assertIn('background:linear-gradient(90deg,#fff var(--progress,0%),rgba(255,255,255,.20) 0);', HTML)
+        self.assertIn('#playerDock .volume-shell input::-moz-range-progress{background:#fff}', HTML)
+        self.assertNotIn('#b6c4ff', HTML)
+        self.assertNotIn('#c9d4ff', HTML)
+
     def test_integrated_player_dock(self):
         self.assertIn('body:not(.wrld-settings-open) #playerDock.player.glass{', HTML)
         self.assertIn('border:0!important;border-top:1px solid rgba(255,255,255,.16)!important;', HTML)
