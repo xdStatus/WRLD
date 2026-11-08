@@ -155,6 +155,9 @@ jobs:
             echo "::error::$TAG already exists. Refusing to overwrite an existing signed release."
             exit 1
           fi
+          # Target the current default branch rather than an older workflow-changing
+          # commit. GitHub's workflow-file protection can reject release/tag
+          # creation with 403 even when the Actions token has Contents: write.
           gh release create "$TAG" android/dist/WRLD-Android-v2.0.00.apk android/dist/WRLD-Android-v2.0.00.apk.sha256 \
-            --target "$GITHUB_SHA" --title "WRLD Android v2.0.00" \
+            --target main --title "WRLD Android v2.0.00" \
             --notes "WRLD Android 2.0.00: major version release, retaining signed update compatibility, playback, WRLD Cloud, and existing UI."
