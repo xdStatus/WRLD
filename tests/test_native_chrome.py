@@ -79,6 +79,17 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('setPlayerWide(false);', HTML)
         self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
 
+    def test_monochrome_expander_and_library_actions(self):
+        self.assertIn('.visualizer-expand-tab svg{display:block;width:13px;height:13px;', HTML)
+        self.assertIn('background:linear-gradient(115deg,rgba(25,25,25,.91),rgba(12,12,12,.95))', HTML)
+        self.assertIn('id="visualizerExpandTab"', MARKUP)
+        self.assertIn('id="shuffleAllBtn"', MARKUP)
+        self.assertNotIn('id="newPlaylistBtn"', MARKUP)
+        self.assertNotIn("$('newPlaylistBtn')", HTML)
+        self.assertIn('background:rgba(160,160,160,.18)', HTML)
+        self.assertIn('background:rgba(180,180,180,.26)', HTML)
+        self.assertIn('id=\'createPlaylistCard\'', HTML)
+
     def test_monochrome_audio_reactive_and_tab_switches(self):
         self.assertIn('rgba(27,27,27,.55),rgba(5,5,5,.84)', HTML)
         self.assertIn('.wrld-outgoing-row.song{background:#121212;display:grid}', HTML)
