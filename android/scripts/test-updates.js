@@ -12,7 +12,7 @@ const service = read("android/app/src/main/java/com/wrld/player/PlaybackService.
 const activityManifest = read("android/app/src/main/AndroidManifest.xml");
 assert.doesNotMatch(activityManifest, /android.permission.POST_NOTIFICATIONS/,
   "Do not request Android app notification permissions");
-assert.doesNotMatch(activity, /UpdateNotificationWorker|testUpdateNotification|POST_NOTIFICATIONS/,
+assert.doesNotMatch(activity, /UpdateNotificationWorker|testUpdateNotification|POST_NOTIFICATIONS|fun openUpdates\(/,
   "Remove automatic app update notifications and test bridge");
 assert.doesNotMatch(ui, /data-test-update-notification|openUpdateSettings:function/,
   "Remove notification-only UI controls");
@@ -52,7 +52,6 @@ assert.match(ui, /app\.updates\.state==="current"\|\|app\.updates\.state==="erro
 
 assert.match(activity, /@JavascriptInterface fun checkForUpdates\(\)/);
 assert.match(activity, /@JavascriptInterface fun downloadUpdate\(\)/);
-assert.match(activity, /releases\/tag\/android-v\$\{appVersion\(\)\}/, "GitHub Releases in Android must open its own tagged APK release");
 assert.match(activity, /AndroidUpdateChecker\.check\(current\)/);
 assert.match(activity, /verifiedUpdateUrl = result\.downloadUrl/);
 assert.match(activity, /startsWith\("https:\/\/github\.com\/xdStatus\/WRLD\/releases\/download\/android-v"\)/);
