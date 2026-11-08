@@ -124,6 +124,15 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertNotIn('#b6c4ff', HTML)
         self.assertNotIn('#c9d4ff', HTML)
 
+    def test_up_next_queue_slides_above_fixed_player(self):
+        self.assertIn('body:not(.wrld-settings-open) #playerDock .queue-drawer{', HTML)
+        self.assertIn('position:absolute;left:12px;right:auto;bottom:calc(100% + 10px);', HTML)
+        self.assertIn('width:min(420px,calc(100% - 24px));max-height:calc(100vh - 265px);', HTML)
+        self.assertIn('body:not(.wrld-settings-open) #playerDock.queue-open .queue-drawer{', HTML)
+        self.assertIn('max-height:min(38vh,390px);overflow-y:auto;', HTML)
+        self.assertIn("if(queueOpen)renderQueue();", HTML)
+        self.assertIn("drawer.inert=!queueOpen;", HTML)
+
     def test_integrated_player_dock(self):
         self.assertIn('body:not(.wrld-settings-open) #playerDock.player.glass{', HTML)
         self.assertIn('border:0!important;border-top:1px solid rgba(255,255,255,.16)!important;', HTML)
