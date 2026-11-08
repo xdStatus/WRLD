@@ -539,8 +539,8 @@ html,body{width:100%;height:100%;min-width:0}
 .library-nav .collection-tab:after,.library-nav .collection-tab.active:after{display:none!important}
 .library-nav .collection-tab:active{transform:scale(.96)}
 .library-nav .new-playlist{margin-left:0;flex:none}
-.shuffle-all-btn{margin-left:auto;flex:none;height:31px;border:1px solid rgba(255,255,255,.22);border-radius:10px;background:rgba(255,255,255,.07);padding:0 10px;font-size:11px}
-.shuffle-all-btn:hover{background:rgba(255,255,255,.13)}
+.shuffle-all-btn{margin-left:auto;flex:none;height:31px;border:1px solid rgba(255,255,255,.29);border-radius:10px;background:rgba(160,160,160,.18);padding:0 10px;font-size:11px;color:#f1f1f1;box-shadow:inset 0 1px 0 rgba(255,255,255,.055)}
+.shuffle-all-btn:hover{background:rgba(180,180,180,.26);border-color:rgba(255,255,255,.42)}
 .shuffle-all-btn:disabled{opacity:.4;cursor:default}
 .tab-indicator{position:absolute;left:0;bottom:0;width:0;height:2px;pointer-events:none;background:#fff;border-radius:5px;box-shadow:0 0 12px #fff5;transform:translate3d(0,0,0);transition:transform .4s cubic-bezier(.2,.85,.22,1),width .4s cubic-bezier(.2,.85,.22,1)}
 .library-stage{display:flex;flex:1;flex-direction:column;min-height:0;overflow:hidden;transition:opacity .30s cubic-bezier(.22,1,.36,1),transform .36s cubic-bezier(.22,1,.36,1)}
@@ -1108,7 +1108,6 @@ body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
         <button class="collection-tab" id="tabPlaylists" role="tab" aria-selected="false" data-view="playlists">Playlists</button>
         <button class="collection-tab" id="tabHistory" role="tab" aria-selected="false" data-view="history">History</button>
         <button class="shuffle-all-btn" id="shuffleAllBtn" type="button" aria-label="Shuffle all songs" title="Shuffle every song on your computer">Shuffle All</button>
-        <button class="new-playlist" id="newPlaylistBtn" type="button" title="Create playlist" aria-label="Create playlist">+ New</button>
         <span class="tab-indicator" id="tabIndicator" aria-hidden="true"></span>
       </div>
       <div class="library-stage" id="libraryStage">
@@ -2000,7 +1999,6 @@ function updateCollectionNav(){
   $('backPlaylistsBtn').classList.toggle('hidden',state.view!=='playlist');
   $('renamePlaylistBtn').classList.toggle('hidden',state.view!=='playlist');
   $('deletePlaylistBtn').classList.toggle('hidden',state.view!=='playlist');
-  $('newPlaylistBtn').classList.toggle('hidden',state.view==='settings');
   $('settingsGear').classList.toggle('active',state.view==='settings');
   $('settingsGear').setAttribute('aria-pressed',String(state.view==='settings'));
 }
@@ -2514,7 +2512,6 @@ function openPlaylistDialog(mode='create',playlistId=null,trackId=null){
   $('playlistNameInput').value=mode==='rename'?(p?.name||''):'';
   $('playlistDialog').showModal();$('playlistNameInput').focus();
 }
-$('newPlaylistBtn').addEventListener('click',()=>openPlaylistDialog());
 $('renamePlaylistBtn').addEventListener('click',()=>{if(activePlaylist())openPlaylistDialog('rename',state.activePlaylist)});
 $('deletePlaylistBtn').addEventListener('click',async()=>{
   const p=activePlaylist();if(!p)return;
