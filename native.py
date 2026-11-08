@@ -156,6 +156,8 @@ class NativeAPI:
             win.resize(width, 1080)
             if step < steps:
                 time.sleep(0.016)
+        # Keep WRLD pinned to the left edge after every expand/collapse.
+        win.move(0, 0)
         return True
 
     def window_action(self, action):
