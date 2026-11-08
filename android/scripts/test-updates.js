@@ -9,6 +9,7 @@ const ui = read("android/app/src/main/assets/index.html");
 const activity = read("android/app/src/main/java/com/wrld/player/MainActivity.kt");
 const checker = read("android/app/src/main/java/com/wrld/player/AndroidUpdateChecker.kt");
 const service = read("android/app/src/main/java/com/wrld/player/PlaybackService.kt");
+const notificationWorker = read("android/app/src/main/java/com/wrld/player/UpdateNotificationWorker.kt");
 const gradle = read("android/app/build.gradle.kts");
 const workflow = read(".github/workflows/android.yml");
 const fingerprint = read("android/signing-cert.sha256").trim();
@@ -39,6 +40,14 @@ assert.match(activity, /Intent\(Intent\.ACTION_VIEW, android\.net\.Uri\.parse\(u
 assert.match(activity, /receiveAppVersion/);
 assert.match(activity, /receiveUpdateStatus/);
 
+assert.match(ui, /\[data-test-update-notification\]/, "Test notification button must be included in delegated click selector");
+assert.match(ui, /if\(b\.dataset\.testUpdateNotification\)\{call\("testUpdateNotification"\)/);
+assert.match(activity, /pendingNotificationTest = true/);
+assert.match(activity, /if \(requestCode == 21021\)/);
+assert.match(activity, /UpdateNotificationWorker\.showTestNotification\(this\)/);
+assert.match(notificationWorker, /fun showTestNotification\(context: Context\): Boolean/);
+assert.match(notificationWorker, /manager\.notify\(21022, notification\)/);
+assert.match(notificationWorker, /WRLD notifications are working/);
 assert.match(ui, /data-check-updates="1"/);
 assert.match(ui, /data-download-update="1"/);
 assert.match(ui, /receiveUpdateStatus:function\(data\)/);
