@@ -3192,12 +3192,14 @@ function setPlayerWide(wide){
  });
 }
 reactiveTab.addEventListener('click',async()=>{
- if(reactiveResizeBusy)return;
+ // Do not race a pin-button update against the native unpin/resize/repin.
+ if(reactiveResizeBusy||alwaysOnTopBusy)return;
  if(document.body.classList.contains('wrld-queue-open'))setQueueOpen(false);
  const expanded=!document.body.classList.contains('wrld-reactive-expanded');
  const api=nativeUI();
  reactiveResizeBusy=true;
  reactiveTab.disabled=true;
+ $('alwaysOnTopBtn').disabled=true;
  clearTimeout(reactiveRevealTimer);
  reactiveRevealTimer=0;
  try{
@@ -3245,6 +3247,7 @@ reactiveTab.addEventListener('click',async()=>{
  }finally{
   reactiveResizeBusy=false;
   reactiveTab.disabled=false;
+  $('alwaysOnTopBtn').disabled=false;
  }
 });
 function connectNativeChrome(){
