@@ -217,7 +217,22 @@ class NativeAPI:
         if not webview.windows: return False
         win = webview.windows[0]
         if action == 'minimize':
-            win.minimize()
+            # Use the native Windows window handle for a reliable taskbar minimize.
+            # The WebView and audio session stay alive; only rendering is hidden.
+            if sys.platform == 'win32':
+                import ctypes
+                from ctypes import wintypes
+                user32 = ctypes.windll.user32
+                user32.FindWindowW.restype = wintypes.HWND
+                user32.FindWindowW.argtypes = (wintypes.LPCWSTR, wintypes.LPCWSTR)
+                hwnd = user32.FindWindowW(None, 'WRLD')
+                if hwnd:
+                    SW_MINIMIZE = 6
+                    user32.ShowWindow(hwnd, SW_MINIMIZE)
+                else:
+                    win.minimize()
+            else:
+                win.minimize()
         elif action == 'maximize':
             if self._window_maximized:
                 win.restore()
