@@ -76,7 +76,7 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('wrld-reactive-revealed', HTML)
         self.assertIn('clip-path:inset(50% 0 50% 0);', HTML)
         self.assertIn('clip-path .75s cubic-bezier(.22,1,.36,1)', HTML)
-        self.assertIn('clip-path:inset(0 0 0 0);pointer-events:auto;', HTML)
+        self.assertIn('visibility:visible;clip-path:inset(0 0 0 0);pointer-events:auto;', HTML)
         self.assertIn('const nextWidth=Math.max(1,canvas.clientWidth);', HTML)
         self.assertIn('const nextHeight=Math.max(1,canvas.clientHeight);', HTML)
         self.assertIn('transition-delay:0s;', HTML)
@@ -96,9 +96,15 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('setPlayerWide(false);', HTML)
         self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
 
+    def test_audio_reactive_expander_remains_visible(self):
+        self.assertIn('color:rgba(255,255,255,.92);cursor:pointer;', HTML)
+        self.assertIn('display:block;width:5px;height:40px;border-radius:999px;', HTML)
+        self.assertIn('visibility:visible;clip-path:inset(0 0 0 0);pointer-events:auto;', HTML)
+        self.assertIn("document.body.classList.add('wrld-reactive-revealed');", HTML)
+
     def test_monochrome_expander_and_library_actions(self):
         self.assertIn('.visualizer-expand-tab span{', HTML)
-        self.assertIn('display:block;width:3px;height:30px;border-radius:999px;', HTML)
+        self.assertIn('display:block;width:5px;height:40px;border-radius:999px;', HTML)
         self.assertIn('background:transparent;box-shadow:none;', HTML)
         self.assertNotIn('<svg viewBox="0 0 16 16"><path d="m6 3.5 4.5 4.5L6 12.5"/></svg>', MARKUP)
         self.assertIn('id="visualizerExpandTab"', MARKUP)
