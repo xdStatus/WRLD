@@ -29,6 +29,11 @@ assert.match(checker, /optString\("tag_name"\)/);
 assert.match(checker, /assets\.length\(\)/);
 assert.match(checker, /hasVerifiedAsset/);
 assert.match(checker, /latestVersion > installed/);
+assert.match(checker, /tag\.removePrefix\("android-v"\)/, "Keep zero-padded release versions intact");
+assert.match(checker, /val file = "WRLD-Android-v\$\{releaseVersion\}\.apk"/);
+assert.doesNotMatch(checker, /if \(tag != label\) continue/, "Never reject padded version tags after numeric normalization");
+assert.match(ui, /app\.updates\.state==="current"\|\|app\.updates\.state==="error"/, "Show feedback even when up-to-date");
+
 
 assert.match(activity, /@JavascriptInterface fun checkForUpdates\(\)/);
 assert.match(activity, /@JavascriptInterface fun downloadUpdate\(\)/);
