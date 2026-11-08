@@ -893,21 +893,21 @@ body:not(.wrld-reactive-expanded) .app{max-width:400px}
 body:not(.wrld-settings-open) .app{transition:none}
 /* Keep the entire library and header at 400px; only the bottom track player
    shares the full 800px window while expanded. */
-body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
+body.wrld-player-wide:not(.wrld-settings-open) #playerDock{
  position:fixed;z-index:6;left:12px;right:12px;bottom:12px;width:auto;
  max-width:none;margin:0;
  grid-template-columns:minmax(0,180px) minmax(0,1fr) minmax(95px,140px);
  gap:8px 12px;
 }
-body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-left{grid-column:1;grid-row:1 / 3}
-body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .center{grid-column:2;grid-row:1 / 3}
-body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right{grid-column:3;grid-row:1 / 3;width:100%;max-width:none}
+body.wrld-player-wide:not(.wrld-settings-open) #playerDock .player-left{grid-column:1;grid-row:1 / 3}
+body.wrld-player-wide:not(.wrld-settings-open) #playerDock .center{grid-column:2;grid-row:1 / 3}
+body.wrld-player-wide:not(.wrld-settings-open) #playerDock .player-right{grid-column:3;grid-row:1 / 3;width:100%;max-width:none}
 body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:245px}
-body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
+body.wrld-player-wide:not(.wrld-settings-open) #playerDock{
  height:215px;min-height:215px;padding:23px 22px;
 }
-body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right .volume-value{display:block}
-body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right .volume-label{display:none}
+body.wrld-player-wide:not(.wrld-settings-open) #playerDock .player-right .volume-value{display:block}
+body.wrld-player-wide:not(.wrld-settings-open) #playerDock .player-right .volume-label{display:none}
 /* Keep the original 400px music column pinned to the left at every
    intermediate frame size. Auto-centering caused the collapse jump. */
 body:not(.wrld-settings-open) .app{
@@ -923,7 +923,7 @@ body:not(.wrld-settings-open) #playerDock{
  position:fixed;z-index:6;left:12px;right:12px;bottom:5px;
  width:auto;max-width:none;margin:0;
 }
-body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
+body.wrld-player-wide:not(.wrld-settings-open) #playerDock{
  height:215px;min-height:215px;padding:23px 22px;
 }
 body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:245px}
@@ -955,7 +955,7 @@ body:not(.wrld-settings-open) #playerDock .queue-grip{
  body:not(.wrld-settings-open) #playerDock.player.glass{
   padding-left:15px;padding-right:15px;
  }
- body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock.player.glass{
+ body.wrld-player-wide:not(.wrld-settings-open) #playerDock.player.glass{
   padding-left:24px;padding-right:24px;
  }
 }
@@ -1016,6 +1016,22 @@ body:not(.wrld-settings-open) .side{flex-shrink:0}
  body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{
   bottom:var(--wrld-player-reserve)!important;
  }
+}
+/* Player position transitions are coordinated with native resizing.
+   The 215px dock smoothly grows with the frame; only its control groups
+   change layout once the available width has settled. */
+body:not(.wrld-settings-open) #playerDock.player.glass{
+ transition:background .28s ease,border-color .28s ease,box-shadow .28s ease;
+}
+body:not(.wrld-settings-open) #playerDock .player-left,
+body:not(.wrld-settings-open) #playerDock .center,
+body:not(.wrld-settings-open) #playerDock .player-right{
+ will-change:transform;
+}
+@media(prefers-reduced-motion:reduce){
+ body:not(.wrld-settings-open) #playerDock .player-left,
+ body:not(.wrld-settings-open) #playerDock .center,
+ body:not(.wrld-settings-open) #playerDock .player-right{will-change:auto}
 }
 body.wrld-settings-open .visualizer-expand-tab,body.wrld-settings-open .wrld-reactive-panel{display:none!important}
 body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
@@ -3045,6 +3061,24 @@ function updateReactiveTab(expanded){
  reactiveTab.title=expanded?'Collapse audio reactive':'Expand audio reactive';
  $('reactivePanel').setAttribute('aria-hidden',String(!expanded));
 }
+/* Animate the actual positions of the three player groups, rather than
+   abruptly jumping between the slim two-row and extended three-column grid. */
+function setPlayerWide(wide){
+ const groups=['.player-left','.center','.player-right'].map(sel=>$('playerDock').querySelector(sel));
+ const before=groups.map(el=>el.getBoundingClientRect());
+ document.body.classList.toggle('wrld-player-wide',wide);
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ groups.forEach((el,i)=>{
+  const after=el.getBoundingClientRect();
+  const dx=before[i].left-after.left,dy=before[i].top-after.top;
+  if(Math.abs(dx)<1&&Math.abs(dy)<1)return;
+  if(el.getAnimations)el.getAnimations().forEach(animation=>animation.cancel());
+  el.animate([
+   {transform:`translate(${dx}px,${dy}px)`,opacity:.82},
+   {transform:'translate(0px,0px)',opacity:1}
+  ],{duration:460,easing:'cubic-bezier(.22,1,.36,1)'});
+ });
+}
 reactiveTab.addEventListener('click',async()=>{
  if(reactiveResizeBusy)return;
  const expanded=!document.body.classList.contains('wrld-reactive-expanded');
@@ -3065,6 +3099,7 @@ reactiveTab.addEventListener('click',async()=>{
     if(!resized)throw new Error('Window resize unavailable');
    }
    window.dispatchEvent(new Event('resize'));
+   setPlayerWide(true);
    // Open the complete blue frame vertically, 200ms after window expansion.
    reactiveRevealTimer=setTimeout(()=>{
     if(document.body.classList.contains('wrld-reactive-expanded')){
@@ -3076,6 +3111,7 @@ reactiveTab.addEventListener('click',async()=>{
    // Old CRT shutdown: collapse the ENTIRE panel to its center first,
    // then shrink the native window. No duplicated borders or stretched wave.
    document.body.classList.remove('wrld-reactive-revealed');
+   setPlayerWide(false);
    await new Promise(resolve=>setTimeout(resolve,750));
    document.body.classList.remove('wrld-reactive-expanded');
    updateReactiveTab(false);
@@ -3090,6 +3126,7 @@ reactiveTab.addEventListener('click',async()=>{
   reactiveRevealTimer=0;
   document.body.classList.toggle('wrld-reactive-expanded',!expanded);
   document.body.classList.toggle('wrld-reactive-revealed',!expanded);
+  document.body.classList.toggle('wrld-player-wide',!expanded);
   updateReactiveTab(!expanded);
   console.error('Could not change WRLD window width',error);
  }finally{
