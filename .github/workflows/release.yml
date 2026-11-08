@@ -138,4 +138,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ steps.release.outputs.tag }}"
-          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows ${tag}: v2 major release with 400px slim and 800px Audio Reactive modes, green PLAYING/red PAUSED indicators, Always on Top support, queue, music library, and WRLD Cloud. Preserves the working topmost-safe native window expansion."
+          gh release create "$tag" "dist/WRLD.exe" "dist/WRLD.exe.sha256" --target "${{ github.sha }}" --title "WRLD $tag" --notes "WRLD Windows ${tag}: WebView2 memory and idle-rendering optimization. Constellation art is only mounted near visible song rows; offscreen art is reclaimed, Audio Reactive pauses when collapsed or hidden, and the starfield releases its canvas when minimized. Foreground stars, waveform, spectrum, playback, and Always on Top stay intact."
