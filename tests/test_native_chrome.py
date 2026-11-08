@@ -14,7 +14,7 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('frameless=True', NATIVE)
         self.assertIn('easy_drag=False', NATIVE)
         self.assertIn("window.move(0, 0)", NATIVE)
-        self.assertIn("win.move(0, 0)", NATIVE)
+        self.assertIn('user32.MoveWindow(hwnd, 0, 0, width, height, True)', NATIVE)
         self.assertNotIn('pywebview-drag-region', MARKUP)
         self.assertIn('class="window-drag-strip" aria-hidden="true"', MARKUP)
         self.assertIn('pointer-events:none!important', HTML)
@@ -33,12 +33,14 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('ctypes.c_void_p(-1 if enabled else -2)', NATIVE)
         self.assertIn('0, 0, 0, 0, 0x0013', NATIVE)
 
-    def test_topmost_restored_after_audio_reactive_resize(self):
-        self.assertIn('was_pinned = self._always_on_top', NATIVE)
-        self.assertIn("self.set_always_on_top(False)['success']", NATIVE)
-        self.assertIn('if was_pinned:', NATIVE)
-        self.assertIn('time.sleep(0.15)', NATIVE)
-        self.assertIn('self.set_always_on_top(True)', NATIVE)
+    def test_topmost_preserved_during_audio_reactive_resize(self):
+        self.assertIn('user32.MoveWindow(', NATIVE)
+        self.assertIn('user32.GetWindowRect(', NATIVE)
+        self.assertIn('start = rect.right - rect.left', NATIVE)
+        self.assertIn('if not user32.MoveWindow(hwnd, 0, 0, width, height, True):', NATIVE)
+        resize_method = NATIVE.split('def set_visualizer_expanded(self, expanded):', 1)[1].split('def set_always_on_top(', 1)[0]
+        self.assertNotIn('set_always_on_top(', resize_method)
+        self.assertNotIn('win.resize(', resize_method)
         self.assertIn('if(reactiveResizeBusy||alwaysOnTopBusy)return;', HTML)
         self.assertIn(" $('alwaysOnTopBtn').disabled=true;", HTML)
         self.assertIn("  $('alwaysOnTopBtn').disabled=false;", HTML)
@@ -61,7 +63,7 @@ class NativeChromeContractTests(unittest.TestCase):
     def test_audio_visualizer_expands_into_right_panel(self):
         self.assertIn('def set_visualizer_expanded(self, expanded):', NATIVE)
         self.assertIn('target = 800 if expanded else 400', NATIVE)
-        self.assertIn('win.resize(width, 1080)', NATIVE)
+        self.assertIn('user32.MoveWindow(hwnd, 0, 0, width, height, True)', NATIVE)
         self.assertIn('time.sleep(0.016)', NATIVE)
         self.assertIn('id="visualizerExpandTab"', MARKUP)
         self.assertIn('id="reactivePanel"', MARKUP)
