@@ -9,21 +9,21 @@ const ui = read("android/app/src/main/assets/index.html");
 const activity = read("android/app/src/main/java/com/wrld/player/MainActivity.kt");
 const checker = read("android/app/src/main/java/com/wrld/player/AndroidUpdateChecker.kt");
 const service = read("android/app/src/main/java/com/wrld/player/PlaybackService.kt");
-const notificationWorker = read("android/app/src/main/java/com/wrld/player/UpdateNotificationWorker.kt");
-assert.match(notificationWorker, /putExtra\(OPEN_UPDATES_EXTRA, true\)/,
-  "Both update and test alerts must navigate into WRLD Settings");
-assert.match(notificationWorker, /Intent\(context, MainActivity::class\.java\)/);
-assert.match(notificationWorker, /FLAG_ACTIVITY_CLEAR_TOP/);
-assert.match(activity, /override fun onNewIntent\(newIntent: Intent\)/);
-assert.match(activity, /openUpdateSettingsIfRequested\(\)/);
-assert.match(activity, /window\.WRLD\.openUpdateSettings\(\)/);
-assert.match(ui, /openUpdateSettings:function\(\)/);
-assert.match(ui, /setView\("settings"\)/);
-assert.match(ui, /id="checkAndroidUpdates"/);
-assert.match(ui, /button\.scrollIntoView\(\{block:"center",behavior:"auto"\}\)/);
-assert.doesNotMatch(ui, /data-open-updates=/, "Remove the GitHub Releases button");
-assert.ok(ui.indexOf('data-test-update-notification="1"') > ui.indexOf('data-download-update="1"'),
-  "Place notification test below the update download control");
+const activityManifest = read("android/app/src/main/AndroidManifest.xml");
+assert.doesNotMatch(activityManifest, /android.permission.POST_NOTIFICATIONS/,
+  "Do not request Android app notification permissions");
+assert.doesNotMatch(activity, /UpdateNotificationWorker|testUpdateNotification|POST_NOTIFICATIONS/,
+  "Remove automatic app update notifications and test bridge");
+assert.doesNotMatch(ui, /data-test-update-notification|openUpdateSettings:function/,
+  "Remove notification-only UI controls");
+assert.match(activity, /clearLegacyUpdateNotifications\(\)/,
+  "Cancel update notification jobs left behind by older versions");
+assert.match(activity, /manager.cancel\(21021\)/);
+assert.match(activity, /manager.cancel\(21022\)/);
+assert.match(ui, /data-check-updates="1"/,
+  "Keep manual Android update checking available");
+assert.match(ui, /data-download-update="1"/,
+  "Keep manual verified APK downloading available");
 
 const gradle = read("android/app/build.gradle.kts");
 const workflow = read(".github/workflows/android.yml");
@@ -60,14 +60,6 @@ assert.match(activity, /Intent\(Intent\.ACTION_VIEW, android\.net\.Uri\.parse\(u
 assert.match(activity, /receiveAppVersion/);
 assert.match(activity, /receiveUpdateStatus/);
 
-assert.match(ui, /\[data-test-update-notification\]/, "Test notification button must be included in delegated click selector");
-assert.match(ui, /if\(b\.dataset\.testUpdateNotification\)\{call\("testUpdateNotification"\)/);
-assert.match(activity, /pendingNotificationTest = true/);
-assert.match(activity, /if \(requestCode == 21021\)/);
-assert.match(activity, /UpdateNotificationWorker\.showTestNotification\(this\)/);
-assert.match(notificationWorker, /fun showTestNotification\(context: Context\): Boolean/);
-assert.match(notificationWorker, /manager\.notify\(21022, notification\)/);
-assert.match(notificationWorker, /WRLD notifications are working/);
 assert.match(ui, /data-check-updates="1"/);
 assert.match(ui, /data-download-update="1"/);
 assert.match(ui, /receiveUpdateStatus:function\(data\)/);
