@@ -10,6 +10,21 @@ const activity = read("android/app/src/main/java/com/wrld/player/MainActivity.kt
 const checker = read("android/app/src/main/java/com/wrld/player/AndroidUpdateChecker.kt");
 const service = read("android/app/src/main/java/com/wrld/player/PlaybackService.kt");
 const notificationWorker = read("android/app/src/main/java/com/wrld/player/UpdateNotificationWorker.kt");
+assert.match(notificationWorker, /putExtra\(OPEN_UPDATES_EXTRA, true\)/,
+  "Both update and test alerts must navigate into WRLD Settings");
+assert.match(notificationWorker, /Intent\(context, MainActivity::class\.java\)/);
+assert.match(notificationWorker, /FLAG_ACTIVITY_CLEAR_TOP/);
+assert.match(activity, /override fun onNewIntent\(newIntent: Intent\)/);
+assert.match(activity, /openUpdateSettingsIfRequested\(\)/);
+assert.match(activity, /window\.WRLD\.openUpdateSettings\(\)/);
+assert.match(ui, /openUpdateSettings:function\(\)/);
+assert.match(ui, /setView\("settings"\)/);
+assert.match(ui, /id="checkAndroidUpdates"/);
+assert.match(ui, /button\.scrollIntoView\(\{block:"center",behavior:"auto"\}\)/);
+assert.doesNotMatch(ui, /data-open-updates=/, "Remove the GitHub Releases button");
+assert.ok(ui.indexOf('data-test-update-notification="1"') > ui.indexOf('data-download-update="1"'),
+  "Place notification test below the update download control");
+
 const gradle = read("android/app/build.gradle.kts");
 const workflow = read(".github/workflows/android.yml");
 const fingerprint = read("android/signing-cert.sha256").trim();
