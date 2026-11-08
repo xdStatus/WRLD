@@ -657,7 +657,7 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 .alphabet-rail{display:flex;flex:0 0 25px;flex-direction:column;justify-content:space-evenly;align-items:center;min-height:0;margin-right:8px;padding:3px 0;border-right:1px solid #ffffff16}
 .alphabet-letter{display:grid;place-items:center;flex:1 1 auto;width:21px;min-height:0;max-height:24px;border:0;border-radius:6px;padding:0;background:transparent;font-size:clamp(7px,1.13vh,10px);font-weight:620;color:#888;transition:background .2s,color .2s,text-shadow .2s,box-shadow .2s,transform .2s}
 .alphabet-letter:disabled{color:#363636;opacity:.7;cursor:default}
-.alphabet-letter:not(:disabled):hover,.alphabet-letter:not(:disabled):focus-visible{color:white;background:#ffffff24;text-shadow:0 0 10px #fff;box-shadow:0 0 14px #cde3ff55;transform:scale(1.2)}
+.alphabet-letter:not(:disabled):hover,.alphabet-letter:not(:disabled):focus-visible{color:white;background:#ffffff24;text-shadow:0 0 10px #fff;box-shadow:0 0 14px #dddddd44;transform:scale(1.2)}
 .alphabet-letter.is-current{color:white;text-shadow:0 0 8px #ffffffbc}
 .sort-tools{display:flex;align-items:center;gap:5px;min-width:0}
 .sort-flip{display:grid;place-items:center;width:29px;min-width:29px;height:29px;padding:0;border:1px solid #ffffff35;border-radius:8px;background:#ffffff0c;font-size:17px;transition:background .2s,box-shadow .2s}
@@ -674,7 +674,7 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 .header-settings:hover{background:rgba(255,255,255,.065)}
 @keyframes wrldDesktopGearSpin{to{transform:rotate(360deg)}}
 .song{grid-template-columns:42px minmax(0,1fr) 53px;min-height:65px}
-.song-art,.mini-art{display:grid;place-items:center;overflow:hidden;position:relative;flex:none;border:1px solid rgba(255,255,255,.15);border-radius:10px;background:radial-gradient(circle,#171b27,#080a10 80%)}
+.song-art,.mini-art{display:grid;place-items:center;overflow:hidden;position:relative;flex:none;border:1px solid rgba(255,255,255,.15);border-radius:10px;background:radial-gradient(circle,#191919,#080808 80%)}
 .song-art{width:40px;height:40px}
 .mini-art{width:42px;height:42px}
 .constellation-svg{width:100%;height:100%;display:block}
@@ -683,7 +683,7 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 .constellation-playing .constellation-bright{animation:wrldConstellationTwinkle 3.5s ease-in-out infinite alternate}
 @keyframes wrldConstellationDrift{from{transform:translate(-1px,1px) rotate(-1deg)}to{transform:translate(1.5px,-1.5px) rotate(1deg)}}
 @keyframes wrldConstellationTwinkle{from{opacity:.6}to{opacity:1}}
-.visualizer-wrap{background:radial-gradient(circle at 50% 45%,rgba(28,36,57,.5),rgba(4,7,13,.82) 80%);border-radius:15px}
+.visualizer-wrap{background:radial-gradient(circle at 50% 45%,rgba(27,27,27,.55),rgba(5,5,5,.84) 80%);border-radius:15px}
 #visualizer{position:absolute;inset:36px 18px 38px;width:auto;height:auto;display:grid;place-items:center;min-height:0;overflow:hidden}
 #visualizer .constellation-svg{width:min(85%,310px);height:100%;object-fit:contain}
 .visualizer-head,.visualizer-footer{z-index:2}
@@ -711,8 +711,8 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 /* Android-matched navigation: isolated transparent rows, not opaque page clones. */
 .wrld-row-overlay{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none;background:transparent}
 .wrld-outgoing-row{will-change:transform,opacity;pointer-events:none;box-shadow:none!important}
-.wrld-outgoing-row.song{background:#11131a;display:grid}
-.wrld-outgoing-row.playlist-card{background:#11131a}
+.wrld-outgoing-row.song{background:#121212;display:grid}
+.wrld-outgoing-row.playlist-card{background:#121212}
 .now-playing-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:14px}
 .now-playing-top .now-badge{border-bottom:0;padding-bottom:0;flex:none}
 .now-listening{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right;min-width:0}
