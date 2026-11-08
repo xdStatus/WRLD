@@ -10,18 +10,16 @@ MARKUP = HTML.split('<body>', 1)[1].split('<script>', 1)[0]
 
 
 class NativeChromeContractTests(unittest.TestCase):
-    def test_frameless_header_only_drag(self):
+    def test_frameless_window_stays_left_and_cannot_be_dragged(self):
         self.assertIn('frameless=True', NATIVE)
         self.assertIn('easy_drag=False', NATIVE)
-        self.assertIn("DRAG_REGION_DIRECT_TARGET_ONLY", NATIVE)
-        drag_attributes = re.findall(r'class="([^"]*pywebview-drag-region[^"]*)"', MARKUP)
-        self.assertEqual(len(drag_attributes), 3)
-        self.assertIn('window-drag-strip pywebview-drag-region', drag_attributes)
-        self.assertIn('class="window-drag-strip pywebview-drag-region"', MARKUP)
-        self.assertIn('topbar glass pywebview-drag-region', drag_attributes)
-        self.assertIn('pywebview-drag-region', drag_attributes)
+        self.assertIn("window.move(0, 0)", NATIVE)
+        self.assertIn("win.move(0, 0)", NATIVE)
+        self.assertNotIn('pywebview-drag-region', MARKUP)
+        self.assertIn('class="window-drag-strip" aria-hidden="true"', MARKUP)
+        self.assertIn('pointer-events:none!important', HTML)
+        self.assertNotIn('title="Drag window"', MARKUP)
         self.assertNotIn('class="app pywebview-drag-region"', MARKUP)
-        self.assertNotIn('id="windowChrome"', MARKUP)
 
     def test_frameless_window_controls_hidden(self):
         for element_id in ('winMin', 'winMax', 'winClose', 'windowChrome'):
@@ -80,8 +78,10 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
 
     def test_monochrome_expander_and_library_actions(self):
-        self.assertIn('.visualizer-expand-tab svg{display:block;width:13px;height:13px;', HTML)
-        self.assertIn('background:linear-gradient(115deg,rgba(25,25,25,.91),rgba(12,12,12,.95))', HTML)
+        self.assertIn('.visualizer-expand-tab span{', HTML)
+        self.assertIn('display:block;width:3px;height:30px;border-radius:999px;', HTML)
+        self.assertIn('background:transparent;box-shadow:none;', HTML)
+        self.assertNotIn('<svg viewBox="0 0 16 16"><path d="m6 3.5 4.5 4.5L6 12.5"/></svg>', MARKUP)
         self.assertIn('id="visualizerExpandTab"', MARKUP)
         self.assertIn('id="shuffleAllBtn"', MARKUP)
         self.assertNotIn('id="newPlaylistBtn"', MARKUP)
