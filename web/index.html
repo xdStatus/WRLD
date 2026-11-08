@@ -1041,33 +1041,36 @@ body:not(.wrld-settings-open) .side{flex-shrink:0}
   bottom:var(--wrld-player-reserve)!important;
  }
 }
-/* Up Next opens above the fixed 215px player instead of growing downward
-   inside the dock, where it was clipped off-screen. Keep the queue anchored
-   to the music column in both slim and expanded window modes. */
-body:not(.wrld-settings-open) #playerDock .queue-drawer{
- position:absolute;left:12px;right:auto;bottom:calc(100% + 10px);
- width:min(420px,calc(100% - 24px));max-height:calc(100vh - 265px);
- z-index:10;display:grid;grid-template-rows:1fr;
+/* Up Next is portaled into a viewport layer, outside the translucent
+   player: WebView2 otherwise clips fixed descendants of backdrop-filter. */
+body:not(.wrld-settings-open) #queueDrawer.queue-drawer{
+ position:fixed;left:12px;right:auto;bottom:225px;top:auto;
+ width:min(376px,calc(100vw - 24px));max-height:calc(100vh - 260px);
+ z-index:42;display:grid;grid-template-rows:1fr;
  background:radial-gradient(circle at 50% 30%,rgba(31,31,31,.96),rgba(9,9,9,.98) 85%);
  border:1px solid rgba(255,255,255,.19);border-radius:15px;
  box-shadow:0 -12px 45px rgba(0,0,0,.5);
  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
- padding:12px 14px;
- opacity:0;visibility:hidden;pointer-events:none;
- transform:translateY(22px);
+ padding:12px 14px;box-sizing:border-box;
+ opacity:0;visibility:hidden;pointer-events:none;transform:translateY(22px);
  transition:transform .44s cubic-bezier(.22,1,.36,1),opacity .27s ease,visibility 0s linear .44s;
 }
-body:not(.wrld-settings-open) #playerDock.queue-open .queue-drawer{
- opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
- transition-delay:0s;
+body.wrld-queue-open:not(.wrld-settings-open) #queueDrawer.queue-drawer{
+ opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);transition-delay:0s;
 }
-body:not(.wrld-settings-open) #playerDock .queue-drawer-inner{min-height:0;overflow:hidden}
-body:not(.wrld-settings-open) #playerDock .queue-drawer-body{padding:0 2px 5px}
-body:not(.wrld-settings-open) #playerDock .queue-list{
+/* Expanded queue appears over the right-hand Audio Reactive frame, never
+   below the player controls or outside the native viewport. */
+body.wrld-reactive-expanded:not(.wrld-settings-open) #queueDrawer.queue-drawer{
+ left:414px;right:14px;bottom:calc(var(--wrld-player-reserve,264px) + 14px);
+ width:auto;max-height:calc(100vh - var(--wrld-player-reserve,264px) - 46px);
+}
+body:not(.wrld-settings-open) #queueDrawer .queue-drawer-inner{min-height:0;overflow:hidden}
+body:not(.wrld-settings-open) #queueDrawer .queue-drawer-body{padding:0 2px 5px}
+body:not(.wrld-settings-open) #queueDrawer .queue-list{
  max-height:min(38vh,390px);overflow-y:auto;overscroll-behavior:contain;
 }
 @media(prefers-reduced-motion:reduce){
- body:not(.wrld-settings-open) #playerDock .queue-drawer{transition:none!important}
+ body:not(.wrld-settings-open) #queueDrawer.queue-drawer{transition:none!important}
 }
 
 /* Player position transitions are coordinated with native resizing.
@@ -2327,10 +2330,14 @@ function cycleRepeat(){
 }
 renderRepeat();
 let queueOpen=false,queueShown=0,queueEntries=[];
+// Move the queue above the blurred player in the DOM so its fixed placement
+// is relative to the window, not to the player dock.
+document.body.appendChild($('queueDrawer'));
 function setQueueOpen(value){
  if(value&&!state.currentId){toast('Select a song to view the queue');return}
  queueOpen=!!value;
  $('playerDock').classList.toggle('queue-open',queueOpen);
+ document.body.classList.toggle('wrld-queue-open',queueOpen);
  const drawer=$('queueDrawer');
  drawer.setAttribute('aria-hidden',String(!queueOpen));
  drawer.inert=!queueOpen;
@@ -3148,6 +3155,7 @@ function setPlayerWide(wide){
 }
 reactiveTab.addEventListener('click',async()=>{
  if(reactiveResizeBusy)return;
+ if(document.body.classList.contains('wrld-queue-open'))setQueueOpen(false);
  const expanded=!document.body.classList.contains('wrld-reactive-expanded');
  const api=nativeUI();
  reactiveResizeBusy=true;
