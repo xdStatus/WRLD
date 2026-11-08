@@ -103,6 +103,7 @@ class NativeAPI:
 
     def __init__(self):
         self._window_maximized = False
+        self._always_on_top = False
 
     def choose_folder(self) -> str:
         import webview
@@ -159,6 +160,24 @@ class NativeAPI:
         # Keep WRLD pinned to the left edge after every expand/collapse.
         win.move(0, 0)
         return True
+
+    def set_always_on_top(self, enabled):
+        """Toggle topmost status without moving/resizing the frameless window."""
+        import ctypes
+        import webview
+        if not webview.windows:
+            return {'enabled': self._always_on_top, 'success': False}
+        hwnd = ctypes.windll.user32.FindWindowW(None, 'WRLD')
+        if not hwnd:
+            return {'enabled': self._always_on_top, 'success': False}
+        # HWND_TOPMOST = -1; HWND_NOTOPMOST = -2.
+        # NOMOVE | NOSIZE | NOACTIVATE: preserve left anchor and size.
+        success = bool(ctypes.windll.user32.SetWindowPos(
+            hwnd, -1 if enabled else -2, 0, 0, 0, 0, 0x0013
+        ))
+        if success:
+            self._always_on_top = bool(enabled)
+        return {'enabled': self._always_on_top, 'success': success}
 
     def window_action(self, action):
         import webview
