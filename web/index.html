@@ -1038,6 +1038,35 @@ body:not(.wrld-settings-open) .side{flex-shrink:0}
   bottom:var(--wrld-player-reserve)!important;
  }
 }
+/* Up Next opens above the fixed 215px player instead of growing downward
+   inside the dock, where it was clipped off-screen. Keep the queue anchored
+   to the music column in both slim and expanded window modes. */
+body:not(.wrld-settings-open) #playerDock .queue-drawer{
+ position:absolute;left:12px;right:auto;bottom:calc(100% + 10px);
+ width:min(420px,calc(100% - 24px));max-height:calc(100vh - 265px);
+ z-index:10;display:grid;grid-template-rows:1fr;
+ background:radial-gradient(circle at 50% 30%,rgba(31,31,31,.96),rgba(9,9,9,.98) 85%);
+ border:1px solid rgba(255,255,255,.19);border-radius:15px;
+ box-shadow:0 -12px 45px rgba(0,0,0,.5);
+ backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+ padding:12px 14px;
+ opacity:0;visibility:hidden;pointer-events:none;
+ transform:translateY(22px);
+ transition:transform .44s cubic-bezier(.22,1,.36,1),opacity .27s ease,visibility 0s linear .44s;
+}
+body:not(.wrld-settings-open) #playerDock.queue-open .queue-drawer{
+ opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
+ transition-delay:0s;
+}
+body:not(.wrld-settings-open) #playerDock .queue-drawer-inner{min-height:0;overflow:hidden}
+body:not(.wrld-settings-open) #playerDock .queue-drawer-body{padding:0 2px 5px}
+body:not(.wrld-settings-open) #playerDock .queue-list{
+ max-height:min(38vh,390px);overflow-y:auto;overscroll-behavior:contain;
+}
+@media(prefers-reduced-motion:reduce){
+ body:not(.wrld-settings-open) #playerDock .queue-drawer{transition:none!important}
+}
+
 /* Player position transitions are coordinated with native resizing.
    The 215px dock smoothly grows with the frame; only its control groups
    change layout once the available width has settled. */
