@@ -768,14 +768,7 @@ class MainActivity : Activity() {
             }
         }
 
-        @JavascriptInterface fun openUpdates() {
-            runOnUiThread {
-                try {
-                    val target = android.net.Uri.parse("https://github.com/xdStatus/WRLD/releases/tag/android-v${appVersion()}")
-                    startActivity(Intent(Intent.ACTION_VIEW, target))
-                } catch (_: Exception) { showError("No browser is available.") }
-            }
-        }
+
     }
 
     override fun onDestroy() {
