@@ -149,17 +149,29 @@ class NativeAPI:
         target = 800 if expanded else 400
         start = 400 if expanded else 800
         steps = 12
-        for step in range(1, steps + 1):
-            progress = step / steps
-            # Ease in/out without changing music playback or the window origin.
-            eased = progress * progress * (3 - 2 * progress)
-            width = round(start + (target - start) * eased)
-            win.resize(width, 1080)
-            if step < steps:
-                time.sleep(0.016)
-        # Keep WRLD pinned to the left edge after every expand/collapse.
-        win.move(0, 0)
-        return True
+        was_pinned = self._always_on_top
+        if was_pinned:
+            # Topmost frameless WebView2 windows can misrender during resize.
+            # Temporarily remove topmost status before changing dimensions.
+            if not self.set_always_on_top(False)['success']:
+                return False
+        try:
+            for step in range(1, steps + 1):
+                progress = step / steps
+                # Ease in/out without changing music playback or window origin.
+                eased = progress * progress * (3 - 2 * progress)
+                width = round(start + (target - start) * eased)
+                win.resize(width, 1080)
+                if step < steps:
+                    time.sleep(0.016)
+            # Keep WRLD pinned to the left edge after every expand/collapse.
+            win.move(0, 0)
+            return True
+        finally:
+            if was_pinned:
+                # Let WebView2 finish repainting at its new size, then repin.
+                time.sleep(0.15)
+                self.set_always_on_top(True)
 
     def set_always_on_top(self, enabled):
         """Toggle topmost status without moving/resizing the frameless window."""
