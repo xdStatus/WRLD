@@ -9,8 +9,8 @@ android {
         applicationId = "com.wrld.player"
         minSdk = 26
         targetSdk = 35
-        versionCode = 53
-        versionName = "2.0.04"
+        versionCode = 54
+        versionName = "2.0.05"
     }
     // Release APKs are signed only when CI supplies the permanent private
     // keystore through secrets. Local debug builds still work without it.
