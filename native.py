@@ -213,17 +213,27 @@ def run_desktop() -> None:
         window = webview.create_window(
             'WRLD', address, js_api=NativeAPI(), width=window_width, height=window_height,
             min_size=(400, 480), resizable=True, frameless=True,
-            easy_drag=False, shadow=True,
+            easy_drag=False, shadow=False,
             background_color='#050505', text_select=False, zoomable=False,
         )
 
         def enforce_portrait_window():
-            # Apply the requested native frame dimensions after WinForms/WebView2
-            # creates the actual window; this is separate from the CSS layout.
-            # Do this only at launch, so manual resizing stays under user control.
+            # Remove Windows 11's rounded native corners. The CSS is already
+            # square, but DWM otherwise clips the frameless window and lets
+            # desktop pixels peek through at its top and left edges.
+            try:
+                hwnd = ctypes.windll.user32.FindWindowW(None, 'WRLD')
+                if hwnd:
+                    dwm_corner_preference = ctypes.c_int(1)  # DWMWCP_DONOTROUND
+                    ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                        hwnd, 33, ctypes.byref(dwm_corner_preference),
+                        ctypes.sizeof(dwm_corner_preference)
+                    )
+            except (AttributeError, OSError):
+                # Older Windows versions do not expose this DWM setting.
+                pass
+            # Keep the native frame flush with the primary screen's top-left.
             window.resize(window_width, window_height)
-            # Anchor the window at the primary display's top-left on launch.
-            # Users may freely drag it to another position afterward.
             window.move(0, 0)
         # Use the built-in Windows WebView2 renderer — no browser process window.
         # Keep UI preferences such as repeat mode and volume between launches.
