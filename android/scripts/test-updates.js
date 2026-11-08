@@ -20,6 +20,12 @@ assert.match(activity, /clearLegacyUpdateNotifications\(\)/,
   "Cancel update notification jobs left behind by older versions");
 assert.match(activity, /manager.cancel\(21021\)/);
 assert.match(activity, /manager.cancel\(21022\)/);
+const transport = ui.split('<div class="transport">', 2)[1]?.split('</div>', 1)[0] || "";
+const controls = ["repeatButton", "previousButton", "playButton", "nextButton", "likeButton"];
+const buttonOrder = [...transport.matchAll(/<button id="([^"]+)"/g)].map(match => match[1]);
+assert.deepEqual(buttonOrder, controls,
+  "Android player must place Repeat on the left and Like on the right");
+
 assert.match(ui, /data-check-updates="1"/,
   "Keep manual Android update checking available");
 assert.match(ui, /data-download-update="1"/,
