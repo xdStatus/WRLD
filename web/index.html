@@ -986,9 +986,12 @@ body:not(.wrld-settings-open) .side{flex-shrink:0}
    This keeps tracks and Now Playing above it rather than behind fixed controls. */
 @media(max-width:900px){
  /* Reserve the full dock height plus breathing room above it. */
+ /* In slim mode, leave a small clear gap above the 215px dock rather
+    than wasting 49px of the song-list area. */
  body:not(.wrld-settings-open){
-  --wrld-player-reserve:264px;
+  --wrld-player-reserve:228px;
  }
+ /* Keep expanded mode clearance unchanged for the Audio Reactive panel. */
  body.wrld-reactive-expanded:not(.wrld-settings-open){
   --wrld-player-reserve:264px;
  }
@@ -1008,7 +1011,10 @@ body:not(.wrld-settings-open) .side{flex-shrink:0}
  }
  body:not(.wrld-settings-open) .library-stage{min-height:0}
  body:not(.wrld-settings-open) .side{
-  flex:0 0 auto;min-height:0;margin-top:0;margin-bottom:12px;
+  flex:0 0 auto;min-height:0;margin-top:0;margin-bottom:0;
+ }
+ body.wrld-reactive-expanded:not(.wrld-settings-open) .side{
+  margin-bottom:12px;
  }
  body:not(.wrld-settings-open) #playerDock.player.glass{
   bottom:0;max-height:calc(100vh - 70px);
