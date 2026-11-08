@@ -135,6 +135,7 @@ class MainActivity : Activity() {
     }
     @Volatile private var verifiedUpdateUrl: String? = null
     private var pendingNotificationTest = false
+    private var pendingUpdateNavigation = false
 
     private fun appVersion(): String =
         packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0"
@@ -148,6 +149,7 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pendingUpdateNavigation = intent?.getBooleanExtra(UpdateNotificationWorker.OPEN_UPDATES_EXTRA, false) == true
         UpdateNotificationWorker.schedule(this)
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -183,6 +185,7 @@ class MainActivity : Activity() {
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     webReady = true
+                    openUpdateSettingsIfRequested()
                     sendCollections()
                     sendHistory()
                     sendAudioSettings()
@@ -335,6 +338,21 @@ class MainActivity : Activity() {
                 showError("Audio service could not start: " + (error.message ?: "unknown error"))
             }
         }, java.util.concurrent.Executor { command -> handler.post(command) })
+    }
+
+    private fun openUpdateSettingsIfRequested() {
+        if (!pendingUpdateNavigation || !webReady) return
+        pendingUpdateNavigation = false
+        sendScript("window.WRLD.openUpdateSettings();")
+    }
+
+    override fun onNewIntent(newIntent: Intent) {
+        super.onNewIntent(newIntent)
+        setIntent(newIntent)
+        if (newIntent.getBooleanExtra(UpdateNotificationWorker.OPEN_UPDATES_EXTRA, false)) {
+            pendingUpdateNavigation = true
+            openUpdateSettingsIfRequested()
+        }
     }
 
     private fun sendScript(script: String) {
