@@ -277,6 +277,12 @@ dialog{border-radius:10px}
 .visualizer-wrap:before{background:radial-gradient(ellipse 67% 48% at 50% 50%,rgba(255,255,255,.028),transparent 95%)}
 .visualizer-wrap.is-playing{border-color:rgba(255,255,255,.25)}
 .viz-status.is-playing .viz-indicator{background:#f0f0f0;box-shadow:0 0 8px rgba(255,255,255,.32)}
+/* Audio Reactive status only: positive playback in green, paused in red. */
+.wrld-reactive-panel .viz-status.is-playing{color:#74df97}
+.wrld-reactive-panel .viz-status.is-playing .viz-indicator{background:#58df84;box-shadow:0 0 9px rgba(88,223,132,.55)}
+.wrld-reactive-panel .viz-status.is-paused{color:#f17878}
+.wrld-reactive-panel .viz-status.is-paused .viz-indicator{background:#f06b6b;box-shadow:0 0 9px rgba(240,107,107,.45)}
+
 .viz-mode[aria-pressed="true"]:after,.now-playing-note .live-line{background:#e5e5e5}
 .seek-fill{background:linear-gradient(90deg,#bbb,#eee 60%,#fff)}
 .seek-head{box-shadow:0 0 8px 2px rgba(255,255,255,.44),0 0 18px 3px rgba(255,255,255,.15)}
@@ -2826,6 +2832,7 @@ function updateVisualizerLabels(){
  const t=currentTrack(),playing=!!t&&!audio.paused;
  $('visualizerWrap').classList.toggle('is-playing',playing);
  $('vizStatus').classList.toggle('is-playing',playing);
+ $('vizStatus').classList.toggle('is-paused',!!t&&!playing);
  $('vizStatusText').textContent=wrldAudioAnalysisError?'UNAVAILABLE':playing?'PLAYING':t?'PAUSED':'READY';
  updateDesktopConstellations();
 }
