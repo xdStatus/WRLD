@@ -21,6 +21,13 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertNotIn('title="Drag window"', MARKUP)
         self.assertNotIn('class="app pywebview-drag-region"', MARKUP)
 
+    def test_native_window_has_square_flush_edges(self):
+        self.assertIn('easy_drag=False, shadow=False', NATIVE)
+        self.assertIn('DWMWCP_DONOTROUND', NATIVE)
+        self.assertIn('DwmSetWindowAttribute(', NATIVE)
+        self.assertIn('hwnd, 33, ctypes.byref(dwm_corner_preference)', NATIVE)
+        self.assertIn('window.move(0, 0)', NATIVE)
+
     def test_frameless_window_controls_hidden(self):
         for element_id in ('winMin', 'winMax', 'winClose', 'windowChrome'):
             self.assertNotIn('id="' + element_id + '"', MARKUP)
