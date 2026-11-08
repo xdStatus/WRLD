@@ -125,10 +125,13 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertNotIn('#c9d4ff', HTML)
 
     def test_up_next_queue_slides_above_fixed_player(self):
-        self.assertIn('body:not(.wrld-settings-open) #playerDock .queue-drawer{', HTML)
-        self.assertIn('position:absolute;left:12px;right:auto;bottom:calc(100% + 10px);', HTML)
-        self.assertIn('width:min(420px,calc(100% - 24px));max-height:calc(100vh - 265px);', HTML)
-        self.assertIn('body:not(.wrld-settings-open) #playerDock.queue-open .queue-drawer{', HTML)
+        self.assertIn('body:not(.wrld-settings-open) #queueDrawer.queue-drawer{', HTML)
+        self.assertIn('position:fixed;left:12px;right:auto;bottom:225px;top:auto;', HTML)
+        self.assertIn('body.wrld-reactive-expanded:not(.wrld-settings-open) #queueDrawer.queue-drawer{', HTML)
+        self.assertIn('left:414px;right:14px;bottom:calc(var(--wrld-player-reserve,264px) + 14px);', HTML)
+        self.assertIn('body.wrld-queue-open:not(.wrld-settings-open) #queueDrawer.queue-drawer{', HTML)
+        self.assertIn("document.body.appendChild($('queueDrawer'));", HTML)
+        self.assertIn("document.body.classList.toggle('wrld-queue-open',queueOpen);", HTML)
         self.assertIn('max-height:min(38vh,390px);overflow-y:auto;', HTML)
         self.assertIn("if(queueOpen)renderQueue();", HTML)
         self.assertIn("drawer.inert=!queueOpen;", HTML)
