@@ -36,9 +36,14 @@ class UpdateNotificationWorker(context: Context, params: WorkerParameters) :
                 context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
                 return Result.success()
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (!manager.areNotificationsEnabled()) return Result.success()
             val channel = "wrld-app-updates"
-            if (Build.VERSION.SDK_INT >= 26)
-                manager.createNotificationChannel(NotificationChannel(channel, "WRLD app updates", NotificationManager.IMPORTANCE_DEFAULT))
+            if (Build.VERSION.SDK_INT >= 26) {
+                manager.createNotificationChannel(
+                    NotificationChannel(channel, "WRLD app updates", NotificationManager.IMPORTANCE_DEFAULT))
+                if (manager.getNotificationChannel(channel)?.importance == NotificationManager.IMPORTANCE_NONE)
+                    return Result.success()
+            }
             // Open WRLD's own Updates section instead of sending the user
             // straight to the browser. The in-app checker then presents the
             // verified Android APK download button.
@@ -113,12 +118,32 @@ class UpdateNotificationWorker(context: Context, params: WorkerParameters) :
                 "wrld-android-update-manual-test", ExistingWorkPolicy.REPLACE, request)
         }
 
+        /**
+         * Check on launch/return without polling on every brief app switch.
+         * WorkManager can defer execution for battery/network limits; this is
+         * not a real-time GitHub push notification.
+         */
+        fun checkOnForeground(context: Context) {
+            val prefs = context.getSharedPreferences("wrld-update-alerts", Context.MODE_PRIVATE)
+            val now = System.currentTimeMillis()
+            val last = prefs.getLong("last-foreground-check-ms", 0L)
+            if (last > 0 && now >= last && now - last < TimeUnit.MINUTES.toMillis(15)) return
+            prefs.edit().putLong("last-foreground-check-ms", now).apply()
+            val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+            val request = OneTimeWorkRequestBuilder<UpdateNotificationWorker>()
+                .setConstraints(constraints).build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                "wrld-android-update-foreground", ExistingWorkPolicy.KEEP, request)
+        }
+
         fun schedule(context: Context) {
             val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
-            val request = PeriodicWorkRequestBuilder<UpdateNotificationWorker>(12, TimeUnit.HOURS)
+            val request = PeriodicWorkRequestBuilder<UpdateNotificationWorker>(1, TimeUnit.HOURS)
                 .setConstraints(constraints).build()
+            // UPDATE applies the shorter interval to installations that already
+            // have the old 12-hour schedule registered under this work name.
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                "wrld-android-update-alert", ExistingPeriodicWorkPolicy.KEEP, request)
+                "wrld-android-update-alert", ExistingPeriodicWorkPolicy.UPDATE, request)
         }
     }
 }
