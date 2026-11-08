@@ -3192,7 +3192,7 @@ function setPlayerWide(wide){
  });
 }
 reactiveTab.addEventListener('click',async()=>{
- // Do not race a pin-button update against the native unpin/resize/repin.
+ // Keep pin changes separate from the native size-only resize operation.
  if(reactiveResizeBusy||alwaysOnTopBusy)return;
  if(document.body.classList.contains('wrld-queue-open'))setQueueOpen(false);
  const expanded=!document.body.classList.contains('wrld-reactive-expanded');
