@@ -1758,6 +1758,29 @@ function constellationArtwork(id){
  for(var n=0;n<points.length;n++){var p=points[n];dots+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+(p.r*2.5).toFixed(1)+'" fill="#dce8ff" opacity=".13"/><circle class="'+(n%3===0?'constellation-bright':'')+'" cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+p.r.toFixed(2)+'" fill="#f5f8ff"/>'}
  return '<svg class="constellation-svg" viewBox="0 0 100 100" aria-hidden="true"><g>'+background+'</g><g class="constellation-motion">'+lines+dots+'</g></svg>';
 }
+// Constellation SVGs are expensive in a large music library (one per row).
+// Keep the row layout intact, but mount the exact same artwork only while a
+// song is near the viewport, and reclaim its DOM when it leaves that area.
+let wrldSongArtObserver=null;
+function observeSongArtwork(){
+ if(wrldSongArtObserver){wrldSongArtObserver.disconnect();wrldSongArtObserver=null}
+ const arts=$('songList').querySelectorAll('.song-art');
+ function showArt(art){
+  if(art.firstElementChild)return;
+  art.innerHTML=constellationArtwork(art.dataset.trackId||'wrld');
+  art.classList.toggle('constellation-playing',
+   !document.hidden&&!audio.paused&&art.dataset.trackId===state.currentId);
+ }
+ if(!('IntersectionObserver' in window)){arts.forEach(showArt);return}
+ wrldSongArtObserver=new IntersectionObserver(entries=>{
+  for(const entry of entries){
+   const art=entry.target;
+   if(entry.isIntersecting)showArt(art);
+   else if(art.firstElementChild)art.replaceChildren();
+  }
+ },{root:null,rootMargin:'350px 0px 350px 0px',threshold:0});
+ arts.forEach(art=>wrldSongArtObserver.observe(art));
+}
 function updateDesktopConstellations(){
  const playing=!!state.currentId&&!audio.paused&&!document.hidden;
  document.querySelectorAll('.song-art').forEach(art=>art.classList.toggle('constellation-playing',playing&&art.dataset.trackId===state.currentId));
@@ -2177,9 +2200,16 @@ function applyFilter(){
   alphabetRail.classList.toggle('hidden',state.view!=='all'&&state.view!=='liked');
   $('settingsPanel').classList.toggle('hidden',!settingsView);
   $('countText').textContent=settingsView?'LOCAL':gridView?`${state.playlists.length} PLAYLIST${state.playlists.length===1?'':'S'}`:`${state.filtered.length} SONG${state.filtered.length===1?'':'S'}`;
-  if(settingsView){state.filtered=[];renderSettings();updateCollectionNav();return}
-  if(gridView){renderPlaylistGrid();$('emptyState').classList.add('hidden');}
+  if(settingsView){
+    if(wrldSongArtObserver){wrldSongArtObserver.disconnect();wrldSongArtObserver=null}
+    state.filtered=[];renderSettings();updateCollectionNav();return
+  }
+  if(gridView){
+    if(wrldSongArtObserver){wrldSongArtObserver.disconnect();wrldSongArtObserver=null}
+    renderPlaylistGrid();$('emptyState').classList.add('hidden');
+  }
   else if(!state.filtered.length){
+    if(wrldSongArtObserver){wrldSongArtObserver.disconnect();wrldSongArtObserver=null}
     list.replaceChildren();$('emptyState').classList.remove('hidden');
     $('emptyState').textContent=state.view==='history'?'No recently played songs. Play a track to start your history.':state.view==='liked'?'No liked songs yet. Use the heart beside any song to save it.':state.view==='playlist'?'Nothing here yet. Add a song using its + menu.':q?'No matching songs. Try another search.':'No songs found. Rescan or choose a folder.';
   }else{
@@ -2191,10 +2221,11 @@ function applyFilter(){
       row.dataset.id=t.id;
       row.title=t.title;
       const liked=state.liked.has(t.id);
-      row.innerHTML=`<div class="song-art" data-track-id="${clean(t.id)}">${constellationArtwork(t.id)}</div><div class="song-info"><div class="song-title">${clean(t.title)}</div><div class="song-sub">${clean(t.artist||'Juice WRLD')} · ${clean(t.format||'Audio')}</div></div><div class="song-format" title="Song length">${Number.isFinite(t.duration)&&t.duration>0?fmt(t.duration):'—'}</div><button class="song-tool like-action ${liked?'is-liked':''}" data-like="${clean(t.id)}" type="button" aria-label="${liked?'Unlike':'Like'} ${clean(t.title)}" aria-pressed="${liked}" title="${liked?'Remove from Liked Songs':'Like song'}">${heartSVG()}</button><button class="song-tool add-action" data-more="${clean(t.id)}" type="button" aria-label="Song options for ${clean(t.title)}" title="Add to playlist / options">${moreSVG()}</button>`;
+      row.innerHTML=`<div class="song-art" data-track-id="${clean(t.id)}"></div><div class="song-info"><div class="song-title">${clean(t.title)}</div><div class="song-sub">${clean(t.artist||'Juice WRLD')} · ${clean(t.format||'Audio')}</div></div><div class="song-format" title="Song length">${Number.isFinite(t.duration)&&t.duration>0?fmt(t.duration):'—'}</div><button class="song-tool like-action ${liked?'is-liked':''}" data-like="${clean(t.id)}" type="button" aria-label="${liked?'Unlike':'Like'} ${clean(t.title)}" aria-pressed="${liked}" title="${liked?'Remove from Liked Songs':'Like song'}">${heartSVG()}</button><button class="song-tool add-action" data-more="${clean(t.id)}" type="button" aria-label="Song options for ${clean(t.title)}" title="Add to playlist / options">${moreSVG()}</button>`;
       frag.appendChild(row);
     });
     list.replaceChildren(frag);
+    observeSongArtwork();
   }
   // Leave enough scrollable room to align even the final letter at the top.
   list.style.paddingBottom=state.filtered.length&&state.sort==='title'&&!state.sortReversed&&(state.view==='all'||state.view==='liked')?Math.max(0,$('listWrap').clientHeight)+'px':'0px';
