@@ -874,19 +874,19 @@ body.wrld-settings-open #settingsPanel.hidden{display:none!important}
    reachable against the left music column in both window widths. */
 .visualizer-expand-tab{
  position:fixed;z-index:30;top:50%;left:375px;transform:translateY(-50%);
- width:25px;height:64px;padding:0;display:grid;place-items:center;
+ width:25px;height:72px;padding:0;display:grid;place-items:center;
  border:0;border-radius:0;background:transparent;box-shadow:none;
- color:rgba(236,236,236,.64);cursor:pointer;
+ color:rgba(255,255,255,.92);cursor:pointer;
  transition:color .24s ease;
 }
 .visualizer-expand-tab:hover,.visualizer-expand-tab:focus-visible{background:transparent;color:#fff;border:0}
 .visualizer-expand-tab:focus-visible{outline:1px solid rgba(255,255,255,.4);outline-offset:0}
 .visualizer-expand-tab span{
- display:block;width:3px;height:30px;border-radius:999px;
- background:currentColor;box-shadow:0 0 7px rgba(255,255,255,.12);
- transition:height .3s cubic-bezier(.22,1,.36,1),background .25s ease;
+ display:block;width:5px;height:40px;border-radius:999px;
+ background:currentColor;box-shadow:0 0 10px rgba(255,255,255,.28);
+ transition:height .3s cubic-bezier(.22,1,.36,1),box-shadow .25s ease;
 }
-.visualizer-expand-tab:hover span{height:38px}
+.visualizer-expand-tab:hover span{height:47px;box-shadow:0 0 14px rgba(255,255,255,.42)}
 body.wrld-reactive-expanded .visualizer-expand-tab{left:375px}
 .wrld-reactive-panel{
  display:flex;flex-direction:column;position:fixed;left:400px;top:0;bottom:0;width:400px;
@@ -901,7 +901,7 @@ body.wrld-reactive-expanded .wrld-reactive-panel{
  visibility:visible;pointer-events:none;transition-delay:0s;
 }
 body.wrld-reactive-expanded.wrld-reactive-revealed .wrld-reactive-panel{
- clip-path:inset(0 0 0 0);pointer-events:auto;
+ visibility:visible;clip-path:inset(0 0 0 0);pointer-events:auto;
 }
 /* The blue-bordered visualizer fills the revealed panel at natural size.
    Its header, canvas and footer are never separately transformed. */
