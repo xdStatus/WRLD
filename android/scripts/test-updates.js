@@ -31,6 +31,7 @@ assert.match(checker, /latestVersion > installed/);
 
 assert.match(activity, /@JavascriptInterface fun checkForUpdates\(\)/);
 assert.match(activity, /@JavascriptInterface fun downloadUpdate\(\)/);
+assert.match(activity, /releases\/tag\/android-v\$\{appVersion\(\)\}/, "GitHub Releases in Android must open its own tagged APK release");
 assert.match(activity, /AndroidUpdateChecker\.check\(current\)/);
 assert.match(activity, /verifiedUpdateUrl = result\.downloadUrl/);
 assert.match(activity, /startsWith\("https:\/\/github\.com\/xdStatus\/WRLD\/releases\/download\/android-v"\)/);
