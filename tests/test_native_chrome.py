@@ -42,7 +42,7 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('body.wrld-reactive-expanded .wrld-reactive-panel{', HTML)
         self.assertIn('left:400px;top:0;bottom:0;width:400px', HTML)
         self.assertIn('body.wrld-reactive-expanded .app{width:400px', HTML)
-        self.assertIn('body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{', HTML)
+        self.assertIn('body.wrld-player-wide:not(.wrld-settings-open) #playerDock{', HTML)
         self.assertIn('body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:245px}', HTML)
         self.assertIn('body:not(.wrld-settings-open) .app{', HTML)
         self.assertIn('margin-left:0!important;margin-right:0!important;', HTML)
@@ -71,6 +71,12 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('clearTimeout(reactiveRevealTimer);', HTML)
         self.assertIn('api.set_visualizer_expanded(true)', HTML)
         self.assertIn('api.set_visualizer_expanded(false)', HTML)
+        self.assertIn('function setPlayerWide(wide){', HTML)
+        self.assertIn("document.body.classList.toggle('wrld-player-wide',wide)", HTML)
+        self.assertIn('const before=groups.map(el=>el.getBoundingClientRect());', HTML)
+        self.assertIn("duration:460,easing:'cubic-bezier(.22,1,.36,1)'", HTML)
+        self.assertIn('setPlayerWide(true);', HTML)
+        self.assertIn('setPlayerWide(false);', HTML)
         self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
 
     def test_now_playing_title_stays_with_heading(self):
