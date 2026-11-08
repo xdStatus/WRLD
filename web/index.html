@@ -697,11 +697,11 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 .wrld-listening-card{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:15px 17px;color:#ddd;font-size:12px}
 .wrld-listening-card output{font-variant-numeric:tabular-nums;color:#fff}
 .seek-shell .seek-track{height:4px;background:rgba(233,233,233,.24);border-radius:99px;transition:height .2s cubic-bezier(.22,1,.36,1)}
-.seek-shell .seek-fill{background:linear-gradient(90deg,#b6c4ff,#c9d4ff 72%,#fff);box-shadow:0 0 6px rgba(196,205,255,.2)}
+.seek-shell .seek-fill{background:linear-gradient(90deg,#f0f0f0,#ffffff 72%,#fff);box-shadow:0 0 6px rgba(255,255,255,.14)}
 .seek-shell:hover .seek-track,.seek-shell.is-scrubbing .seek-track{height:8px}
 .seek-shell:hover .seek-head,.seek-shell.is-scrubbing .seek-head{height:10px;box-shadow:0 0 10px 3px rgba(255,255,255,.56)}
-.volume-shell input::-webkit-slider-runnable-track{background:linear-gradient(90deg,#b6c4ff var(--progress,0%),rgba(233,233,233,.24) 0)}
-.volume-shell input::-webkit-slider-thumb{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.08),0 0 10px rgba(205,215,255,.36)}
+.volume-shell input::-webkit-slider-runnable-track{background:linear-gradient(90deg,#ffffff var(--progress,0%),rgba(233,233,233,.20) 0)}
+.volume-shell input::-webkit-slider-thumb{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.08),0 0 10px rgba(255,255,255,.26)}
 .player .queue-drawer{transition:grid-template-rows .54s cubic-bezier(.22,.7,.25,1),opacity .35s ease}
 .shuffle-all-btn{border-radius:11px;transition:background .2s,transform .2s,border-color .2s}
 .shuffle-all-btn:active{transform:scale(.96)}
@@ -727,9 +727,9 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 /* Replicate Android's seek glow, two trailing rays, tooltip and native slider behavior. */
 .seek-shell{height:32px;touch-action:none}
 .seek-shell .seek-track{height:4px;background:rgba(233,233,233,.24);border-radius:999px;transition:height .2s cubic-bezier(.22,1,.36,1)}
-.seek-shell .seek-fill{position:relative;height:100%;background:linear-gradient(90deg,#b6c4ff,#c9d4ff 72%,#fff);transition:width .1s linear;box-shadow:none}
+.seek-shell .seek-fill{position:relative;height:100%;background:linear-gradient(90deg,#f0f0f0,#ffffff 72%,#fff);transition:width .1s linear;box-shadow:none}
 .seek-shell .seek-head{position:absolute;right:0;top:50%;height:4px;width:3px;transform:translateY(-50%);border-radius:99px;background:#fff;box-shadow:0 0 3px rgba(255,255,255,.75);isolation:isolate}
-.seek-shell .seek-head::before,.seek-shell .seek-head::after{content:"";position:absolute;right:0;top:50%;width:calc(104px * var(--line-growth,0));height:16px;opacity:var(--line-growth,0);transform-origin:100% 50%;background:radial-gradient(ellipse 103px 7px at 100% 50%,rgba(255,255,255,.88) 0%,rgba(216,225,255,.44) 30%,rgba(181,198,255,.13) 65%,transparent 100%);filter:blur(6px);pointer-events:none;transition:width .1s linear,opacity .1s linear}
+.seek-shell .seek-head::before,.seek-shell .seek-head::after{content:"";position:absolute;right:0;top:50%;width:calc(104px * var(--line-growth,0));height:16px;opacity:var(--line-growth,0);transform-origin:100% 50%;background:radial-gradient(ellipse 103px 7px at 100% 50%,rgba(255,255,255,.88) 0%,rgba(232,232,232,.39) 30%,rgba(205,205,205,.11) 65%,transparent 100%);filter:blur(6px);pointer-events:none;transition:width .1s linear,opacity .1s linear}
 .seek-shell .seek-head::before{transform:translateY(-50%) rotate(-12deg)}
 .seek-shell .seek-head::after{transform:translateY(-50%) rotate(12deg)}
 .seek-shell.is-scrubbing .seek-track{height:6px;background:rgba(244,244,244,.29)}
@@ -951,7 +951,7 @@ body:not(.wrld-settings-open) #playerDock.player.glass{
  margin:0!important;
  border:0!important;border-top:1px solid rgba(255,255,255,.16)!important;
  border-radius:14px 14px 0 0!important;
- background:linear-gradient(180deg,rgba(29,29,29,.84) 0%,rgba(17,17,17,.94) 44%,rgba(7,7,7,.98) 100%)!important;
+ background:radial-gradient(circle at 50% 45%,rgba(27,27,27,.22),rgba(5,5,5,.46) 80%)!important;
  box-shadow:0 -14px 34px rgba(0,0,0,.21),inset 0 1px 0 rgba(255,255,255,.035)!important;
  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
 }
@@ -1054,6 +1054,23 @@ body:not(.wrld-settings-open) #playerDock .player-right{
  body:not(.wrld-settings-open) #playerDock .center,
  body:not(.wrld-settings-open) #playerDock .player-right{will-change:auto}
 }
+/* Transparent Audio Reactive-inspired player dock with true white sliders.
+   Applied to both 400px and 800px layouts without changing dock geometry. */
+body:not(.wrld-settings-open) #playerDock .seek-shell .seek-track{
+ background:rgba(255,255,255,.17);
+}
+body:not(.wrld-settings-open) #playerDock .seek-shell .seek-fill{
+ background:linear-gradient(90deg,#ededed,#fff 72%,#fff);
+ box-shadow:0 0 6px rgba(255,255,255,.12);
+}
+body:not(.wrld-settings-open) #playerDock .volume-shell input::-webkit-slider-runnable-track{
+ background:linear-gradient(90deg,#fff var(--progress,0%),rgba(255,255,255,.20) 0);
+}
+body:not(.wrld-settings-open) #playerDock .volume-shell input::-moz-range-track{background:rgba(255,255,255,.20)}
+body:not(.wrld-settings-open) #playerDock .volume-shell input::-moz-range-progress{background:#fff}
+body:not(.wrld-settings-open) #playerDock .volume-shell input::-webkit-slider-thumb,
+body:not(.wrld-settings-open) #playerDock .volume-shell input::-moz-range-thumb{background:#fff}
+
 body.wrld-settings-open .visualizer-expand-tab,body.wrld-settings-open .wrld-reactive-panel{display:none!important}
 body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
 @media(prefers-reduced-motion:reduce){.visualizer-expand-tab,.visualizer-expand-tab span,.wrld-reactive-panel,body:not(.wrld-settings-open) .app{transition:none!important}}
