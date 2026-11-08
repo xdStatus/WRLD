@@ -848,9 +848,9 @@ body.wrld-settings-open #settingsPanel.hidden{display:none!important}
 #starfield{left:0;right:auto;width:800px!important;height:100vh!important}
 .space-haze{left:0;right:auto;width:800px;height:100vh}
 @media(max-width:900px){
-  /* About 20% more height and space for the collapsed mini player. */
+  /* Match the expanded player's 215px height in the slim layout. */
   body:not(.wrld-settings-open) #playerDock{
-    min-height:156px;padding:14px 13px;
+    height:215px;min-height:215px;padding:23px 13px;
   }
   body:not(.wrld-settings-open) #playerDock .mini-art{width:40px;height:40px}
   body:not(.wrld-settings-open) #playerDock .play-main{width:44px;height:44px}
@@ -904,7 +904,7 @@ body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .center{grid-co
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right{grid-column:3;grid-row:1 / 3;width:100%;max-width:none}
 body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:245px}
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
- min-height:215px;padding:23px 22px;
+ height:215px;min-height:215px;padding:23px 22px;
 }
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right .volume-value{display:block}
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock .player-right .volume-label{display:none}
@@ -924,7 +924,7 @@ body:not(.wrld-settings-open) #playerDock{
  width:auto;max-width:none;margin:0;
 }
 body.wrld-reactive-expanded:not(.wrld-settings-open) #playerDock{
- min-height:215px;padding:23px 22px;
+ height:215px;min-height:215px;padding:23px 22px;
 }
 body.wrld-reactive-expanded:not(.wrld-settings-open) .wrld-reactive-panel{bottom:245px}
 
@@ -987,7 +987,7 @@ body:not(.wrld-settings-open) .side{flex-shrink:0}
 @media(max-width:900px){
  /* Reserve the full dock height plus breathing room above it. */
  body:not(.wrld-settings-open){
-  --wrld-player-reserve:200px;
+  --wrld-player-reserve:264px;
  }
  body.wrld-reactive-expanded:not(.wrld-settings-open){
   --wrld-player-reserve:264px;
