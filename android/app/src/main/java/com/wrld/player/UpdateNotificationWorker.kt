@@ -39,15 +39,20 @@ class UpdateNotificationWorker(context: Context, params: WorkerParameters) :
             val channel = "wrld-app-updates"
             if (Build.VERSION.SDK_INT >= 26)
                 manager.createNotificationChannel(NotificationChannel(channel, "WRLD app updates", NotificationManager.IMPORTANCE_DEFAULT))
-            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(update.downloadUrl)).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            // Open WRLD's own Updates section instead of sending the user
+            // straight to the browser. The in-app checker then presents the
+            // verified Android APK download button.
+            val intent = Intent(context, MainActivity::class.java).apply {
+                putExtra(OPEN_UPDATES_EXTRA, true)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             }
             val pending = PendingIntent.getActivity(context, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val notification = NotificationCompat.Builder(context, channel)
                 .setSmallIcon(R.drawable.ic_wrld)
                 .setContentTitle("WRLD Android v${update.latest} is available")
-                .setContentText("Tap to download the latest WRLD update.")
+                .setContentText("Tap to open WRLD Settings and download the update.")
                 .setContentIntent(pending)
                 .setAutoCancel(true)
                 .build()
@@ -60,6 +65,8 @@ class UpdateNotificationWorker(context: Context, params: WorkerParameters) :
     }
 
     companion object {
+        const val OPEN_UPDATES_EXTRA = "com.wrld.player.OPEN_UPDATES"
+
         /**
          * A real local test alert, independent of release availability/network.
          * It never claims that an update is available.
@@ -78,8 +85,11 @@ class UpdateNotificationWorker(context: Context, params: WorkerParameters) :
                 if (manager.getNotificationChannel(channel)?.importance == NotificationManager.IMPORTANCE_NONE)
                     return false
             }
-            val intent = Intent(context, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            val intent = Intent(context, MainActivity::class.java).apply {
+                putExtra(OPEN_UPDATES_EXTRA, true)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            }
             val pending = PendingIntent.getActivity(context, 1, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val notification = NotificationCompat.Builder(context, channel)
