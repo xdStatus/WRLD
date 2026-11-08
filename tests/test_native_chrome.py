@@ -108,6 +108,12 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('setPlayerWide(false);', HTML)
         self.assertIn('body.wrld-settings-open .visualizer-expand-tab', HTML)
 
+    def test_audio_reactive_playback_status_colors(self):
+        self.assertIn('.wrld-reactive-panel .viz-status.is-playing{color:#74df97}', HTML)
+        self.assertIn('.wrld-reactive-panel .viz-status.is-paused{color:#f17878}', HTML)
+        self.assertIn("$('vizStatus').classList.toggle('is-paused',!!t&&!playing);", HTML)
+        self.assertIn("playing?'PLAYING':t?'PAUSED':'READY'", HTML)
+
     def test_audio_reactive_expander_remains_visible(self):
         self.assertIn('color:rgba(255,255,255,.92);cursor:pointer;', HTML)
         self.assertIn('display:block;width:5px;height:40px;border-radius:999px;', HTML)
