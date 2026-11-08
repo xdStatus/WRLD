@@ -1151,7 +1151,8 @@ window.WRLD={
   if(!data)return;
   app.updates={state:String(data.state||"idle"),latest:String(data.latest||""),message:String(data.message||"")};
   if(app.view==="settings")renderSettings();
-  if(app.updates.state==="available"||app.updates.state==="error")notice(app.updates.message);
+  // Every manual check must end with visible feedback, even when up to date.
+  if(app.updates.state==="available"||app.updates.state==="current"||app.updates.state==="error")notice(app.updates.message);
  },
  receiveListeningTime:function(ms){
   app.listeningMs=Math.max(0,Number(ms)||0);
