@@ -673,6 +673,13 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 .header-settings.active{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.32);color:#fff}
 .header-settings:hover{background:rgba(255,255,255,.065)}
 @keyframes wrldDesktopGearSpin{to{transform:rotate(360deg)}}
+/* Pin control shares the Settings silhouette; only the gear rotates. */
+.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:none;margin-left:auto}
+.header-actions .header-settings{margin-left:0}
+.header-settings.always-on-top-toggle svg{animation:none;stroke-width:1.8}
+.header-settings.always-on-top-toggle[aria-pressed="true"]{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.52);color:#fff}
+.header-settings.always-on-top-toggle[aria-pressed="true"] svg{filter:drop-shadow(0 0 3px rgba(255,255,255,.32))}
+
 .song{grid-template-columns:42px minmax(0,1fr) 53px;min-height:65px}
 .song-art,.mini-art{display:grid;place-items:center;overflow:hidden;position:relative;flex:none;border:1px solid rgba(255,255,255,.15);border-radius:10px;background:radial-gradient(circle,#191919,#080808 80%)}
 .song-art{width:40px;height:40px}
@@ -1151,7 +1158,10 @@ body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
       <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="currentColor" fill="none" stroke-width="2"/><path d="m20 20-4.2-4.2" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/></svg>
       <input id="search" type="search" placeholder="Search your songs..." autocomplete="off">
     </label>
+    <div class="header-actions">
+      <button class="header-settings always-on-top-toggle" id="alwaysOnTopBtn" type="button" title="Keep WRLD on top" aria-label="Keep WRLD on top" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V7M7.5 11.5 12 7l4.5 4.5M5 4h14"/></svg></button>
     <button class="header-settings" id="settingsGear" type="button" title="Settings" aria-label="Open Settings" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.00 2.00 L13.52 4.35 L14.98 4.79 L17.56 3.69 L19.07 4.93 L18.49 7.67 L19.21 9.02 L21.81 10.05 L22.00 12.00 L19.65 13.52 L19.21 14.98 L20.31 17.56 L19.07 19.07 L16.33 18.49 L14.98 19.21 L13.95 21.81 L12.00 22.00 L10.48 19.65 L9.02 19.21 L6.44 20.31 L4.93 19.07 L5.51 16.33 L4.79 14.98 L2.19 13.95 L2.00 12.00 L4.35 10.48 L4.79 9.02 L3.69 6.44 L4.93 4.93 L7.67 5.51 L9.02 4.79 L10.05 2.19 Z"/><circle cx="12" cy="12" r="3.2"/></svg></button>
+    </div>
 
   </header>
 
@@ -2548,6 +2558,31 @@ async function changeLike(id,enabled){
 }
 $('nowLikeBtn').addEventListener('click',()=>{if(state.currentId)changeLike(state.currentId,!state.liked.has(state.currentId))});
 document.querySelectorAll('.collection-tab').forEach(tab=>tab.addEventListener('click',()=>setView(tab.dataset.view)));
+/* Windows topmost mode is controlled by the native host, not CSS z-index. */
+let alwaysOnTopBusy=false;
+$('alwaysOnTopBtn').addEventListener('click',async()=>{
+ if(alwaysOnTopBusy)return;
+ const btn=$('alwaysOnTopBtn');
+ const api=nativeUI();
+ if(!api?.set_always_on_top){toast('Always on Top is available in WRLD for Windows');return}
+ alwaysOnTopBusy=true;
+ btn.disabled=true;
+ const enabled=btn.getAttribute('aria-pressed')!=='true';
+ try{
+  const result=await api.set_always_on_top(enabled);
+  if(!result?.success)throw new Error('Could not change window stacking order');
+  const active=!!result.enabled;
+  btn.setAttribute('aria-pressed',String(active));
+  btn.setAttribute('aria-label',active?'Disable Always on Top':'Keep WRLD on top');
+  btn.title=active?'Always on Top enabled':'Keep WRLD on top';
+ }catch(error){
+  console.error('Always on Top failed',error);
+  toast('Could not change Always on Top');
+ }finally{
+  alwaysOnTopBusy=false;
+  btn.disabled=false;
+ }
+});
 let musicViewBeforeSettings='all';
 $('settingsGear').addEventListener('click',()=>{
  if(state.view==='settings')setView(musicViewBeforeSettings);
