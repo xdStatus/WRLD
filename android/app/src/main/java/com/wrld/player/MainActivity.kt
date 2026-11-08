@@ -1,6 +1,9 @@
 package com.wrld.player
 
 import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
+import androidx.work.WorkManager
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
@@ -134,8 +137,6 @@ class MainActivity : Activity() {
         }
     }
     @Volatile private var verifiedUpdateUrl: String? = null
-    private var pendingNotificationTest = false
-    private var pendingUpdateNavigation = false
 
     private fun appVersion(): String =
         packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0"
@@ -149,12 +150,9 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        pendingUpdateNavigation = intent?.getBooleanExtra(UpdateNotificationWorker.OPEN_UPDATES_EXTRA, false) == true
-        UpdateNotificationWorker.schedule(this)
-        if (Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 21021)
-        }
+        // Unregister legacy update-alert jobs from older WRLD versions and
+        // dismiss their existing notifications. Manual update checks remain.
+        clearLegacyUpdateNotifications()
         window.statusBarColor = Color.BLACK
         window.navigationBarColor = Color.BLACK
         collections = CollectionStore(this)
@@ -185,7 +183,6 @@ class MainActivity : Activity() {
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     webReady = true
-                    openUpdateSettingsIfRequested()
                     sendCollections()
                     sendHistory()
                     sendAudioSettings()
@@ -282,29 +279,22 @@ class MainActivity : Activity() {
         requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 21021) {
-            if (pendingNotificationTest) {
-                pendingNotificationTest = false
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    sendTestUpdateNotification()
-                } else {
-                    Toast.makeText(this, "Allow WRLD notifications in Android Settings to receive alerts.", Toast.LENGTH_LONG).show()
-                }
-            }
-            return
-        }
         if (requestCode != 100) return
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)
             loadLibrary()
         else sendScript("window.WRLD.permissionDenied();")
     }
 
-    private fun sendTestUpdateNotification() {
-        val posted = UpdateNotificationWorker.showTestNotification(this)
-        Toast.makeText(this,
-            if (posted) "WRLD test notification sent. Check your notification shade."
-            else "Notifications are blocked. Enable WRLD app updates in Android Settings.",
-            Toast.LENGTH_LONG).show()
+    private fun clearLegacyUpdateNotifications() {
+        val work = WorkManager.getInstance(this)
+        for (name in listOf(
+            "wrld-android-update-alert",
+            "wrld-android-update-foreground",
+            "wrld-android-update-manual-test"
+        )) work.cancelUniqueWork(name)
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.cancel(21021)
+        manager.cancel(21022)
     }
 
     private fun connectPlayer() {
@@ -338,21 +328,6 @@ class MainActivity : Activity() {
                 showError("Audio service could not start: " + (error.message ?: "unknown error"))
             }
         }, java.util.concurrent.Executor { command -> handler.post(command) })
-    }
-
-    private fun openUpdateSettingsIfRequested() {
-        if (!pendingUpdateNavigation || !webReady) return
-        pendingUpdateNavigation = false
-        sendScript("window.WRLD.openUpdateSettings();")
-    }
-
-    override fun onNewIntent(newIntent: Intent) {
-        super.onNewIntent(newIntent)
-        setIntent(newIntent)
-        if (newIntent.getBooleanExtra(UpdateNotificationWorker.OPEN_UPDATES_EXTRA, false)) {
-            pendingUpdateNavigation = true
-            openUpdateSettingsIfRequested()
-        }
     }
 
     private fun sendScript(script: String) {
@@ -744,18 +719,6 @@ class MainActivity : Activity() {
                 } else {
                     collections.toggleTrack(id, trackId)
                     sendCollections()
-                }
-            }
-        }
-
-        @JavascriptInterface fun testUpdateNotification() {
-            runOnUiThread {
-                if (Build.VERSION.SDK_INT >= 33 &&
-                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                    pendingNotificationTest = true
-                    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 21021)
-                } else {
-                    sendTestUpdateNotification()
                 }
             }
         }
