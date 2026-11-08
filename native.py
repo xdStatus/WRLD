@@ -140,38 +140,50 @@ class NativeAPI:
         return result
 
     def set_visualizer_expanded(self, expanded):
-        """Smoothly extend the native frame while leaving its top-left anchor fixed."""
+        """Resize at x=0 without ever changing the window's topmost state.
+
+        Windows MoveWindow changes only position/size, unlike toggling
+        HWND_TOPMOST or calling pywebview resize during a topmost transition.
+        """
+        import ctypes
+        from ctypes import wintypes
         import time
         import webview
         if not webview.windows:
             return False
-        win = webview.windows[0]
+        user32 = ctypes.windll.user32
+        user32.FindWindowW.restype = wintypes.HWND
+        user32.FindWindowW.argtypes = (wintypes.LPCWSTR, wintypes.LPCWSTR)
+        user32.GetWindowRect.restype = wintypes.BOOL
+        user32.GetWindowRect.argtypes = (wintypes.HWND, ctypes.POINTER(wintypes.RECT))
+        user32.MoveWindow.restype = wintypes.BOOL
+        user32.MoveWindow.argtypes = (
+            wintypes.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int,
+            ctypes.c_int, wintypes.BOOL
+        )
+        hwnd = user32.FindWindowW(None, 'WRLD')
+        if not hwnd:
+            return False
+        rect = wintypes.RECT()
+        if not user32.GetWindowRect(hwnd, ctypes.byref(rect)):
+            return False
         target = 800 if expanded else 400
-        start = 400 if expanded else 800
-        steps = 12
-        was_pinned = self._always_on_top
-        if was_pinned:
-            # Topmost frameless WebView2 windows can misrender during resize.
-            # Temporarily remove topmost status before changing dimensions.
-            if not self.set_always_on_top(False)['success']:
-                return False
-        try:
-            for step in range(1, steps + 1):
-                progress = step / steps
-                # Ease in/out without changing music playback or window origin.
-                eased = progress * progress * (3 - 2 * progress)
-                width = round(start + (target - start) * eased)
-                win.resize(width, 1080)
-                if step < steps:
-                    time.sleep(0.016)
-            # Keep WRLD pinned to the left edge after every expand/collapse.
-            win.move(0, 0)
+        start = rect.right - rect.left
+        height = rect.bottom - rect.top
+        if start == target and rect.left == 0 and rect.top == 0:
             return True
-        finally:
-            if was_pinned:
-                # Let WebView2 finish repainting at its new size, then repin.
-                time.sleep(0.15)
-                self.set_always_on_top(True)
+        steps = 12
+        for step in range(1, steps + 1):
+            progress = step / steps
+            eased = progress * progress * (3 - 2 * progress)
+            width = round(start + (target - start) * eased)
+            # MoveWindow preserves HWND_TOPMOST / HWND_NOTOPMOST, and does not
+            # activate, minimize, maximize, or recreate the native WebView.
+            if not user32.MoveWindow(hwnd, 0, 0, width, height, True):
+                return False
+            if step < steps:
+                time.sleep(0.016)
+        return True
 
     def set_always_on_top(self, enabled):
         """Toggle topmost status without moving/resizing the frameless window."""
