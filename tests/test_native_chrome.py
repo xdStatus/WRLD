@@ -48,8 +48,8 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('margin-left:0!important;margin-right:0!important;', HTML)
         self.assertIn('height:clamp(430px,calc(100vh - 490px),620px)', HTML)
         self.assertIn('position:fixed;z-index:6;left:12px;right:12px;bottom:5px;', HTML)
-        self.assertIn('min-height:156px;padding:14px 13px', HTML)
-        self.assertIn('min-height:215px;padding:23px 22px', HTML)
+        self.assertIn('height:215px;min-height:215px;padding:23px 13px', HTML)
+        self.assertIn('height:215px;min-height:215px;padding:23px 22px', HTML)
         self.assertIn('#starfield{left:0;right:auto;width:800px!important', HTML)
         self.assertIn('const sceneWidth=800;', HTML)
         self.assertIn('if(stars.length&&width===sceneWidth&&height===sceneHeight&&dpr===nextDpr)return;', HTML)
@@ -81,7 +81,7 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('body:not(.wrld-settings-open) .side{flex-shrink:0}', HTML)
 
     def test_player_space_reserved_in_both_modes(self):
-        self.assertIn('--wrld-player-reserve:200px;', HTML)
+        self.assertIn("body:not(.wrld-settings-open){\n  --wrld-player-reserve:264px;", HTML)
         self.assertIn('--wrld-player-reserve:264px;', HTML)
         self.assertIn('padding-bottom:var(--wrld-player-reserve)!important;', HTML)
         self.assertIn('margin-top:0;margin-bottom:12px;', HTML)
