@@ -134,6 +134,7 @@ class MainActivity : Activity() {
         }
     }
     @Volatile private var verifiedUpdateUrl: String? = null
+    private var pendingNotificationTest = false
 
     private fun appVersion(): String =
         packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0"
@@ -278,10 +279,29 @@ class MainActivity : Activity() {
         requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 21021) {
+            if (pendingNotificationTest) {
+                pendingNotificationTest = false
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    sendTestUpdateNotification()
+                } else {
+                    Toast.makeText(this, "Allow WRLD notifications in Android Settings to receive alerts.", Toast.LENGTH_LONG).show()
+                }
+            }
+            return
+        }
         if (requestCode != 100) return
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)
             loadLibrary()
         else sendScript("window.WRLD.permissionDenied();")
+    }
+
+    private fun sendTestUpdateNotification() {
+        val posted = UpdateNotificationWorker.showTestNotification(this)
+        Toast.makeText(this,
+            if (posted) "WRLD test notification sent. Check your notification shade."
+            else "Notifications are blocked. Enable WRLD app updates in Android Settings.",
+            Toast.LENGTH_LONG).show()
     }
 
     private fun connectPlayer() {
@@ -711,11 +731,14 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface fun testUpdateNotification() {
-            UpdateNotificationWorker.checkNow(applicationContext)
             runOnUiThread {
-                Toast.makeText(this@MainActivity,
-                    "Checking for a newer WRLD release. A notification appears if one is available.",
-                    Toast.LENGTH_LONG).show()
+                if (Build.VERSION.SDK_INT >= 33 &&
+                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    pendingNotificationTest = true
+                    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 21021)
+                } else {
+                    sendTestUpdateNotification()
+                }
             }
         }
 
