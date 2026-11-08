@@ -757,6 +757,11 @@ body.wrld-intro-running .brand h1.intro-final-reveal{visibility:visible!importan
 body.native-shell .brand h1.pywebview-drag-region .header-letter{pointer-events:none}
 @media(max-width:620px){.topbar .window-drag-strip{height:19px}}
 
+/* Window is anchored at screen x=0: no visual drag handles or grab cursor. */
+body.native-shell .topbar,body.native-shell .brand h1,
+body.native-shell .topbar .window-drag-strip{cursor:default!important}
+body.native-shell .topbar .window-drag-strip{height:0!important;min-height:0!important;pointer-events:none!important}
+
 /* Compact portrait layout: geometry only. Original WRLD colors, fonts, controls,
    stars, visualizers, audio logic and animations are intentionally unchanged. */
 @media (max-width:900px){
@@ -858,26 +863,24 @@ body.wrld-settings-open #settingsPanel.hidden{display:none!important}
 
 /* Expandable audio-reactive drawer, sharing the expanded width with the player.
    Preserve WRLD's existing monochrome surfaces and visualizer rendering. */
-/* Monochrome edge handle: quieter than a floating control, with the same
-   hit area and left-edge anchor in both native window sizes. */
+/* Small vertical progress-like handle. Its invisible 25x64 hit target stays
+   reachable against the left music column in both window widths. */
 .visualizer-expand-tab{
  position:fixed;z-index:30;top:50%;left:375px;transform:translateY(-50%);
- width:25px;height:68px;padding:0;display:grid;place-items:center;
- border:1px solid rgba(255,255,255,.13);border-right:0;
- border-radius:11px 0 0 11px;
- background:linear-gradient(115deg,rgba(25,25,25,.91),rgba(12,12,12,.95));
- color:rgba(245,245,245,.82);box-shadow:-3px 0 14px rgba(0,0,0,.16),inset 1px 0 rgba(255,255,255,.035);
- backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
- transition:background .24s ease,border-color .24s ease,color .24s ease;
+ width:25px;height:64px;padding:0;display:grid;place-items:center;
+ border:0;border-radius:0;background:transparent;box-shadow:none;
+ color:rgba(236,236,236,.64);cursor:pointer;
+ transition:color .24s ease;
 }
-.visualizer-expand-tab:hover,.visualizer-expand-tab:focus-visible{
- background:rgba(37,37,37,.97);border-color:rgba(255,255,255,.29);color:#fff;
+.visualizer-expand-tab:hover,.visualizer-expand-tab:focus-visible{background:transparent;color:#fff;border:0}
+.visualizer-expand-tab:focus-visible{outline:1px solid rgba(255,255,255,.4);outline-offset:0}
+.visualizer-expand-tab span{
+ display:block;width:3px;height:30px;border-radius:999px;
+ background:currentColor;box-shadow:0 0 7px rgba(255,255,255,.12);
+ transition:height .3s cubic-bezier(.22,1,.36,1),background .25s ease;
 }
-.visualizer-expand-tab:focus-visible{outline:1px solid rgba(255,255,255,.52);outline-offset:2px}
-.visualizer-expand-tab span{display:grid;place-items:center;transition:transform .4s cubic-bezier(.22,1,.36,1)}
-.visualizer-expand-tab svg{display:block;width:13px;height:13px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.visualizer-expand-tab:hover span{height:38px}
 body.wrld-reactive-expanded .visualizer-expand-tab{left:375px}
-body.wrld-reactive-expanded .visualizer-expand-tab span{transform:rotate(180deg)}
 .wrld-reactive-panel{
  display:flex;flex-direction:column;position:fixed;left:400px;top:0;bottom:0;width:400px;
  z-index:2;padding:18px 12px 18px 16px;overflow:hidden;border-left:1px solid rgba(255,255,255,.16);
@@ -1116,7 +1119,7 @@ body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
 </div>
 <canvas id="starfield" aria-hidden="true"></canvas>
 <div class="space-haze" aria-hidden="true"></div>
-<button id="visualizerExpandTab" class="visualizer-expand-tab" type="button" aria-label="Expand audio reactive visualizer" aria-expanded="false" aria-controls="reactivePanel" title="Expand audio reactive"><span aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m6 3.5 4.5 4.5L6 12.5"/></svg></span></button>
+<button id="visualizerExpandTab" class="visualizer-expand-tab" type="button" aria-label="Expand audio reactive visualizer" aria-expanded="false" aria-controls="reactivePanel" title="Expand audio reactive"><span aria-hidden="true"></span></button>
 <aside id="reactivePanel" class="wrld-reactive-panel" aria-label="Audio reactive visualizer" aria-hidden="true">
       <div class="visualizer-wrap" id="visualizerWrap">
         <div class="visualizer-head">
@@ -1130,12 +1133,12 @@ body.wrld-settings-open.wrld-reactive-expanded .app{width:100%;max-width:none}
       </div>
 </aside>
 <div class="app">
-  <header class="topbar glass pywebview-drag-region">
-    <div class="window-drag-strip pywebview-drag-region" title="Drag WRLD window" aria-label="Drag window from here"></div>
+  <header class="topbar glass">
+    <div class="window-drag-strip" aria-hidden="true"></div>
     <div class="brand">
       <button class="brand-badge" id="logoCometBtn" type="button" title="Summon a comet" aria-label="Summon a comet"><span class="brand-magicule" aria-hidden="true"></span></button>
       <div>
-        <h1 class="pywebview-drag-region" title="Drag window"><span class="header-letter">W</span><span class="header-letter">R</span><span class="header-letter">L</span><span class="header-letter">D</span></h1>
+        <h1><span class="header-letter">W</span><span class="header-letter">R</span><span class="header-letter">L</span><span class="header-letter">D</span></h1>
       </div>
     </div>
     <label class="search" aria-label="Search songs">
