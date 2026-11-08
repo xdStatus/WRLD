@@ -21,6 +21,18 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertNotIn('title="Drag window"', MARKUP)
         self.assertNotIn('class="app pywebview-drag-region"', MARKUP)
 
+    def test_always_on_top_button_and_native_toggle(self):
+        self.assertIn('id="alwaysOnTopBtn"', MARKUP)
+        self.assertIn('class="header-actions"', MARKUP)
+        self.assertIn('aria-pressed="false"', MARKUP)
+        self.assertIn("api.set_always_on_top(enabled)", HTML)
+        self.assertIn("btn.setAttribute('aria-pressed',String(active))", HTML)
+        self.assertIn('.header-settings.always-on-top-toggle[aria-pressed="true"]', HTML)
+        self.assertIn('def set_always_on_top(self, enabled):', NATIVE)
+        self.assertIn('user32.SetWindowPos(', NATIVE)
+        self.assertIn('ctypes.c_void_p(-1 if enabled else -2)', NATIVE)
+        self.assertIn('0, 0, 0, 0, 0x0013', NATIVE)
+
     def test_native_window_has_square_flush_edges(self):
         self.assertIn('easy_drag=False, shadow=False', NATIVE)
         self.assertIn('DWMWCP_DONOTROUND', NATIVE)
