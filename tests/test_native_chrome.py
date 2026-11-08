@@ -128,7 +128,7 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('body:not(.wrld-settings-open) #queueDrawer.queue-drawer{', HTML)
         self.assertIn('position:fixed;left:12px;right:auto;bottom:225px;top:auto;', HTML)
         self.assertIn('body.wrld-reactive-expanded:not(.wrld-settings-open) #queueDrawer.queue-drawer{', HTML)
-        self.assertIn('left:414px;right:14px;bottom:calc(var(--wrld-player-reserve,264px) + 14px);', HTML)
+        self.assertIn('left:412px;right:6px;bottom:calc(var(--wrld-player-reserve,264px) + 14px);', HTML)
         self.assertIn('body.wrld-queue-open:not(.wrld-settings-open) #queueDrawer.queue-drawer{', HTML)
         self.assertIn("document.body.appendChild($('queueDrawer'));", HTML)
         self.assertIn("document.body.classList.toggle('wrld-queue-open',queueOpen);", HTML)
