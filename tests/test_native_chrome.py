@@ -52,11 +52,19 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('hwnd, 33, ctypes.byref(dwm_corner_preference)', NATIVE)
         self.assertIn('window.move(0, 0)', NATIVE)
 
-    def test_frameless_window_controls_hidden(self):
+    def test_frameless_header_minimize_button(self):
+        # Legacy Windows title-bar chrome stays absent, but the slim WRLD
+        # header now has one explicit minimize button.
         for element_id in ('winMin', 'winMax', 'winClose', 'windowChrome'):
             self.assertNotIn('id="' + element_id + '"', MARKUP)
+        self.assertEqual(MARKUP.count('id="minimizeBtn"'), 1)
+        self.assertIn('aria-label="Minimize WRLD"', MARKUP)
+        self.assertIn("api.window_action('minimize')", HTML)
+        self.assertIn('.header-settings.minimize-toggle svg{animation:none;', HTML)
         self.assertIn("document.body.classList.add('native-shell')", HTML)
         self.assertIn("if(e.key==='F11')", HTML)
+        self.assertIn("if action == 'minimize':", NATIVE)
+        self.assertIn("win.minimize()", NATIVE)
         for action in ('minimize', 'maximize', 'close'):
             self.assertIn("'" + action + "'", NATIVE)
 
