@@ -79,9 +79,10 @@ object AndroidUpdateChecker {
                 val tag = release.optString("tag_name")
                 val version = decodeVersion(tag, tagged = true) ?: continue
                 if (latestVersion != null && version <= latestVersion) continue
-                val label = "android-v${version.major}.${version.minor}.${version.patch}"
-                if (tag != label) continue
-                val file = "WRLD-Android-v${version.major}.${version.minor}.${version.patch}.apk"
+                // Version comparison is numeric, but release tags and filenames
+                // keep their original zero padding (e.g. android-v2.0.02).
+                val releaseVersion = tag.removePrefix("android-v")
+                val file = "WRLD-Android-v${releaseVersion}.apk"
                 val assets = release.optJSONArray("assets") ?: continue
                 var hasVerifiedAsset = false
                 for (assetIndex in 0 until assets.length()) {
@@ -93,7 +94,7 @@ object AndroidUpdateChecker {
                 }
                 if (!hasVerifiedAsset) continue
                 latestVersion = version
-                latestLabel = "${version.major}.${version.minor}.${version.patch}"
+                latestLabel = releaseVersion
                 latestUrl = "$DOWNLOADS_BASE/$tag/$file"
             }
             val available = latestVersion != null && latestVersion > installed
