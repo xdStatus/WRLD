@@ -2968,12 +2968,20 @@ function initAudioVisualizer(){
     ctx.restore();
     wrldLastPeak=peak;
   }
+  let visualizerFrame=0;
+  function visualizerVisible(){
+    return !document.hidden&&document.body.classList.contains('wrld-reactive-expanded');
+  }
+  function requestVisualizerFrame(){
+    if(!visualizerFrame&&visualizerVisible())visualizerFrame=requestAnimationFrame(frame);
+  }
   function frame(time){
-    requestAnimationFrame(frame);
-    if(document.hidden||width<2||height<2)return;
+    visualizerFrame=0;
+    if(!visualizerVisible()||width<2||height<2)return;
+    requestVisualizerFrame();
     const playing=!!state.currentId&&!audio.paused&&!!wrldAnalyser&&wrldAudioCtx?.state==='running';
-    // ~30 fps during playback; 4 fps on idle. Both modes follow the real signal.
-    const interval=playing?33:250;
+    // Full 30 fps when viewed; lower to 4 fps when unfocused or paused.
+    const interval=!document.hasFocus()?250:playing?33:250;
     if(time-lastTime<interval)return;
     const dt=Math.min(.12,Math.max(.008,(time-lastTime||33)/1000));lastTime=time;
     setupCanvas();
@@ -2984,7 +2992,20 @@ function initAudioVisualizer(){
   resize();
   if('ResizeObserver' in window)new ResizeObserver(resize).observe(canvas);
   else window.addEventListener('resize',resize,{passive:true});
-  requestAnimationFrame(frame);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){
+      if(visualizerFrame)cancelAnimationFrame(visualizerFrame);
+      visualizerFrame=0;
+    }else{lastTime=0;requestVisualizerFrame()}
+  });
+  window.addEventListener('wrld-reactive-visibility',()=>{
+    if(!visualizerVisible()){
+      if(visualizerFrame)cancelAnimationFrame(visualizerFrame);
+      visualizerFrame=0;
+    }else{lastTime=0;requestVisualizerFrame()}
+  });
+  window.addEventListener('focus',()=>{lastTime=0;requestVisualizerFrame()});
+  requestVisualizerFrame();
   window.__wrldVisualizerStatus=()=>({frames:wrldVizFrames,mode:wrldVisualizerMode,peak:wrldLastPeak,audioContextState:wrldAudioCtx?.state||'not yet started',playing:!audio.paused,currentTrack:state.currentId,canvasWidth:width,analysisError:wrldAudioAnalysisError});
 }
 audio.addEventListener('play',()=>{ensureAudioAnalysis();updateVisualizerLabels()});
@@ -3246,6 +3267,7 @@ reactiveTab.addEventListener('click',async()=>{
    // the native window opens. Its contents stay at original dimensions.
    document.body.classList.remove('wrld-reactive-revealed');
    document.body.classList.add('wrld-reactive-expanded');
+   window.dispatchEvent(new Event('wrld-reactive-visibility'));
    updateReactiveTab(true);
    if(api?.set_visualizer_expanded){
     const resized=await api.set_visualizer_expanded(true);
@@ -3267,6 +3289,7 @@ reactiveTab.addEventListener('click',async()=>{
    setPlayerWide(false);
    await new Promise(resolve=>setTimeout(resolve,750));
    document.body.classList.remove('wrld-reactive-expanded');
+   window.dispatchEvent(new Event('wrld-reactive-visibility'));
    updateReactiveTab(false);
    if(api?.set_visualizer_expanded){
     const resized=await api.set_visualizer_expanded(false);
@@ -3278,6 +3301,7 @@ reactiveTab.addEventListener('click',async()=>{
   clearTimeout(reactiveRevealTimer);
   reactiveRevealTimer=0;
   document.body.classList.toggle('wrld-reactive-expanded',!expanded);
+  window.dispatchEvent(new Event('wrld-reactive-visibility'));
   document.body.classList.toggle('wrld-reactive-revealed',!expanded);
   document.body.classList.toggle('wrld-player-wide',!expanded);
   updateReactiveTab(!expanded);
