@@ -33,6 +33,16 @@ class NativeChromeContractTests(unittest.TestCase):
         self.assertIn('ctypes.c_void_p(-1 if enabled else -2)', NATIVE)
         self.assertIn('0, 0, 0, 0, 0x0013', NATIVE)
 
+    def test_topmost_restored_after_audio_reactive_resize(self):
+        self.assertIn('was_pinned = self._always_on_top', NATIVE)
+        self.assertIn("self.set_always_on_top(False)['success']", NATIVE)
+        self.assertIn('if was_pinned:', NATIVE)
+        self.assertIn('time.sleep(0.15)', NATIVE)
+        self.assertIn('self.set_always_on_top(True)', NATIVE)
+        self.assertIn('if(reactiveResizeBusy||alwaysOnTopBusy)return;', HTML)
+        self.assertIn(" $('alwaysOnTopBtn').disabled=true;", HTML)
+        self.assertIn("  $('alwaysOnTopBtn').disabled=false;", HTML)
+
     def test_native_window_has_square_flush_edges(self):
         self.assertIn('easy_drag=False, shadow=False', NATIVE)
         self.assertIn('DWMWCP_DONOTROUND', NATIVE)
