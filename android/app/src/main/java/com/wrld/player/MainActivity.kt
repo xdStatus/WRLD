@@ -490,6 +490,15 @@ class MainActivity : Activity() {
         @JavascriptInterface fun setMusicSource(value: String) {
             runOnUiThread {
                 if (value != "device" && value != "cloud") return@runOnUiThread
+                if (musicSource == value) return@runOnUiThread
+                // A Media3 queue survives library switches. Clear it so a cloud
+                // stream cannot resume from the local library while offline.
+                controller?.stop()
+                controller?.clearMediaItems()
+                ++cloudRequestVersion
+                songs = emptyList()
+                sendSongs(emptyList())
+                sendPlayerState()
                 musicSource = value
                 lastCloudPlayedId = ""
                 getSharedPreferences("wrld-cloud", MODE_PRIVATE).edit()
@@ -509,6 +518,13 @@ class MainActivity : Activity() {
             runOnUiThread {
                 try {
                     CloudSecrets.save(this@MainActivity, value.trim())
+                    if (musicSource != "cloud") {
+                        controller?.stop()
+                        controller?.clearMediaItems()
+                        songs = emptyList()
+                        sendSongs(emptyList())
+                        sendPlayerState()
+                    }
                     musicSource = "cloud"
                     lastCloudPlayedId = ""
                     getSharedPreferences("wrld-cloud", MODE_PRIVATE).edit()
@@ -589,7 +605,14 @@ class MainActivity : Activity() {
                 val player = controller ?: return@runOnUiThread
                 try {
                     val source = JSONArray(ids)
-                    val mapped = songs.associateBy { it.id }
+                    // Only queue songs from the currently selected source.
+                    // Never let stale UI IDs route device playback through Cloud.
+                    val allowedSongs = if (musicSource == "device") {
+                        songs.filter { it.uri.scheme == "content" }
+                    } else {
+                        songs.filter { it.id.startsWith("r2_") && it.uri.scheme == "https" && it.uri.host == android.net.Uri.parse(CloudLibrary.BASE_URL).host }
+                    }
+                    val mapped = allowedSongs.associateBy { it.id }
                     val playlist = mutableListOf<MediaItem>()
                     for (i in 0 until minOf(source.length(), 20000)) {
                         val song = mapped[source.optString(i)] ?: continue
